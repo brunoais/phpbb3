@@ -415,6 +415,11 @@ class auth_admin extends auth
 			unset($memberships, $groups);
 		}
 
+		// The list of UG_ID and FORUM_ID for the permissions
+		// This starts as a numeric array and is meant to be joined into a string to output to javascript
+		$UG_ID_list = array();
+		$FORUM_ID_list = array();
+
 		// If we only have one forum id to display or being in local mode and more than one user/group to display,
 		// we switch the complete interface to group by user/usergroup instead of grouping by forum
 		// To achieve this, we need to switch the array a bit
@@ -496,6 +501,9 @@ class auth_admin extends auth
 					{
 						$s_custom_permissions = false;
 					}
+
+					$UG_ID_list[]	= $ug_id;
+					$FORUM_ID_list[]= $forum_id;
 
 					$template->assign_block_vars($tpl_pmask . '.' . $tpl_fmask, array(
 						'NAME'				=> $ug_names_ary[$ug_id],
@@ -583,6 +591,9 @@ class auth_admin extends auth
 						$s_custom_permissions = false;
 					}
 
+					$UG_ID_list[]	= $ug_id;
+					$FORUM_ID_list[]= $forum_id;
+
 					$template->assign_block_vars($tpl_pmask . '.' . $tpl_fmask, array(
 						'NAME'				=> ($forum_id == 0) ? $forum_names_ary[0] : $forum_names_ary[$forum_id]['forum_name'],
 						'PADDING'			=> ($forum_id == 0) ? '' : $forum_names_ary[$forum_id]['padding'],
@@ -598,6 +609,9 @@ class auth_admin extends auth
 				unset($hold_ary[$ug_id], $ug_names_ary[$ug_id]);
 			}
 		}
+
+		$template->assign_var('UG_ID_LIST', implode(',', $UG_ID_list));
+		$template->assign_var('FORUM_ID_LIST', implode(',', $FORUM_ID_list));
 	}
 
 	/**

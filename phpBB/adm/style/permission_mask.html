@@ -12,6 +12,34 @@
 	<!-- IF S_ROLE_JS_ARRAY -->
 		{S_ROLE_JS_ARRAY}
 	<!-- ENDIF -->
+	<!-- IF UG_ID_LIST -->
+		var ugIds = [{UG_ID_LIST}];
+	<!-- ENDIF -->
+	<!-- IF FORUM_ID_LIST -->
+		var forumIds = [{FORUM_ID_LIST}];
+	<!-- ENDIF -->
+	<!-- IF UG_ID_LIST && FORUM_ID_LIST -->
+		//IE8 fix. (does not follow standard)
+		if(!window.addEventListener){
+			window.addEventListener = function(event, callback){
+				window.attachEvent('on'+event, callback);
+			}
+		}
+		addEventListener('load', function (){
+							// for each permissions table
+							for(var i = 0; i < ugIds.length; i++){
+								for(var j = 0; j < forumIds.length; j++){
+									showHidePermissions('setting['+ ugIds[i] +']['+ forumIds[j] +'][f_read]',
+														'setting['+ ugIds[i] +']['+ forumIds[j] +'][f_read_other]',
+														[4,3],
+														true
+														);
+								}
+							}
+						}
+						, false
+					);
+	<!-- ENDIF -->
 // ]]>
 </script>
 <script type="text/javascript" src="style/permissions.js"></script>
@@ -101,8 +129,8 @@
 				</thead>
 				<tbody>
 				<!-- BEGIN mask -->
-					<!-- IF p_mask.f_mask.category.mask.S_ROW_COUNT is even --><tr class="row4"><!-- ELSE --><tr class="row3"><!-- ENDIF -->
-					<th class="permissions-name<!-- IF p_mask.f_mask.category.mask.S_ROW_COUNT is even --> row4<!-- ELSE --> row3<!-- ENDIF -->"><!-- IF p_mask.f_mask.category.mask.U_TRACE --><a href="{p_mask.f_mask.category.mask.U_TRACE}" class="trace" onclick="popup(this.href, 750, 515, '_trace'); return false;" title="{L_TRACE_SETTING}"><img src="images/icon_trace.gif" alt="{L_TRACE_SETTING}" /></a> <!-- ENDIF -->{p_mask.f_mask.category.mask.PERMISSION}</th>
+					<tr class="<!-- IF p_mask.f_mask.category.mask.S_ROW_COUNT is even -->row4<!-- ELSE -->row3<!-- ENDIF --> show">
+					<th class="permissions-name"><!-- IF p_mask.f_mask.category.mask.U_TRACE --><a href="{p_mask.f_mask.category.mask.U_TRACE}" class="trace" onclick="popup(this.href, 750, 515, '_trace'); return false;" title="{L_TRACE_SETTING}"><img src="images/icon_trace.gif" alt="{L_TRACE_SETTING}" /></a> <!-- ENDIF -->{p_mask.f_mask.category.mask.PERMISSION}</th>
 					<!-- IF p_mask.S_VIEW -->
 						<td<!-- IF p_mask.f_mask.category.mask.S_YES --> class="yes"<!-- ENDIF -->>&nbsp;</td>
 						<td<!-- IF p_mask.f_mask.category.mask.S_NEVER --> class="never"<!-- ENDIF -->></td>

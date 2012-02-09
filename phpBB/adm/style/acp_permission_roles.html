@@ -17,6 +17,20 @@
 		<!-- IF S_ROLE_JS_ARRAY -->
 			{S_ROLE_JS_ARRAY}
 		<!-- ENDIF -->
+		if(!window.addEventListener){
+			window.addEventListener = function(event, callback){
+				window.attachEvent('on'+event, callback);
+			}
+		}
+		addEventListener('load', function (){
+						showHidePermissions('setting_f_read',
+											'setting_f_read_other',
+											[4,3],
+											true
+											);
+					}
+					, false
+				);
 	// ]]>
 	</script>
 
