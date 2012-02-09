@@ -357,3 +357,139 @@ function set_role_settings(role_id, target_id)
 		mark_one_option(target_id, r, (settings[r] == 1) ? 'y' : 'n');
 	}
 }
+
+
+/**
+ * Control system for showing and hiding permissions. without losing the original aspect
+ *
+ * Note: After we giveup on supporting IE9, this function may be altered to be more efficient. 
+*/
+
+var showHidePermissions;
+(function (){
+	
+	/**
+	 * Function originally meant to restore the multiple colored system of the permissions table.
+	 * This function changes the class of all the direct children of element having in account the prefix and the ignoreForDegrade.
+	 * For all elements it checks, if it does contain the class ignoreForDegrade the previous prefix class is removed and replaced with
+	 * a class formed by appending the prefix with the next element in numbering array.
+	 * Supports any number of different CSS valid characters for the HTML attribute class, except the space.
+	 * 
+	 * Note: Does not work if numbering cannot be treated as an infinite array.
+	 * 
+	 * @param element Node The element that contains the children that will do the multiple class
+	 * @param prefix String The string that prefixes all in the numbering. E.g. 'row'
+	 * @param numbering Array An array of anything that is transformable to string (and follows the rules above). E.g. [3,4]
+	 * @param ignoreForDegrade String If this substring is inside the class HTML attribute, the system skips it.
+	 * @return function Returns the function that executes the job
+	*/
+	function restoreDegrade(element, prefix, numbering, ignoreForDegrade){
+		var children = element.childNodes;
+		return function (){
+			for(var i = 0, childCounter = 0; i < children.length; i++){
+				// if this is a textNode, it doesn't matter me.
+				// if this one is hidden, it's no use counting with it
+				if(children[i].nodeType == 3 || children[i].className.indexOf(ignoreForDegrade) != -1) continue;
+				
+				children[i].className = children[i].className.replace(new RegExp(prefix + "[^ \"']+",'g'), prefix + numbering[childCounter]);
+				childCounter = (childCounter + 1) % numbering.length;
+			}
+		}
+	}
+	
+	/**
+	 * Replaces the hide CSS class with the CSS show class
+	 *
+	 * @param element Node The element to apply the changes  
+	 * @param callback function A function to execute when the job is done
+	*/
+	function appear(element, callback){
+		return function (){
+				if(element.classList){
+					element.classList.remove('hide');
+					element.classList.add('show');
+				}else{
+					// IE does not know what classList is. While we support IE9, well keep this one.
+					element.className = element.className.replace(/hide/g, 'show');
+				}
+				if(callback) callback();
+			}
+	}
+	
+	/**
+	 * Replaces the show CSS class with the CSS hide class
+	 *
+	 * @param element Node The element to apply the changes  
+	 * @param callback function A function to execute when the job is done
+	*/
+	function disappear(element, callback){
+		return function (){
+				if(element.classList){
+					element.classList.add('hide');
+					element.classList.remove('show');
+				}else{
+					// IE does not know what classList is. While we support IE9, well keep this one.
+					element.className = element.className.replace(/show/g, 'hide');
+				}
+				if(callback) callback();
+			}
+	}
+
+	/**
+	* Controler to make options appear or dissapear as needed
+	* 
+	* @param listenPermission string The permission id to listen to.
+	*								 E.g. GOOD: "setting[5][2][f_read]" BAD: "setting[5][2][f_read]_y"
+	* @param applyTo string The id of the tag whose content should show or hide depending on the listen option
+	* 						E.g. GOOD: "setting[5][2][f_read]" BAD: "setting[5][2][f_read]_y"
+	* @param appearOnYes boolean When should the conent appear? When YES is pressed (true) or when NO/NEVER is pressed (false)?
+	* @throws Object 'not enugh arguments' when no enugh arguments given 
+	* @throws DOMExeption '%s is null' when the given arguments are invalid
+	*/
+	showHidePermissions = function (listenPermission, applyTo, numbering, appearOnYes){
+		if(arguments.length < 2){
+			throw {
+					reason: 'not enugh arguments'
+				};
+		}
+		var yesPermission;
+		var noPermission;
+		var neverPermission;
+		yesPermission = document.getElementById(listenPermission + '_y');
+		noPermission = document.getElementById(listenPermission + '_u');
+		neverPermission = document.getElementById(listenPermission + '_n');
+		applyToElement = document.getElementById(applyTo + '_n');
+		
+		var current = applyToElement;
+		var currentName = current.parentNode.tagName.toLowerCase();
+		while( currentName != 'tr' && currentName != 'body'){
+			current = current.parentNode;
+			currentName = current.parentNode.tagName.toLowerCase();
+		}
+		applyToElement = current.parentNode;
+		
+		//IE8 fix. (does not follow the standard)
+		if(!yesPermission.addEventListener){
+			var eventListener = function(event, callback){
+				this.attachEvent('on'+event, callback);
+			}
+			yesPermission.addEventListener = eventListener;
+			noPermission.addEventListener = eventListener;
+			neverPermission.addEventListener = eventListener;
+			applyToElement.addEventListener = eventListener;
+			applyToElement.parentNode.addEventListener = eventListener;
+		}
+		var restorePresentation = restoreDegrade(applyToElement.parentNode, 'row', numbering, 'hide');
+		var appearFunc = appear(applyToElement, restorePresentation);
+		var disappearFunc = disappear(applyToElement, restorePresentation);
+		
+		yesPermission.addEventListener('click', appearOnYes ? appearFunc : disappearFunc, false);
+		noPermission.addEventListener('click', appearOnYes ? disappearFunc : appearFunc, false);
+		neverPermission.addEventListener('click', appearOnYes ? disappearFunc : appearFunc, false);
+		
+		// If it's supposed not to be there:
+		if((appearOnYes && !yesPermission.checked) || (!appearOnYes && yesPermission.checked)){
+			disappearFunc();
+		}
+	}
+})();

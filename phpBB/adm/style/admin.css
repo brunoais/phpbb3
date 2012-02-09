@@ -1591,18 +1591,19 @@ fieldset.permissions .padding {
 	display: inline;
 }
 
-.permissions-panel th.row3 {
+.permissions-panel tr.row3 th,
+.permissions-panel tr.row4 th {
 	background-image: none;
-	background-color: #D1D7DC;
 	color: #536482;
 	border: none;
 }
 
-.permissions-panel th.row4 {
-	background-image: none;
+.permissions-panel tr.row3 th {
+	background-color: #D1D7DC;
+}
+
+.permissions-panel tr.row4 th {
 	background-color: #E4E8EB;
-	color: #536482;
-	border: none;
 }
 
 .permissions-panel th a:link, .permissions-panel th a:hover, .permissions-panel th a:visited {
@@ -1646,4 +1647,8 @@ fieldset.permissions .padding {
 
 .phpinfo td, .phpinfo th, .phpinfo h2, .phpinfo h1 {
 	text-align: left;
+}
+
+.hide{
+	display:none;
 }
