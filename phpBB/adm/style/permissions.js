@@ -293,10 +293,25 @@ function mark_options(id, s)
 
 	var rb = t.getElementsByTagName('input');
 
+	var event;
+	if(document.createEvent){
+		var click = document.createEvent("MouseEvents");
+		click.initMouseEvent("click", true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
+		event = function (where){
+			where.dispatchEvent(click);
+		}
+	}else{
+		// As usual, IE needs special treatment
+		var click = document.createEventObject();
+		event = function (where){
+			where.fireEvent("onclick", click);
+		}
+	}
 	for (var r = 0; r < rb.length; r++)
 	{
 		if (rb[r].id.substr(rb[r].id.length-1) == s)
 		{
+			event(rb[r]);
 			rb[r].checked = true;
 		}
 	}
@@ -313,10 +328,25 @@ function mark_one_option(id, field_name, s)
 
 	var rb = t.getElementsByTagName('input');
 
+	var event;
+	if(document.createEvent){
+		var click = document.createEvent("MouseEvents");
+		click.initMouseEvent("click", true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
+		event = function (where){
+			where.dispatchEvent(click);
+		}
+	}else{
+		// As usual, IE needs special treatment
+		var click = document.createEventObject();
+		event = function (where){
+			where.fireEvent("onclick", click);
+		}
+	}
 	for (var r = 0; r < rb.length; r++)
 	{
 		if (rb[r].id.substr(rb[r].id.length-field_name.length-3, field_name.length) == field_name && rb[r].id.substr(rb[r].id.length-1) == s)
 		{
+			event(rb[r]);
 			rb[r].checked = true;
 		}
 	}
