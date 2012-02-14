@@ -1,3 +1,5 @@
+// Allow inline inputs to capture and execute click events
+var acceptClicks;
 /**
 * Hide and show all checkboxes
 * status = true (show boxes), false (hide boxes)
@@ -292,29 +294,16 @@ function mark_options(id, s)
 	}
 
 	var rb = t.getElementsByTagName('input');
-
-	var event;
-	if(document.createEvent){
-		var click = document.createEvent("MouseEvents");
-		click.initMouseEvent("click", true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
-		event = function (where){
-			where.dispatchEvent(click);
-		}
-	}else{
-		// As usual, IE needs special treatment
-		var click = document.createEventObject();
-		event = function (where){
-			where.fireEvent("onclick", click);
-		}
-	}
+	acceptClicks = false;
 	for (var r = 0; r < rb.length; r++)
 	{
 		if (rb[r].id.substr(rb[r].id.length-1) == s)
 		{
-			event(rb[r]);
+			$(rb[r]).click();
 			rb[r].checked = true;
 		}
 	}
+	acceptClicks = true;
 }
 
 function mark_one_option(id, field_name, s)
@@ -327,29 +316,16 @@ function mark_one_option(id, field_name, s)
 	}
 
 	var rb = t.getElementsByTagName('input');
-
-	var event;
-	if(document.createEvent){
-		var click = document.createEvent("MouseEvents");
-		click.initMouseEvent("click", true, true, window, 0, 0, 0, 0, 0, false, false, false, false, 0, null);
-		event = function (where){
-			where.dispatchEvent(click);
-		}
-	}else{
-		// As usual, IE needs special treatment
-		var click = document.createEventObject();
-		event = function (where){
-			where.fireEvent("onclick", click);
-		}
-	}
+	acceptClicks = false;
 	for (var r = 0; r < rb.length; r++)
 	{
 		if (rb[r].id.substr(rb[r].id.length-field_name.length-3, field_name.length) == field_name && rb[r].id.substr(rb[r].id.length-1) == s)
 		{
-			event(rb[r]);
+			$(rb[r]).click();
 			rb[r].checked = true;
 		}
 	}
+	acceptClicks = true;
 }
 
 /**
@@ -414,16 +390,18 @@ var showHidePermissions;
 	 * @return function Returns the function that executes the job
 	*/
 	function restoreDegrade(element, prefix, numbering, ignoreForDegrade){
-		var children = element.childNodes;
+		// pick the element, find all it's children
+		var children = $(element).children();
+		var deleteClasses = prefix + numbering[0];
+		for(var i = 1; i < numbering.length; i++){
+			deleteClasses += ' ' + prefix + numbering[i];
+		}
 		return function (){
-			for(var i = 0, childCounter = 0; i < children.length; i++){
-				// if this is a textNode, it doesn't matter me.
-				// if this one is hidden, it's no use counting with it
-				if(children[i].nodeType == 3 || children[i].className.indexOf(ignoreForDegrade) != -1) continue;
-				
-				children[i].className = children[i].className.replace(new RegExp(prefix + "[^ \"']+",'g'), prefix + numbering[childCounter]);
-				childCounter = (childCounter + 1) % numbering.length;
-			}
+			var visibleChildren = children.not('.hide');
+			visibleChildren.each( function (index, element){
+					$(element).removeClass(deleteClasses).addClass(prefix + numbering[index % numbering.length]);
+				}
+			)
 		}
 	}
 	
@@ -435,13 +413,7 @@ var showHidePermissions;
 	*/
 	function appear(element, callback){
 		return function (){
-				if(element.classList){
-					element.classList.remove('hide');
-					element.classList.add('show');
-				}else{
-					// IE does not know what classList is. While we support IE9, well keep this one.
-					element.className = element.className.replace(/hide/g, 'show');
-				}
+				$(element).removeClass('hide');
 				if(callback) callback();
 			}
 	}
@@ -454,13 +426,7 @@ var showHidePermissions;
 	*/
 	function disappear(element, callback){
 		return function (){
-				if(element.classList){
-					element.classList.add('hide');
-					element.classList.remove('show');
-				}else{
-					// IE does not know what classList is. While we support IE9, well keep this one.
-					element.className = element.className.replace(/show/g, 'hide');
-				}
+				$(element).addClass('hide');
 				if(callback) callback();
 			}
 	}
@@ -482,42 +448,31 @@ var showHidePermissions;
 					reason: 'not enugh arguments'
 				};
 		}
-		var yesPermission;
-		var noPermission;
-		var neverPermission;
-		yesPermission = document.getElementById(listenPermission + '_y');
-		noPermission = document.getElementById(listenPermission + '_u');
-		neverPermission = document.getElementById(listenPermission + '_n');
-		applyToElement = document.getElementById(applyTo + '_n');
-		
+		var yesPermission = document.getElementById(listenPermission + '_y');
+		var noPermission = document.getElementById(listenPermission + '_u');
+		var neverPermission = document.getElementById(listenPermission + '_n');
+
+		var applyToElement = document.getElementById(applyTo + '_n');
+
 		var current = applyToElement;
 		var currentName = current.parentNode.tagName.toLowerCase();
+		// Search for a parent of this node who is the owner of all permissions
+		// That node is the first tr I'll find If it finds the body tag. BOM!!!
 		while( currentName != 'tr' && currentName != 'body'){
 			current = current.parentNode;
 			currentName = current.parentNode.tagName.toLowerCase();
 		}
 		applyToElement = current.parentNode;
-		
-		//IE8 fix. (does not follow the standard)
-		if(!yesPermission.addEventListener){
-			var eventListener = function(event, callback){
-				this.attachEvent('on'+event, callback);
-			}
-			yesPermission.addEventListener = eventListener;
-			noPermission.addEventListener = eventListener;
-			neverPermission.addEventListener = eventListener;
-			applyToElement.addEventListener = eventListener;
-			applyToElement.parentNode.addEventListener = eventListener;
-		}
+
 		var restorePresentation = restoreDegrade(applyToElement.parentNode, 'row', numbering, 'hide');
 		var appearFunc = appear(applyToElement, restorePresentation);
 		var disappearFunc = disappear(applyToElement, restorePresentation);
-		
-		yesPermission.addEventListener('click', appearOnYes ? appearFunc : disappearFunc, false);
-		noPermission.addEventListener('click', appearOnYes ? disappearFunc : appearFunc, false);
-		neverPermission.addEventListener('click', appearOnYes ? disappearFunc : appearFunc, false);
-		
-		// If it's supposed not to be there:
+
+		$(yesPermission).click(appearOnYes ? appearFunc : disappearFunc);
+		$(noPermission).click(appearOnYes ? disappearFunc : appearFunc);
+		$(neverPermission).click(appearOnYes ? disappearFunc : appearFunc);
+
+		// If it's supposed not to be visible there:
 		if((appearOnYes && !yesPermission.checked) || (!appearOnYes && yesPermission.checked)){
 			disappearFunc();
 		}

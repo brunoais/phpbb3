@@ -123,8 +123,8 @@
 					</thead>
 					<tbody>
 					<!-- BEGIN mask -->
-						<!-- IF auth.mask.S_ROW_COUNT is even --><tr class="row4"><!-- ELSE --><tr class="row3"><!-- ENDIF -->
-						<th class="permissions-name<!-- IF auth.mask.S_ROW_COUNT is even --> row4<!-- ELSE --> row3<!-- ENDIF -->">{auth.mask.PERMISSION}</th>
+						<tr class="<!-- IF auth.mask.S_ROW_COUNT is even -->row4<!-- ELSE -->row3<!-- ENDIF -->">
+						<th class="permissions-name">{auth.mask.PERMISSION}</th>
 							
 						<td class="permissions-yes"><label for="setting_{auth.mask.FIELD_NAME}_y"><input onchange="set_colours('00{auth.S_ROW_COUNT}', false)" id="setting_{auth.mask.FIELD_NAME}_y" name="setting[{auth.mask.FIELD_NAME}]" class="radio" type="radio"<!-- IF auth.mask.S_YES --> checked="checked"<!-- ENDIF --> value="1" /></label></td>
 						<td class="permissions-no"><label for="setting_{auth.mask.FIELD_NAME}_u"><input onchange="set_colours('00{auth.S_ROW_COUNT}', false)" id="setting_{auth.mask.FIELD_NAME}_u" name="setting[{auth.mask.FIELD_NAME}]" class="radio" type="radio"<!-- IF auth.mask.S_NO --> checked="checked"<!-- ENDIF --> value="-1" /></label></td>
