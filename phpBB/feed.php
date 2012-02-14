@@ -527,7 +527,23 @@ class phpbb_feed_base
 	{
 		return (isset($this->keys[$key])) ? $this->keys[$key] : NULL;
 	}
+	function get_unlimited_reading_forums($readable_forum_id = false)
+	{
+		global $auth;
+		static $forum_ids;
+		if(!$readable_forum_id)
+		{
+			$readable_forum_id = $this->get_readable_forums();
+		}
 
+		if (!isset($forum_ids))
+		{
+			$forum_ids = array_keys($auth->acl_getf('f_read_other', true));
+		}
+
+		// if the user cannot read, he cannot read without limits
+		return array_intersect($forum_ids, $readable_forum_id);
+	}
 	function get_readable_forums()
 	{
 		global $auth;
@@ -751,13 +767,15 @@ class phpbb_feed_overall extends phpbb_feed_post_base
 {
 	function get_sql()
 	{
-		global $auth, $db;
-
+		global $auth, $db, $user;
 		$forum_ids = array_diff($this->get_readable_forums(), $this->get_excluded_forums(), $this->get_passworded_forums());
+		// Get the forums
 		if (empty($forum_ids))
 		{
 			return false;
 		}
+
+		$unlimited_access_forums = $this->get_unlimited_reading_forums($forum_ids);
 
 		// m_approve forums
 		$fid_m_approve = $this->get_moderator_approve_forums();
@@ -767,6 +785,9 @@ class phpbb_feed_overall extends phpbb_feed_post_base
 		$sql = 'SELECT topic_id, topic_last_post_time
 			FROM ' . TOPICS_TABLE . '
 			WHERE ' . $db->sql_in_set('forum_id', $forum_ids) . '
+				AND (' . $db->sql_in_set('forum_id', $unlimited_access_forums, false, true) . '
+					OR topic_poster = ' . $user->data['user_id'] . '
+					)
 				AND topic_moved_id = 0
 				AND (topic_approved = 1
 					' . $sql_m_approve . ')
@@ -834,6 +855,8 @@ class phpbb_feed_forum extends phpbb_feed_post_base
 {
 	var $forum_id		= 0;
 	var $forum_data		= array();
+	// The user is able to read all forums
+	var $unlimited_read = false;
 
 	function phpbb_feed_forum($forum_id)
 	{
@@ -877,6 +900,9 @@ class phpbb_feed_forum extends phpbb_feed_post_base
 			trigger_error('SORRY_AUTH_READ');
 		}
 
+		// Make sure we can read all topics this forum
+		$unlimited_read = $auth->acl_get('f_read_other', $this->forum_id);
+
 		// Make sure forum is not passworded or user is authed
 		if ($this->forum_data['forum_password'])
 		{
@@ -893,7 +919,7 @@ class phpbb_feed_forum extends phpbb_feed_post_base
 
 	function get_sql()
 	{
-		global $auth, $db;
+		global $auth, $db, $user;
 
 		$m_approve = ($auth->acl_get('m_approve', $this->forum_id)) ? true : false;
 
@@ -903,6 +929,7 @@ class phpbb_feed_forum extends phpbb_feed_post_base
 			WHERE forum_id = ' . $this->forum_id . '
 				AND topic_moved_id = 0
 				' . ((!$m_approve) ? 'AND topic_approved = 1' : '') . '
+				' . ((!$this->unlimited_read) ? 'AND topic_poster = ' . $user->data['user_id'] : ''). '
 			ORDER BY topic_last_post_time DESC';
 		$result = $db->sql_query_limit($sql, $this->num_items);
 
@@ -975,7 +1002,7 @@ class phpbb_feed_topic extends phpbb_feed_post_base
 	{
 		global $auth, $db, $user;
 
-		$sql = 'SELECT f.forum_options, f.forum_password, t.topic_id, t.forum_id, t.topic_approved, t.topic_title, t.topic_time, t.topic_views, t.topic_replies, t.topic_type
+		$sql = 'SELECT f.forum_options, f.forum_password, t.topic_id, t.forum_id, t.topic_approved, t.topic_title, t.topic_time, t.topic_views, t.topic_poster, t.topic_replies, t.topic_type
 			FROM ' . TOPICS_TABLE . ' t
 			LEFT JOIN ' . FORUMS_TABLE . ' f
 				ON (f.forum_id = t.forum_id)
@@ -1004,7 +1031,11 @@ class phpbb_feed_topic extends phpbb_feed_post_base
 		}
 
 		// Make sure we can read this forum
-		if (!$auth->acl_get('f_read', $this->forum_id))
+		// If I can read, make sure that I can read all topics or I started this topic
+		if (!$auth->acl_get('f_read', $this->forum_id) ||
+			(	!$auth->acl_get('f_read_other', $this->forum_id) &&
+				$user->data['user_id'] != $this->topic_data['topic_poster']
+			))
 		{
 			trigger_error('SORRY_AUTH_READ');
 		}
@@ -1060,6 +1091,7 @@ class phpbb_feed_topic extends phpbb_feed_post_base
 class phpbb_feed_forums extends phpbb_feed_base
 {
 	var $num_items	= 0;
+	var $unlimited_reading_forums = array();
 
 	function set_keys()
 	{
@@ -1080,7 +1112,7 @@ class phpbb_feed_forums extends phpbb_feed_base
 		{
 			return false;
 		}
-
+		$this->unlimited_reading_forums = $this->get_unlimited_reading_forums( $in_fid_ary );
 		// Build SQL Query
 		$this->sql = array(
 			'SELECT'	=> 'f.forum_id, f.left_id, f.forum_name, f.forum_last_post_time,
@@ -1104,9 +1136,13 @@ class phpbb_feed_forums extends phpbb_feed_base
 		if ($config['feed_item_statistics'])
 		{
 			global $user;
-
-			$item_row['statistics'] = $user->lang('TOTAL_TOPICS', (int) $row['forum_topics'])
-				. ' ' . $this->separator_stats . ' ' . $user->lang('TOTAL_POSTS_OTHER', (int) $row['forum_posts']);
+			// Who has no right to see all forums cannot see how many topics are there
+			if(in_array((int)$row['forum_id'], $this->unlimited_reading_forums, true)){
+				$item_row['statistics'] = $user->lang('TOTAL_TOPICS', (int) $row['forum_topics'])
+					. ' ' . $this->separator_stats . ' ' . $user->lang('TOTAL_POSTS_OTHER', (int) $row['forum_posts']);
+			}else{
+				$item_row['statistics'] = $user->lang('PRIVATE_FORUM');
+			}
 		}
 	}
 }
@@ -1222,7 +1258,7 @@ class phpbb_feed_topics extends phpbb_feed_topic_base
 {
 	function get_sql()
 	{
-		global $db, $config;
+		global $db, $config, $user;
 
 		$forum_ids_read = $this->get_readable_forums();
 		if (empty($forum_ids_read))
@@ -1236,12 +1272,17 @@ class phpbb_feed_topics extends phpbb_feed_topic_base
 			return false;
 		}
 
+		$unlimited_access_forums = $this->get_unlimited_reading_forums($in_fid_ary);
+
 		// We really have to get the post ids first!
 		$sql = 'SELECT topic_first_post_id, topic_time
 			FROM ' . TOPICS_TABLE . '
 			WHERE ' . $db->sql_in_set('forum_id', $in_fid_ary) . '
 				AND topic_moved_id = 0
 				AND topic_approved = 1
+				AND (' . $db->sql_in_set('forum_id', $unlimited_access_forums, false, true) . '
+					OR topic_poster = ' . $user->data['user_id'] . '
+					)
 			ORDER BY topic_time DESC';
 		$result = $db->sql_query_limit($sql, $this->num_items);
 
@@ -1310,7 +1351,7 @@ class phpbb_feed_topics_active extends phpbb_feed_topic_base
 
 	function get_sql()
 	{
-		global $db, $config;
+		global $db, $config, $user;
 
 		$forum_ids_read = $this->get_readable_forums();
 		if (empty($forum_ids_read))
@@ -1324,6 +1365,8 @@ class phpbb_feed_topics_active extends phpbb_feed_topic_base
 		{
 			return false;
 		}
+		// Get the forums where you can read topics started by others
+		$unlimited_access_forums = $this->get_unlimited_reading_forums($in_fid_ary);
 
 		// Search for topics in last X days
 		$last_post_time_sql = ($this->sort_days) ? ' AND topic_last_post_time > ' . (time() - ($this->sort_days * 24 * 3600)) : '';
@@ -1332,6 +1375,9 @@ class phpbb_feed_topics_active extends phpbb_feed_topic_base
 		$sql = 'SELECT topic_last_post_id, topic_last_post_time
 			FROM ' . TOPICS_TABLE . '
 			WHERE ' . $db->sql_in_set('forum_id', $in_fid_ary) . '
+			AND (' . $db->sql_in_set('forum_id', $unlimited_access_forums, false, true) . '
+					OR topic_poster = ' . $user->data['user_id'] . '
+				)
 				AND topic_moved_id = 0
 				AND topic_approved = 1
 				' . $last_post_time_sql . '
