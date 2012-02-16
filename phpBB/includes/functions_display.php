@@ -462,6 +462,7 @@ function display_forums($root_data = '', $display_moderators = true, $return_mod
 			'FORUM_FOLDER_IMG_ALT'	=> isset($user->lang[$folder_alt]) ? $user->lang[$folder_alt] : '',
 			'FORUM_IMAGE'			=> ($row['forum_image']) ? '<img src="' . $phpbb_root_path . $row['forum_image'] . '" alt="' . $user->lang[$folder_alt] . '" />' : '',
 			'FORUM_IMAGE_SRC'		=> ($row['forum_image']) ? $phpbb_root_path . $row['forum_image'] : '',
+			'FORUM_PRIVATE'			=> !$auth->acl_get('f_read_other', $row['forum_id']) , // Is the user able to read the other users topics? If not, let's not bother getting a proper information
 			'LAST_POST_SUBJECT'		=> censor_text($last_post_subject),
 			'LAST_POST_TIME'		=> $last_post_time,
 			'LAST_POSTER'			=> get_username_string('username', $row['forum_last_poster_id'], $row['forum_last_poster_name'], $row['forum_last_poster_colour']),
