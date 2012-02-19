@@ -900,7 +900,8 @@ class phpbb_feed_forum extends phpbb_feed_post_base
 			trigger_error('SORRY_AUTH_READ');
 		}
 
-		// Make sure we can read all topics this forum
+		// Make sure we can read all topics this forum else
+		// You'll need to be the topic starter to see it all
 		$unlimited_read = $auth->acl_get('f_read_other', $this->forum_id);
 
 		// Make sure forum is not passworded or user is authed
@@ -1211,6 +1212,9 @@ class phpbb_feed_news extends phpbb_feed_topic_base
 			WHERE ' . $db->sql_in_set('forum_id', $in_fid_ary) . '
 				AND topic_moved_id = 0
 				AND topic_approved = 1
+				AND (' . $db->sql_in_set('forum_id', $this->get_unlimited_reading_forums(), false, true) . '
+					OR topic_poster = ' . $user->data['user_id'] . '
+					)
 			ORDER BY topic_time DESC';
 		$result = $db->sql_query_limit($sql, $this->num_items);
 
