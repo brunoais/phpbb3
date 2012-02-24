@@ -38,13 +38,13 @@
 
 // ]]>
 </script>
-<script type="text/javascript" src="{T_SUPER_TEMPLATE_PATH}/editor.js"></script>
+<script type="text/javascript" defer src="{T_SUPER_TEMPLATE_PATH}/editor.js"></script>
 
 <!-- IF S_BBCODE_ALLOWED -->
 <div id="colour_palette" style="display: none;">
 	<dl style="clear: left;">
 		<dt><label>{L_FONT_COLOR}:</label></dt>
-		<dd>
+		<dd id="color_palette_colours">
 		<script type="text/javascript">
 		// <![CDATA[
 			function change_palette()
@@ -61,8 +61,8 @@
 					document.getElementById('bbpalette').value = '{LA_FONT_COLOR}';
 				}
 			}
-
-			colorPalette('h', 15, 10);
+			
+			onload_functions.push("colorPalette('h', 15, 10, 'color_palette_colours')");
 		// ]]>
 		</script>
 		</dd>

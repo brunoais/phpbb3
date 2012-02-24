@@ -2186,7 +2186,7 @@ function change_database_data(&$no_updates, $version)
 			if (!isset($config['load_jquery_cdn']))
 			{
 				set_config('load_jquery_cdn', 0);
-				set_config('load_jquery_url', '//ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js');
+				set_config('load_jquery_url', 'http://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js');
 			}
 
 			if (!isset($config['use_system_cron']))

@@ -2003,14 +2003,28 @@ function on_page($num_items, $per_page, $start)
 */
 function append_sid($url, $params = false, $is_amp = true, $session_id = false)
 {
-	global $_SID, $_EXTRA_URL, $phpbb_hook;
+	global $request, $_SID, $_EXTRA_URL, $phpbb_hook;
 
 	if ($params === '' || (is_array($params) && empty($params)))
 	{
 		// Do not append the ? if the param-list is empty anyway.
 		$params = false;
 	}
-
+	if($request->is_set('altjQuery'))
+	{
+		if(is_array($params))
+		{
+			$params['altjQuery'];
+		}
+		else if(is_string($params))
+		{
+			$params .= ($is_amp? '&amp;' : '&') . 'altjQuery';
+		}
+		else
+		{
+			$params = array( 'altjQuery' => 1);
+		}
+	}
 	// Developers using the hook function need to globalise the $_SID and $_EXTRA_URL on their own and also handle it appropriately.
 	// They could mimic most of what is within this function
 	if (!empty($phpbb_hook) && $phpbb_hook->call_hook(__FUNCTION__, $url, $params, $is_amp, $session_id))
@@ -4516,7 +4530,7 @@ function phpbb_http_login($param)
 */
 function page_header($page_title = '', $display_online_list = true, $item_id = 0, $item = 'forum')
 {
-	global $db, $config, $template, $SID, $_SID, $_EXTRA_URL, $user, $auth, $phpEx, $phpbb_root_path;
+	global $db, $config, $template, $SID, $_SID, $_EXTRA_URL, $user, $auth, $request, $phpEx, $phpbb_root_path;
 
 	if (defined('HEADER_INC'))
 	{
@@ -4780,8 +4794,8 @@ function page_header($page_title = '', $display_online_list = true, $item_id = 0
 		'T_STYLESHEET_LINK'		=> "{$web_path}styles/" . rawurlencode($user->theme['theme_path']) . '/theme/stylesheet.css',
 		'T_STYLESHEET_LANG_LINK'    => "{$web_path}styles/" . rawurlencode($user->theme['theme_path']) . '/theme/' . $user->lang_name . '/stylesheet.css',
 		'T_STYLESHEET_NAME'		=> $user->theme['theme_name'],
-		'T_JQUERY_LINK'			=> ($config['load_jquery_cdn'] && !empty($config['load_jquery_url'])) ? $config['load_jquery_url'] : "{$web_path}assets/javascript/jquery.js",
-		'S_JQUERY_FALLBACK'		=> ($config['load_jquery_cdn']) ? true : false,
+		'T_JQUERY_LINK'			=> ($config['load_jquery_cdn'] && !empty($config['load_jquery_url']) && !$request->is_set('altjQuery') ) ? $config['load_jquery_url'] : "{$web_path}assets/javascript/jquery.js",
+		'S_USING_EXT_JQUERY'	=> ($config['load_jquery_cdn'] && !empty($config['load_jquery_url']) && !$request->is_set('altjQuery') ),
 
 		'T_THEME_NAME'			=> rawurlencode($user->theme['theme_path']),
 		'T_THEME_LANG_NAME'		=> $user->data['user_lang'],

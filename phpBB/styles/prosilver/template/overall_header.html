@@ -74,7 +74,7 @@
 
 // ]]>
 </script>
-<script type="text/javascript" src="{T_SUPER_TEMPLATE_PATH}/forum_fn.js"></script>
+<script defer type="text/javascript" src="{T_TEMPLATE_PATH}/forum_fn.js"></script>
 
 <link href="{T_THEME_PATH}/print.css" rel="stylesheet" type="text/css" media="print" title="printonly" />
 <link href="{T_STYLESHEET_LINK}" rel="stylesheet" type="text/css" media="screen, projection" />
@@ -83,6 +83,26 @@
 <!-- IF S_CONTENT_DIRECTION eq 'rtl' -->
 	<link href="{T_THEME_PATH}/bidi.css" rel="stylesheet" type="text/css" media="screen, projection" />
 <!-- ENDIF -->
+
+
+<!--[if IE]>
+	<script type="text/javascript" src="{T_JQUERY_LINK}"></script>
+	<!-- IF S_USING_EXT_JQUERY -->
+	<script type="text/javascript">
+	// IE < 9 does not have onerror working so an alternative is needed
+		if(!window.jQuery){
+			// append the "altjQuery" GET variable
+			location.href = (location.href.indexOf('?') !== -1) ? location.href.replace(/\?/, '?altjQuery&') : (location.href.indexOf('#') === -1 ? location.href + '?altjQuery': location.href.replace(/#/, '?altjQuery#'));
+		}
+	</script>
+	<!-- ENDIF -->
+<!-- <![endif]-->
+<!--[if !IE]> -->
+	<script defer type="text/javascript" src="{T_JQUERY_LINK}" onerror="<!-- IF S_USING_EXT_JQUERY -->location.href = (location.href.indexOf('?') !== -1) ? location.href.replace(/\?/, '?altjQuery&') : (location.href.indexOf('#') === -1 ? location.href + '?altjQuery': location.href.replace(/#/, '?altjQuery#'));<!-- ENDIF -->"></script>
+<!-- <![endif]-->
+
+<script defer type="text/javascript" src="{T_ASSETS_PATH}/javascript/core.js"></script>
+<script defer type="text/javascript" src="{T_TEMPLATE_PATH}/ajax.js"></script>
 
 </head>
 
