@@ -121,6 +121,13 @@ gen_sort_selects($limit_days, $sort_by_text, $sort_days, $sort_key, $sort_dir, $
 
 if ($keywords || $author || $author_id || $search_id || $submit)
 {
+	// These are the forums from where you can read all topics
+	// For the other ones, you can only read the topics you started
+	$unlimited_read_forums = $auth->acl_getf('f_read_other', true);
+	//limit the appearence
+	$topic_limiter = ' AND (' . $db->sql_in_set('t.forum_id', array_keys($unlimited_read_forums)) .'
+							OR ' . $user->data['user_id'] . ' = t.topic_poster ) ';
+
 	// clear arrays
 	$id_ary = array();
 
@@ -332,6 +339,7 @@ if ($keywords || $author || $author_id || $search_id || $submit)
 					FROM ' . TOPICS_TABLE . " t
 					WHERE t.topic_moved_id = 0
 						$last_post_time_sql
+						$topic_limiter
 						" . str_replace(array('p.', 'post_'), array('t.', 'topic_'), $m_approve_fid_sql) . '
 						' . ((sizeof($ex_fid_ary)) ? ' AND ' . $db->sql_in_set('t.forum_id', $ex_fid_ary, true) : '') . '
 					ORDER BY t.topic_last_post_time DESC';
@@ -363,6 +371,7 @@ if ($keywords || $author || $author_id || $search_id || $submit)
 					$sort_join = USERS_TABLE . ' u, ';
 					$sql_sort = ' AND u.user_id = p.poster_id ' . $sql_sort;
 				}
+
 				if ($show_results == 'posts')
 				{
 					$sql = "SELECT p.post_id
@@ -370,6 +379,7 @@ if ($keywords || $author || $author_id || $search_id || $submit)
 						WHERE t.topic_replies = 0
 							AND p.topic_id = t.topic_id
 							$last_post_time
+							$topic_limiter
 							$m_approve_fid_sql
 							" . ((sizeof($ex_fid_ary)) ? ' AND ' . $db->sql_in_set('p.forum_id', $ex_fid_ary, true) : '') . "
 							$sql_sort";
@@ -383,6 +393,7 @@ if ($keywords || $author || $author_id || $search_id || $submit)
 							AND t.topic_moved_id = 0
 							AND p.topic_id = t.topic_id
 							$last_post_time
+							$topic_limiter
 							$m_approve_fid_sql
 							" . ((sizeof($ex_fid_ary)) ? ' AND ' . $db->sql_in_set('p.forum_id', $ex_fid_ary, true) : '') . "
 						$sql_sort";
@@ -421,7 +432,8 @@ if ($keywords || $author || $author_id || $search_id || $submit)
 				if ($show_results == 'posts')
 				{
 					$sql = 'SELECT p.post_id
-						FROM ' . POSTS_TABLE . ' p
+						FROM ' . POSTS_TABLE . ' p, ' . TOPICS_TABLE . ' t
+						' . $topic_limiter . '
 						WHERE p.post_time > ' . $user->data['user_lastvisit'] . "
 							$m_approve_fid_sql
 							" . ((sizeof($ex_fid_ary)) ? ' AND ' . $db->sql_in_set('p.forum_id', $ex_fid_ary, true) : '') . "
@@ -434,6 +446,7 @@ if ($keywords || $author || $author_id || $search_id || $submit)
 						FROM ' . TOPICS_TABLE . ' t
 						WHERE t.topic_last_post_time > ' . $user->data['user_lastvisit'] . '
 							AND t.topic_moved_id = 0
+							' . $topic_limiter . '
 							' . str_replace(array('p.', 'post_'), array('t.', 'topic_'), $m_approve_fid_sql) . '
 							' . ((sizeof($ex_fid_ary)) ? 'AND ' . $db->sql_in_set('t.forum_id', $ex_fid_ary, true) : '') . "
 						$sql_sort";
@@ -549,6 +562,7 @@ if ($keywords || $author || $author_id || $search_id || $submit)
 		$sql_where .= $db->sql_in_set(($show_results == 'posts') ? 'p.post_id' : 't.topic_id', $id_ary);
 		$sql_where .= (sizeof($ex_fid_ary)) ? ' AND (' . $db->sql_in_set('f.forum_id', $ex_fid_ary, true) . ' OR f.forum_id IS NULL)' : '';
 		$sql_where .= ($show_results == 'posts') ? $m_approve_fid_sql : str_replace(array('p.post_approved', 'p.forum_id'), array('t.topic_approved', 't.forum_id'), $m_approve_fid_sql);
+		$sql_where .= $topic_limiter;
 	}
 
 	if ($show_results == 'posts')
