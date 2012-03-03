@@ -1141,7 +1141,7 @@ class phpbb_feed_forums extends phpbb_feed_base
 			if(in_array((int)$row['forum_id'], $this->unlimited_reading_forums, true))
 			{
 				$item_row['statistics'] = $user->lang('TOTAL_TOPICS', (int) $row['forum_topics'])
-					. ' ' . $this->separator_stats . ' ' . $user->lang('TOTAL_POSTS_OTHER', (int) $row['forum_posts']);
+					. ' ' . $this->separator_stats . ' ' . $user->lang('TOTAL_POSTS_COUNT', (int) $row['forum_posts']);
 			}
 			else
 			{
