@@ -181,7 +181,8 @@ function display_forums($root_data = '', $display_moderators = true, $return_mod
 		$row['forum_topics'] = ($auth->acl_get('m_approve', $forum_id)) ? $row['forum_topics_real'] : $row['forum_topics'];
 
 		// Display active topics from this forum?
-		if ($show_active && $row['forum_type'] == FORUM_POST && $auth->acl_get('f_read', $forum_id) && ($row['forum_flags'] & FORUM_FLAG_ACTIVE_TOPICS))
+		if ($show_active && $row['forum_type'] == FORUM_POST && ($row['forum_flags'] & FORUM_FLAG_ACTIVE_TOPICS) &&
+			$auth->acl_get('f_read', $forum_id) && $auth->acl_get('f_read_other', $forum_id))
 		{
 			if (!isset($active_forum_ary['forum_topics']))
 			{
@@ -966,6 +967,7 @@ function display_user_activity(&$userdata)
 	$fid_m_approve = $auth->acl_getf('m_approve', true);
 	$sql_m_approve = (!empty($fid_m_approve)) ? 'OR ' . $db->sql_in_set('forum_id', array_keys($fid_m_approve)) : '';
 
+	// Please check if this leaks data on letting users view the existance of threads they should not be able to see
 	// Obtain active forum
 	$sql = 'SELECT forum_id, COUNT(post_id) AS num_posts
 		FROM ' . POSTS_TABLE . '
@@ -995,6 +997,7 @@ function display_user_activity(&$userdata)
 	$forum_ary_topic = array_unique(array_merge($forum_ary, $user->get_passworded_forums()));
 	$forum_sql_topic = (!empty($forum_ary_topic)) ? 'AND ' . $db->sql_in_set('forum_id', $forum_ary_topic, true) : '';
 
+	// Please check if this leaks data on letting users view the existance of threads they should not be able to see
 	$sql = 'SELECT topic_id, COUNT(post_id) AS num_posts
 		FROM ' . POSTS_TABLE . '
 		WHERE poster_id = ' . $userdata['user_id'] . "
