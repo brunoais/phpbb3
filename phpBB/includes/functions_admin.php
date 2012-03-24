@@ -2679,7 +2679,7 @@ function view_log($mode, &$log, &$log_count, $limit = 0, $offset = 0, $forum_id 
 
 		// This query is not really needed if move_topics() updates the forum_id field,
 		// although it's also used to determine if the topic still exists in the database
-		$sql = 'SELECT topic_id, forum_id
+		$sql = 'SELECT topic_id, forum_id, topic_poster
 			FROM ' . TOPICS_TABLE . '
 			WHERE ' . $db->sql_in_set('topic_id', array_map('intval', $topic_id_list));
 		$result = $db->sql_query($sql);
@@ -2688,7 +2688,8 @@ function view_log($mode, &$log, &$log_count, $limit = 0, $offset = 0, $forum_id 
 
 		while ($row = $db->sql_fetchrow($result))
 		{
-			if ($auth->acl_get('f_read', $row['forum_id']))
+			if ($auth->acl_get('f_read', $row['forum_id']) &&
+				($row['topic_poster'] == $user->data['user_id'] || $auth->acl_get('f_read_other', $row['forum_id'])))
 			{
 				$is_auth[$row['topic_id']] = $row['forum_id'];
 			}
