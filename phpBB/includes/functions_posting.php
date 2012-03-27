@@ -899,7 +899,7 @@ function load_drafts($topic_id = 0, $forum_id = 0, $id = 0, $pm_action = '', $ms
 	$topic_rows = array();
 	if (sizeof($topic_ids))
 	{
-		$sql = 'SELECT topic_id, forum_id, topic_title
+		$sql = 'SELECT topic_id, forum_id, topic_title, topic_poster
 			FROM ' . TOPICS_TABLE . '
 			WHERE ' . $db->sql_in_set('topic_id', array_unique($topic_ids));
 		$result = $db->sql_query($sql);
@@ -921,7 +921,8 @@ function load_drafts($topic_id = 0, $forum_id = 0, $id = 0, $pm_action = '', $ms
 
 		if (isset($topic_rows[$draft['topic_id']])
 			&& (
-				($topic_rows[$draft['topic_id']]['forum_id'] && $auth->acl_get('f_read', $topic_rows[$draft['topic_id']]['forum_id']))
+				($topic_rows[$draft['topic_id']]['forum_id'] && $auth->acl_get('f_read', $topic_rows[$draft['topic_id']]['forum_id']) &&
+					($topic_rows[$draft['topic_id']]['topic_poster'] == $user->data['user_id'] || $auth->acl_get('f_read', $topic_rows[$draft['topic_id']]['forum_id'])))
 				||
 				(!$topic_rows[$draft['topic_id']]['forum_id'] && $auth->acl_getf_global('f_read'))
 			))
@@ -973,11 +974,20 @@ function topic_review($topic_id, $forum_id, $mode = 'topic_review', $cur_post_id
 	global $user, $auth, $db, $template, $bbcode, $cache;
 	global $config, $phpbb_root_path, $phpEx;
 
+	$table_join = '';
+	$join_condition = '';
+	if ($auth->acl_get('f_read', $forum_id) && !$auth->acl_get('f_read_other', $forum_id))
+	{
+		$table_join = ', ' . TOPICS_TABLE . ' t';
+		$join_condition = ' AND p.topic_id = t.topic_id AND t.topic_poster = ' . $user->data['user_id'];
+	}
+
 	// Go ahead and pull all data for this topic
 	$sql = 'SELECT p.post_id
-		FROM ' . POSTS_TABLE . ' p' . "
+		FROM ' . POSTS_TABLE . " p  $table_join
 		WHERE p.topic_id = $topic_id
-			" . ((!$auth->acl_get('m_approve', $forum_id)) ? 'AND p.post_approved = 1' : '') . '
+			$join_condition
+			" . ((!$auth->acl_get('m_approve', $forum_id)) ? ' AND p.post_approved = 1' : '') . '
 			' . (($mode == 'post_review') ? " AND p.post_id > $cur_post_id" : '') . '
 			' . (($mode == 'post_review_edit') ? " AND p.post_id = $cur_post_id" : '') . '
 		ORDER BY p.post_time ';
@@ -1261,18 +1271,37 @@ function user_notification($mode, $subject, $topic_title, $forum_name, $forum_id
 		return;
 	}
 
+	$exists_who_can_read = false;
+	$cannot_read_topic = array();
 	// Make sure users are allowed to read the forum
-	foreach ($auth->acl_get_list(array_keys($notify_rows), 'f_read', $forum_id) as $forum_id => $forum_ary)
+	// Register if they have only a limit view (!f_read_other) of the forum
+
+	$permissions = $auth->acl_get_list(array_keys($notify_rows), array('f_read','f_read_other'), $forum_id);
+	if (isset($permissions[$forum_id]['f_read']) && is_array($permissions[$forum_id]['f_read']))
 	{
-		foreach ($forum_ary as $auth_option => $user_ary)
+		$exists_who_can_read = true;
+		foreach ($permissions['f_read'] as $index => $user_id)
 		{
-			foreach ($user_ary as $user_id)
+			$notify_rows[$user_id]['allowed'] = true;
+			// he may be allowed to read but we want to make sure he is allowed to read it all
+			if (!isset($forum_ary['f_read_other'][$index]) || !$forum_ary['f_read_other'][$index])
 			{
-				$notify_rows[$user_id]['allowed'] = true;
+				$cannot_read_topic[$user_id] = $user_id;
 			}
 		}
 	}
 
+	// Make sure that the topic owner always receives the warning even if
+	// he has limited access to topics he can see (!f_read_other)
+	if ($exists_who_can_read && !empty($cannot_read_topic)){
+		$sql = 'SELECT t.topic_poster
+				FROM TOPICS_TABLE t
+				WHERE ' . (int)$topic_id .' = t.topic_id';
+
+		$result = $db->sql_query_limit($sql, 1);
+		unset($cannot_read_topic[(int)$db->sql_fetchfield('topic_poster')]);
+		$db->sql_freeresult($result);
+	}
 
 	// Now, we have to do a little step before really sending, we need to distinguish our users a little bit. ;)
 	$msg_users = $delete_ids = $update_notification = array();
