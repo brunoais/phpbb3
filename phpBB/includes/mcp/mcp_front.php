@@ -78,9 +78,13 @@ function mcp_front_view($id, $mode, $action)
 
 			if ($total)
 			{
+				$forum_all_readable_list = array_values(array_intersect($forum_list, get_forum_list('f_read_other')));
+
 				$sql = 'SELECT p.post_id, p.post_subject, p.post_time, p.post_attachment, p.poster_id, p.post_username, u.username, u.username_clean, u.user_colour, t.topic_id, t.topic_title, t.topic_first_post_id, p.forum_id
 					FROM ' . POSTS_TABLE . ' p, ' . TOPICS_TABLE . ' t, ' . USERS_TABLE . ' u
 					WHERE ' . $db->sql_in_set('p.post_id', $post_list) . '
+						AND (t.topic_poster = ' . $user->data['user_id'] '
+							OR  ' $db->sql_in_set('f.forum_id', $forum_all_readable_list) . ')
 						AND t.topic_id = p.topic_id
 						AND p.poster_id = u.user_id
 					ORDER BY p.post_time DESC';
@@ -145,6 +149,8 @@ function mcp_front_view($id, $mode, $action)
 
 			if ($total)
 			{
+				$forum_all_readable_list = array_values(array_intersect($forum_list, get_forum_list('f_read_other')));
+
 				$sql_ary = array(
 					'SELECT'	=> 'r.report_time, p.post_id, p.post_subject, p.post_time, p.post_attachment, u.username, u.username_clean, u.user_colour, u.user_id, u2.username as author_name, u2.username_clean as author_name_clean, u2.user_colour as author_colour, u2.user_id as author_id, t.topic_id, t.topic_title, f.forum_id, f.forum_name',
 
@@ -164,6 +170,8 @@ function mcp_front_view($id, $mode, $action)
 					),
 
 					'WHERE'		=> 'r.post_id = p.post_id
+						AND (t.topic_poster = ' . $user->data['user_id'] '
+							OR  ' $db->sql_in_set('f.forum_id', $forum_all_readable_list) . ')
 						AND r.pm_id = 0
 						AND r.report_closed = 0
 						AND r.reason_id = rr.reason_id
