@@ -2363,6 +2363,12 @@ function change_database_data(&$no_updates, $version)
 				set_config('teampage_memberships', '1');
 			}
 
+			// Add module_basename ucp_pm for UCP_PM
+			$sql = "UPDATE " . MODULES_TABLE . "
+				SET module_basename = 'ucp_pm'
+				WHERE module_langname = 'UCP_PM'";
+			$db->sql_query($sql);
+
 			$no_updates = false;
 
 		break;
