@@ -11,7 +11,7 @@
 </head>
 <body>
 <?php
-	$string = '[/abc][abc=aij] [/ubc][ubc][ab]a [abc="uij]f\"fu"] [/abc][/ubc][abc uuo="wiu\"" ] [/ubc][/abc][/ab]b [/abc] c';
+	$string = '[/abc][abc=aij] [/ubc][ubc][ab]a [abc="uij]f\"fu"] [/abc][/ubc][abc param1="it is \"val1\"" param2="it is \"val2\"" ] [/ubc][/abc][/ab]b [abc][/abc] c';
 	
 	$BBCode_tags = array('abc', 'ubc');
 	
@@ -60,30 +60,30 @@
 	
 	$subject = substr($string, $posInit[1], $posEnd[0] - $posInit[1] + strlen('[/abc]'));
 	
-	$callback_replace = preg_replace_callback('%\[([A-z-][A-z0-9-]*)' .
-	'(?:' . 
-	'(?:=(?:'.
-	'"([^"]*(?:\\\\.[^"\\\\]*)*)"'.
-	'|'.
-	'([^"\\\\][^]]+)))'.
-	'|'.
-	'((?:\s+(?:[A-z][A-z0-9]+)=(?:"(?:[^"\\\\]*(?:\\\\.[^"\\\\]*)*)"))+)\s*'.
-	')?'.
-	'\]%',
-			function ($matches){
-				$returner = '['. $matches[1] .' ';
+	// $callback_replace = preg_replace_callback('%\[([A-z-][A-z0-9-]*)' .
+	// '(?:' . 
+	// '(?:=(?:'.
+	// '"([^"]*(?:\\\\.[^"\\\\]*)*)"'.
+	// '|'.
+	// '([^"\\\\][^]]+)))'.
+	// '|'.
+	// '((?:\s+(?:[A-z][A-z0-9]+)=(?:"(?:[^"\\\\]*(?:\\\\.[^"\\\\]*)*)"))+)\s*'.
+	// ')?'.
+	// '\]%',
+			// function ($matches){
+				// $returner = '['. $matches[1] .' ';
 				
-				if(isset($matches[2])){
-					$returner .= 'default="' . str_replace('\"', '&quot;',$matches[2]) . '"';
-				}elseif(isset($matches[3])){
-					$returner .= 'default="' . $matches[3] . '"';
-				}elseif(isset($matches[4])){
-					$returner .= $matches[4];
-				}
-				$returner .= '"]';
-				// var_dump($returner);
-				return $returner;
-			}, $string);
+				// if(isset($matches[2])){
+					// $returner .= 'default="' . str_replace('\"', '&quot;',$matches[2]) . '"';
+				// }elseif(isset($matches[3])){
+					// $returner .= 'default="' . $matches[3] . '"';
+				// }elseif(isset($matches[4])){
+					// $returner .= $matches[4];
+				// }
+				// $returner .= '"]';
+				// // var_dump($returner);
+				// return $returner;
+			// }, $string);
 	
 	
 	// var_dump($callback_replace);
@@ -97,6 +97,19 @@
 	
 	$regexedBBCode = implode('|', $BBCode_tags);
 	
+	function parseInnerParameters($parametersString){
+		preg_match_all(
+		'%([A-z][A-z0-9]+)=(?:"([^"\\\\]*(?:\\\\.[^"\\\\]*)*)")%', $parametersString, $parametersMatch, PREG_SET_ORDER);
+		
+		$parameters = array();
+		
+		foreach($parametersMatch AS $parameter){			
+			$parameters[$parameter[1]] = str_replace('\"', '&quot;', $parameter[2]);
+		}
+		
+		return $parameters;
+	}
+	
 	
 	preg_match_all(
 	'%'.
@@ -109,10 +122,10 @@
 	'|'.
 	'((?:\s+(?:[A-z][A-z0-9]+)=(?:"(?:[^"\\\\]*(?:\\\\.[^"\\\\]*)*)"))+)\s*'.
 	')?'.
-	'\]'.
+	'\]()'.
 	'|'.
-	'\[/('.$regexedBBCode.')\]'.
-	'%',$string, $matched,  PREG_SET_ORDER  | PREG_OFFSET_CAPTURE);
+	'\[/('.$regexedBBCode.')\]()'.
+	'%',$string, $matched, PREG_SET_ORDER | PREG_OFFSET_CAPTURE);
 	
 	// var_dump($matched);
 	
@@ -122,33 +135,37 @@
 	$theTags = array();
 	
 	foreach($matched AS $match){
-		if (isset($match[1][0]) && $match[1][0] != ""){
+		if (isset($match[6][0])){
+			$endTags[$match[6][0]][] = $match[6];
+			if(isset($theTags[$match[6][0]]['startingTags'])){
+				$theTags[$match[6][0]]['endingTags'][] = array(	'name' => $match[6][0],
+																'start_position' => $match[6][1],
+																'end_position' => $match[7][1]);
+			}
+		}elseif (isset($match[1][0]) && $match[1][0] != ""){
 			$tag = array();
 			$tag['name'] = $match[1][0];
-			$tag['position'] = $match[1][1];
+			$tag['start_position'] = $match[1][1];
+			$tag['end_position'] = $match[5][1];
+			
 			// var_dump($match[1][0] . " at position: " . $match[1][1]);
 			
 			// Only one of these will ever match
-			
-			if (isset($match[2][0])){
-				// 1 parameter bounded by quotes
-				$tag['parameters'] = str_replace('\"', '&quot;', $match[2][0]);
-			}elseif (isset($match[3][0])){
+			// var_dump($match);
+			if ($match[4][1] > -1){
+				// multiple parameters
+				$tag['parameters'] = parseInnerParameters($match[4][0]);
+			}elseif ($match[3][1] > -1){
 				// 1 parameter bounded by the end of the start tag
 				$tag['parameters'] = $match[3][0];
-			}elseif (isset($match[4][0])){
-				// multiple parameters
-				$tag['parameters'] = $match[4][0];
+			}elseif ($match[2][1] > -1){
+				// 1 parameter bounded by quotes
+				$tag['parameters'] = str_replace('\"', '&quot;', $match[2][0]);
 			}
 			
 			$startingTags[$tag['name']][] = $tag;
 			$theTags[$tag['name']]['startingTags'][] = $tag;
 		
-		}elseif (isset($match[5][0])){
-			$endTags[$match[5][0]][] = $match[5];
-			if(isset($theTags[$match[5][0]]['startingTags'])){
-				$theTags[$match[5][0]]['endingTags'][] = array('name' => $match[5][0], 'position' => $match[5][1]);
-			}
 		}
 	}
 	
