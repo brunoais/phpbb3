@@ -14,8 +14,88 @@
 	$string = '[/abc][abc=aij] [/ubc][ubc][ab]a [abc="uij]f\"fu"] [/abc][/ubc][abc param1="it is \"val1\"" param2="it is \"val2\"" ] [/ubc][/abc][/ab]b [abc][/abc] c[/ubc][ubc]';
 	
 	// $BBCode_tags = array('abc', 'cbc', 'dbc');
-	$BBCode_tags = array('abc', 'ubc');
+	$BBCode_tags = array('cbc');
+	
+	
+// Not so good attempt to try to find the BBCode tags in the string
+// DISCARDED: There's no guarantee that it will follow the tree-like way of the BBCode.
 
+	preg_match_all('%\[abc.*?\[/abc\]%', $string, $string_match);
+
+	// var_dump($string, $string_match);
+	?>
+<?php
+	// Trying to find all the BBCode tags for the BBCode [abc].
+	// The idea seems to be viable.
+	$posInit = array();
+	$posInit[] = strpos($string, '[abc');
+	$posInit[] = strpos($string, '[abc', $posInit[0] + 1);
+	// $posInit[] = strpos($string, '[abc', $posInit[1] + 1);
+
+	// var_dump($posInit);
+	
+	// After knowing where the start tags are, try to find the closing tags for each tag
+	// Seems to be working
+	$posEnd = array();
+	$posEnd[] = strpos($string, '[/abc]', $posInit[1] + 1);
+	$posEnd[] = strpos($string, '[/abc]', $posEnd[0] + 1);
+	// $posEnd[] = strpos($string, '[/abc]', $posInit[1] + 1);
+	
+	
+	// var_dump(substr($string, $posInit[0], $posEnd[1] - $posInit[0] + strlen('[/abc]')));
+	// var_dump(substr($string, $posInit[1], $posEnd[0] - $posInit[1] + strlen('[/abc]')));
+	
+	?>
+<?php
+	
+	// Find and register all what's inside the tag itself (Attempt1)
+	
+	// preg_match('%\[abc(?:=(?:"([^"]*(?:\\\\.[^"\\\\]*)*)"|([^"\\\\][^]]+)))?\]%', $string, $parametersFound);
+	
+	// var_dump($parametersFound);
+	
+	?>
+<?php
+	
+	// Find and register all what's inside the tag itself (Attempt2)
+	
+	$subject = substr($string, $posInit[1], $posEnd[0] - $posInit[1] + strlen('[/abc]'));
+	
+	// $callback_replace = preg_replace_callback('%\[([A-z-][A-z0-9-]*)' .
+	// '(?:' . 
+	// '(?:=(?:'.
+	// '"([^"]*(?:\\\\.[^"\\\\]*)*)"'.
+	// '|'.
+	// '([^"\\\\][^]]+)))'.
+	// '|'.
+	// '((?:\s+(?:[A-z][A-z0-9]+)=(?:"(?:[^"\\\\]*(?:\\\\.[^"\\\\]*)*)"))+)\s*'.
+	// ')?'.
+	// '\]%',
+			// function ($matches){
+				// $returner = '['. $matches[1] .' ';
+				
+				// if(isset($matches[2])){
+					// $returner .= 'default="' . str_replace('\"', '&quot;',$matches[2]) . '"';
+				// }elseif(isset($matches[3])){
+					// $returner .= 'default="' . $matches[3] . '"';
+				// }elseif(isset($matches[4])){
+					// $returner .= $matches[4];
+				// }
+				// $returner .= '"]';
+				// // var_dump($returner);
+				// return $returner;
+			// }, $string);
+	
+	
+	// var_dump($callback_replace);
+	
+	?>	
+	Different try
+	reason:
+	The previous one was not giving the position of the matches, 2 scans were needed. This should solve that.
+	
+<?php
+	
 	$regexedBBCode = implode('|', $BBCode_tags);
 	
 	function parseInnerParameters($parametersString){
@@ -47,6 +127,8 @@
 	'|'.
 	'\[/('.$regexedBBCode.')\]()'.
 	'%',$string, $matched, PREG_SET_ORDER | PREG_OFFSET_CAPTURE);
+	
+	// var_dump($matched);
 	
 	$orderedTags = array();
 	
@@ -94,7 +176,33 @@
 	// var_dump($endTags);
 	// echo "\n\n\n";
 	// var_dump($tagsKind);
-
+	
+	
+	// $abc = array(1, 2, 3, 4);
+	
+	// var_dump(current($abc));
+	// var_dump(next($abc));
+	// var_dump(next($abc));
+	// var_dump(next($abc));
+	// var_dump(next($abc));
+	// // var_dump(reset($abc));
+	// var_dump(prev($abc));
+	// var_dump(end($abc));
+	// var_dump(prev($abc));
+	// unset($abc[key($abc)]);
+	// var_dump(prev($abc));
+	// var_dump(next($abc));
+	// var_dump(end($abc));
+	// var_dump(next($abc));
+	// var_dump(next($abc));
+	// var_dump(end($abc));
+	// var_dump(reset($abc));
+	// var_dump(next($abc));
+	// var_dump(next($abc));
+	// var_dump(next($abc));
+	// var_dump(next($abc));
+	// var_dump(end($abc));
+	
 	
 	$tagsTree;
 	
@@ -103,10 +211,12 @@
 	$BBCodeTree = array();
 	
 	$BBCodeTagMatch = array();
-		
+	
 	foreach ($tagsKind as $BBCodeName => $data){
 		
 		echo "\n\n\n";
+		
+		var_dump($data);
 		
 		while ($data['startingTags'] != array() && $data['endingTags'] != array()){
 			// There's, at least, one possible
@@ -116,6 +226,12 @@
 			
 			reset($data['startingTags']);
 			
+			// // Find an appropriate opening tag
+			// while(	isset($data['startingTags'][key($data['startingTags']) + 1]) &&
+					// $data['startingTags'][key($data['startingTags']) + 1]['end_position'] < $endingTag['start_position']){
+				// // var_dump(key($data['startingTags']));
+				// next($data['startingTags']);
+			// }
 			// Find an appropriate opening tag
 			while(	next($data['startingTags']) !== false &&
 					current($data['startingTags'])['end_position'] < $endingTag['start_position']){
@@ -126,17 +242,16 @@
 			// The test showed that the next element is beyond what I'm looking for, so the previous is the one I want
 			prev($data['startingTags']);
 			
-			// var_dump("current", current($data['startingTags']));
+			var_dump(current($data['startingTags']));
 			
 			if(current($data['startingTags']) === false){
 				// If I go beyond the top limits of the array. The only way to get back is by using end(), prev() will not work.
 				end($data['startingTags']);
 			}
 			
+			var_dump(current($data['startingTags']));
 			
-			if(current($data['startingTags'])['end_position'] < $endingTag['start_position']){
-				
-				// var_dump("selected", current($data['startingTags']));
+			if(current($data['startingTags']) !== false){
 				
 				// K'ay, this is a match for that closing tag
 				$BBCodeTagMatch[$BBCodeName][] = array(
