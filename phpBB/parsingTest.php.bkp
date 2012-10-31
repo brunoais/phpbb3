@@ -273,6 +273,7 @@
 	echo "\n\n\n";
 	var_dump($BBCodeTagMatch);
 	
+	// Abandoned, there must be a better way.
 	// function buildTree($position, &$originalArray, &$arraySize, &$returnPosition){
 		
 		// if($position === $arraySize){
