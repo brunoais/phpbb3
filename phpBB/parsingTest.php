@@ -90,7 +90,7 @@
 	foreach($matched AS $match){
 		if (isset($match[6][0])){
 			// It's a closing tag
-			if(isset($tagsKind[$match[6][0]]['startingTags'])){
+			if (isset($tagsKind[$match[6][0]]['startingTags'])){
 				// If there's already an opening tag
 				// $orderedTags[] = array(	'name' => $match[6][0],
 										// 'type' => 'closing_tag');
@@ -167,12 +167,12 @@
 			prev($data['startingTags']);
 			
 			
-			if(current($data['startingTags']) === false){
+			if (current($data['startingTags']) === false){
 				// If I go beyond the top limits of the array. The only way to get back is by using end(), prev() will not work.
 				end($data['startingTags']);
 			}
 			
-			if(current($data['startingTags'])['end_position'] < $endingTag['start_position']){
+			if (current($data['startingTags'])['end_position'] < $endingTag['start_position']){
 								
 				// K'ay, this is a match for that closing tag
 				$BBCodeTagMatch[$BBCodeName][] = array(
@@ -216,59 +216,63 @@
 	
 	// echo "\n\n\n";
 	// var_dump($BBCodeOrderedTagList);
-		
-	$BBCodeTree[] = &$BBCodeOrderedTagList[key($BBCodeOrderedTagList)];
 	
+	
+	// push the first element into the tree	
+	$BBCodeTree[] = &$BBCodeOrderedTagList[key($BBCodeOrderedTagList)];
+	// and also make it the first parent that will receive the child Nodes
 	$currentParent = &$BBCodeOrderedTagList[key($BBCodeOrderedTagList)];
 	
-	$children = array();
-	
+	// Get the next element of the list and start crackin'!
 	next($BBCodeOrderedTagList);
 	
 	while(current($BBCodeOrderedTagList) !== false){
+		// While we didn't check about all tags found
+		
 		// echo "\n";
 		// var_dump("Currentparent", $currentParent['start_tag']['parameters']['child']);
-		// var_dump(current($BBCodeOrderedTagList)['start_tag']['parameters']['child']);
 		
-		if(current($BBCodeOrderedTagList)['start_tag']['start_position'] <= $currentParent['end_tag']['end_position']){
-			if(current($BBCodeOrderedTagList)['end_tag']['end_position'] <= $currentParent['end_tag']['end_position']){
-				// Tag is inside this1. So this tag is part of its children
-				// $currentParent['children'][] = current($BBCodeOrderedTagList);
+		// Check if this tag is inside the current parent
+		if (current($BBCodeOrderedTagList)['start_tag']['start_position'] <= $currentParent['end_tag']['end_position']){
+			if (current($BBCodeOrderedTagList)['end_tag']['end_position'] <= $currentParent['end_tag']['end_position']){
+				// Tag is inside this parent. So this tag is part of this parent's children
 				
-				// push the new parent
+				// push the previous parent
 				$tagStack[] = &$currentParent;
 				
-				if(!isset($currentParent['children'])){
+				// Only needed while debugging. For production porpuses (and for the sake of speed) this should be removed
+				if (!isset($currentParent['children'])){
 					var_dump("newChild");
 					$currentParent['children'] = array();
 				}
 				// var_dump("child", $BBCodeOrderedTagList[key($BBCodeOrderedTagList)]['start_tag']['parameters']['child']);
 				// var_dump("pushInto", $currentParent['start_tag']['parameters']['child']);
 				
+				// Make this tag children of the current parent tag
 				$currentParent['children'][] = &$BBCodeOrderedTagList[key($BBCodeOrderedTagList)];
 				// echo "\n";
 				// var_dump($currentParent);
-				
-				// unset($currentParent);
-				
+				// Update the parent tag
 				$currentParent = &$BBCodeOrderedTagList[key($BBCodeOrderedTagList)];
 				
 				// var_dump("newParent", $currentParent['start_tag']['parameters']['child']);
 				
 			}else{
 				// Bad nesting. This tag is meant to dissapear from this world! Well, not really... Just read it as text.
+				
 				// var_dump('bad nesting ' . key($BBCodeOrderedTagList));
 				// unset($BBCodeOrderedTagList[key($BBCodeOrderedTagList)]);
 			}
 			next($BBCodeOrderedTagList);
-		}else /* if(current($BBCodeOrderedTagList)['start_tag']['start_position'] > $currentParent['end_tag']['end_position']) */{
+		}else /* if (current($BBCodeOrderedTagList)['start_tag']['start_position'] > $currentParent['end_tag']['end_position']) */{
 			// Close previous tag here. There are no more children.
 			
 			// var_dump("closing", $currentParent['start_tag']['parameters']['child']);
-			// var_dump("unpopedStack", end($tagStack)['start_tag']['parameters']['child']);
 			
-			if(end($tagStack) === false){
+			if (end($tagStack) === false){
 				// var_dump("stackEmpty", $currentParent['start_tag']['parameters']['child']);
+				
+				// This tag belongs to the root, so it needs to be directly added to the tree's root
 				
 				$currentParent = &$BBCodeOrderedTagList[key($BBCodeOrderedTagList)];
 				$BBCodeTree[] = &$BBCodeOrderedTagList[key($BBCodeOrderedTagList)];
@@ -276,13 +280,14 @@
 				next($BBCodeOrderedTagList);
 				// var_dump("nextVictim", $currentParent['start_tag']['parameters']['child']);
 			}else{
-				// $tagStack[key($tagStack)] = &$currentParent;
-				// $currentParent = &$BBCodeOrderedTagList[key($BBCodeOrderedTagList)];
-				
+				// Process the closing of the tag
 				$currentParent = &$tagStack[key($tagStack)];
+				// Pop from the stack
 				unset($tagStack[key($tagStack)]);
 				
 				// var_dump("newParent", $currentParent['start_tag']['parameters']['child']);
+				
+				// Really! no next() here. 
 			}
 			
 			// var_dump($currentParent);
