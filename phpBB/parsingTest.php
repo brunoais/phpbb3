@@ -1,27 +1,45 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html lang="en">
-<head>
-	<meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
-	<title></title>
-	<style type="text/css">
-		body{
-			white-space:pre;
-		}
-	</style>
-</head>
-<body>
 <?php
-	$string = '[/abc][abc=aij] [/ubc][ubc][ab]a [abc="uij]f\"fu"] [/abc][/ubc][abc param1="it is \"val1\"" param2="it is \"val2\"" ] [/ubc][/abc][/ab]b [abc][/abc] c[/ubc][ubc][/ubc][/ubc][/ubc][ubc]';
+	
+	header('content-type: text/plain');
+
+	$string = '[/abc][abc=aij] [/ubc][ubc][ab]a [abc=badOverride][abc="I got a \"child\"!"][ubc rightBoss="true"] YAY[/ubc] [/abc][/ubc][/abc][abc param1="it is \"val1\"" param2="it is \"val2\"" ] [/ubc][/abc][/ab]b [abc][/abc] c[/ubc][ubc][/ubc][/ubc][/ubc][ubc]';
+	
+	// $string = '
+	// [abc child="0"]
+		// [abc child="0,0"] 
+		// [/abc]
+		// [ubc child="0,1"]
+			// [abc child="0,1,0"] 
+				// [ubc child="0,1,0,0"] 
+				// [/ubc]
+			// [/abc]
+		// [/ubc]
+	// [/abc]
+	// [abc child="1"]
+		// [abc child="1,0"]
+			// [ubc child="1,0,0"] 
+			// [/ubc]
+		// [/abc]
+		// [ubc child="1,1"]
+			// [abc child="1,1,0"] 
+			// [/abc]
+		// [/ubc]
+	// [/abc]';
 	
 	// $BBCode_tags = array('abc', 'cbc', 'dbc');
-	// $BBCode_tags = array('abc', 'ubc');
-	$BBCode_tags = array('ubc');
+	$BBCode_tags = array('abc', 'ubc');
+	// $BBCode_tags = array('ubc', 'abc');
+	// $BBCode_tags = array('abc');
+	// $BBCode_tags = array('ubc');
 
 	// The list of BBCodes for the regex matcher
 	$regexedBBCode = implode('|', $BBCode_tags);
 	
+	
+	// Step 1: Find opening and closing tags in the text.
+	
 	function parseInnerParameters($parametersString){
-		
+	
 		// This will parse all parameters in this multiparameter tag
 		// These parameters must follow about the same rules as the parameters in XML.
 		// As usual, if it is invalid, it is just ignored
@@ -120,13 +138,16 @@
 	
 	$tagsKinds = $tagsKind;
 	
-	$BBCodeTree = array();
-	
 	$BBCodeTagMatch = array();
+	
+	$BBCodeOrderedTagList = array();
+	
+	
+	// Step 2: Pair opening and closing tags. 
 		
 	foreach ($tagsKind as $BBCodeName => $data){
 		
-		echo "\n\n\n";
+		// echo "\n\n\n";
 		
 		while ($data['startingTags'] != array() && $data['endingTags'] != array()){
 			// There's, at least, one possible
@@ -159,6 +180,12 @@
 												'end_tag' => $endingTag
 											);
 				
+				$BBCodeOrderedTagList[current($data['startingTags'])['end_position']] = 
+											array(
+												'start_tag' => current($data['startingTags']),
+												'end_tag' => $endingTag
+											);
+				
 				unset($data['startingTags'][key($data['startingTags'])]);
 				
 			}else{
@@ -169,10 +196,108 @@
 		}
 	}
 	
+	// echo "\n\n\n";
+	// var_dump($BBCodeTagMatch);
+	
+	// echo "\n\n\n";
+	ksort($BBCodeOrderedTagList);
+	// var_dump($BBCodeOrderedTagList);
+	
+	$BBCodeOrderedTagListBak = $BBCodeOrderedTagList;
+	
+	
+	// Step 3: Build the tree of tags
+	
+	$BBCodeTree = array();
+	
+	$tagStack = array();
+			
+	ksort($BBCodeOrderedTagList);
+	
+	// echo "\n\n\n";
+	// var_dump($BBCodeOrderedTagList);
+		
+	$BBCodeTree[] = &$BBCodeOrderedTagList[key($BBCodeOrderedTagList)];
+	
+	$currentParent = &$BBCodeOrderedTagList[key($BBCodeOrderedTagList)];
+	
+	$children = array();
+	
+	next($BBCodeOrderedTagList);
+	
+	while(current($BBCodeOrderedTagList) !== false){
+		// echo "\n";
+		// var_dump("Currentparent", $currentParent['start_tag']['parameters']['child']);
+		// var_dump(current($BBCodeOrderedTagList)['start_tag']['parameters']['child']);
+		
+		if(current($BBCodeOrderedTagList)['start_tag']['start_position'] <= $currentParent['end_tag']['end_position']){
+			if(current($BBCodeOrderedTagList)['end_tag']['end_position'] <= $currentParent['end_tag']['end_position']){
+				// Tag is inside this1. So this tag is part of its children
+				// $currentParent['children'][] = current($BBCodeOrderedTagList);
+				
+				// push the new parent
+				$tagStack[] = &$currentParent;
+				
+				if(!isset($currentParent['children'])){
+					var_dump("newChild");
+					$currentParent['children'] = array();
+				}
+				// var_dump("child", $BBCodeOrderedTagList[key($BBCodeOrderedTagList)]['start_tag']['parameters']['child']);
+				// var_dump("pushInto", $currentParent['start_tag']['parameters']['child']);
+				
+				$currentParent['children'][] = &$BBCodeOrderedTagList[key($BBCodeOrderedTagList)];
+				// echo "\n";
+				// var_dump($currentParent);
+				
+				// unset($currentParent);
+				
+				$currentParent = &$BBCodeOrderedTagList[key($BBCodeOrderedTagList)];
+				
+				// var_dump("newParent", $currentParent['start_tag']['parameters']['child']);
+				
+			}else{
+				// Bad nesting. This tag is meant to dissapear from this world! Well, not really... Just read it as text.
+				// var_dump('bad nesting ' . key($BBCodeOrderedTagList));
+				// unset($BBCodeOrderedTagList[key($BBCodeOrderedTagList)]);
+			}
+			next($BBCodeOrderedTagList);
+		}else /* if(current($BBCodeOrderedTagList)['start_tag']['start_position'] > $currentParent['end_tag']['end_position']) */{
+			// Close previous tag here. There are no more children.
+			
+			// var_dump("closing", $currentParent['start_tag']['parameters']['child']);
+			// var_dump("unpopedStack", end($tagStack)['start_tag']['parameters']['child']);
+			
+			if(end($tagStack) === false){
+				// var_dump("stackEmpty", $currentParent['start_tag']['parameters']['child']);
+				
+				$currentParent = &$BBCodeOrderedTagList[key($BBCodeOrderedTagList)];
+				$BBCodeTree[] = &$BBCodeOrderedTagList[key($BBCodeOrderedTagList)];
+				
+				next($BBCodeOrderedTagList);
+				// var_dump("nextVictim", $currentParent['start_tag']['parameters']['child']);
+			}else{
+				// $tagStack[key($tagStack)] = &$currentParent;
+				// $currentParent = &$BBCodeOrderedTagList[key($BBCodeOrderedTagList)];
+				
+				$currentParent = &$tagStack[key($tagStack)];
+				unset($tagStack[key($tagStack)]);
+				
+				// var_dump("newParent", $currentParent['start_tag']['parameters']['child']);
+			}
+			
+			// var_dump($currentParent);
+		}
+		
+	}
+	
 	echo "\n\n\n";
-	var_dump($BBCodeTagMatch);
-
+	var_dump($BBCodeTree);
+	
+	// Step 4: Filter out child nodes that are not allowed.
+	
+	
+	
+	
+	// Step 5: (Is there a step5)?
 	
 	?>
-</body>
-</html>

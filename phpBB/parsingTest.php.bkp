@@ -11,6 +11,32 @@
 </head>
 <body>
 <?php
+	
+	// $a = array();
+	// $b = 1;
+	// $c = &$a;
+	// $d = &$b;
+	// $e;
+	
+	// echo "\n\n";
+	// var_dump($a, $b, $c, $d);
+	
+	// $a[] = &$d;
+	
+	// echo "\n\n";
+	// var_dump($a, $b, $c, $d);
+	// end($a);
+	// $e = &$a[key($a)];
+	// unset($a[key($a)]);
+	
+	// $e++;
+	// echo "\n\n";
+	// var_dump($a, $b, $c, $d, $e);
+	
+	
+	// exit;
+
+
 	$string = '[/abc][abc=aij] [/ubc][ubc][ab]a [abc="uij]f\"fu"] [/abc][/ubc][abc param1="it is \"val1\"" param2="it is \"val2\"" ] [/ubc][/abc][/ab]b [abc][/abc] c[/ubc][ubc]';
 	
 	// $BBCode_tags = array('abc', 'cbc', 'dbc');
@@ -323,6 +349,103 @@
 	
 	// echo "\n\n\n";
 	// var_dump($BBCode_tree);
+	
+	
+	$BBCodeTree = array();
+	
+	// function buildTree(&$BBCodeTree, &$BBCodeOrderedTagList){
+		
+		$BBCodeTree = array();
+		
+		// $BBCodeTree[] = 'oi';
+		
+		// ksort($BBCodeOrderedTagList);
+		
+		// echo "\n\n\n";
+		// var_dump($BBCodeOrderedTagList);
+		// while(($startingElement = reset($BBCodeOrderedTagList)) !== false){
+			
+			// unset($BBCodeOrderedTagList[key($BBCodeOrderedTagList)]);
+			
+			// if(reset($BBCodeOrderedTagList) === false){
+				// $BBCodeTree = array($startingElement);
+				// break;
+			// }
+			
+			// $children = array();
+			
+			// $endFind = $startingElement['end_tag']['end_position'];
+			
+			// do{
+				// if(current($BBCodeOrderedTagList)['start_tag']['start_position'] < $endFind){
+					// if(current($BBCodeOrderedTagList)['end_tag']['end_position'] < $endFind){
+						// // Tag is inside this1. So this tag is part of its children
+						
+						// $children[key($BBCodeOrderedTagList)] = &$BBCodeOrderedTagList[key($BBCodeOrderedTagList)];
+					// }else{
+						// // Bad nesting. This tag is meant to dissapear from this world! Well, not really... Just read it as text.
+						// var_dump('bad nesting ' . key($BBCodeOrderedTagList));
+						// unset($BBCodeOrderedTagList[key($BBCodeOrderedTagList)]);
+					// }
+				// }else if(current($BBCodeOrderedTagList)['start_tag']['start_position'] > $endFind){
+					// // Close previous tag here. There are no more children.
+					
+					// $startingElement['children'] = array();
+					// $buildChildren = array();
+					// // var_dump($children !== array());
+					// if($children !== array()){
+						// // var_dump($children);
+						// // $buildChildren = array();
+						// buildTree($startingElement['children'], $children);
+					// }
+					
+					// foreach($children AS $childKey => $child){
+						// // remove the child from the flat list
+						// $BBCodeOrderedTagList[$childKey] = NULL;
+						
+						
+			// var_dump("terminated", $tagStack);
+			
+			// $popedElement;
+			
+			// if(($popedElement = array_pop($tagStack)) === NULL){
+				// // Empty stack
+				
+				// $nextElement = next($BBCodeOrderedTagList);
+				
+				
+				// if($nextElement !== false){
+					// $BBCodeTree[] = $currentParent;
+					
+					// $currentParent = $nextElement;
+				// }else{
+					
+					// break;
+				// }
+			// }else{
+				
+				// $currentParent = $popedElement;
+				
+				// $children = array();
+			// }
+			
+			// $BBCodeTree[] = $currentParent;
+			// var_dump($currentParent);
+			
+					// }
+					
+					// $BBCodeTree[] = $startingElement;
+					// var_dump($BBCodeTree);
+					
+					// break;
+				// }
+				
+			// }while(next($BBCodeOrderedTagList) !== false);
+		// }
+	// }
+	
+		
+	
 	?>
 </body>
 </html>
