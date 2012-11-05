@@ -12,29 +12,53 @@
 <body>
 <?php
 	
-	// $a = array();
-	// $b = 1;
-	// $c = &$a;
-	// $d = &$b;
-	// $e;
+	$a = array(1,2,3,4,5,6,7,8);
+	$b = 1;
+	$c = &$a;
+	$d = &$b;
+	$e;
 	
-	// echo "\n\n";
-	// var_dump($a, $b, $c, $d);
+	echo "\n\n";
+	var_dump($a, $b, $c, $d);
 	
-	// $a[] = &$d;
+	$a[] = &$d;
 	
-	// echo "\n\n";
-	// var_dump($a, $b, $c, $d);
-	// end($a);
-	// $e = &$a[key($a)];
-	// unset($a[key($a)]);
+	echo "\n\n";
+	var_dump($a, $b, $c, $d);
+	end($a);
+	$e = &$a[key($a)];
+	unset($a[key($a)]);
 	
-	// $e++;
-	// echo "\n\n";
-	// var_dump($a, $b, $c, $d, $e);
+	$e++;
+	echo "\n\n";
+	var_dump($a, $b, $c, $d, $e);
 	
 	
-	// exit;
+	exit;
+	
+	$a = array();
+	$b = 1;
+	$c = &$a;
+	$d = &$b;
+	$e;
+	
+	echo "\n\n";
+	var_dump($a, $b, $c, $d);
+	
+	$a[] = &$d;
+	
+	echo "\n\n";
+	var_dump($a, $b, $c, $d);
+	end($a);
+	$e = &$a[key($a)];
+	unset($a[key($a)]);
+	
+	$e++;
+	echo "\n\n";
+	var_dump($a, $b, $c, $d, $e);
+	
+	
+	exit;
 
 
 	$string = '[/abc][abc=aij] [/ubc][ubc][ab]a [abc="uij]f\"fu"] [/abc][/ubc][abc param1="it is \"val1\"" param2="it is \"val2\"" ] [/ubc][/abc][/ab]b [abc][/abc] c[/ubc][ubc]';

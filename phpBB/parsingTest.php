@@ -2,29 +2,30 @@
 	
 	header('content-type: text/plain');
 
-	$string = '[/abc][abc=aij] [/ubc][ubc][ab]a [abc=badOverride][abc="I got a \"child\"!"][ubc rightBoss="true"] YAY[/ubc] [/abc][/ubc][/abc][abc param1="it is \"val1\"" param2="it is \"val2\"" ] [/ubc][/abc][/ab]b [abc][/abc] c[/ubc][ubc][/ubc][/ubc][/ubc][ubc]';
+	// $string =
+// '[/abc][abc=aij] [/ubc][ubc][ab]a [abc=badOverride][abc="I got a \"child\"!"][ubc rightBoss="true"] YAY[/ubc] [/abc][/ubc][/abc][abc param1="it is \"val1\"" param2="it is \"val2\"" ] [/ubc][/abc][/ab]b [abc][/abc] c[/ubc][ubc][/ubc][/ubc][/ubc][ubc]';
 	
-	// $string = '
-	// [abc child="0"]
-		// [abc child="0,0"] 
-		// [/abc]
-		// [ubc child="0,1"]
-			// [abc child="0,1,0"] 
-				// [ubc child="0,1,0,0"] 
-				// [/ubc]
-			// [/abc]
-		// [/ubc]
-	// [/abc]
-	// [abc child="1"]
-		// [abc child="1,0"]
-			// [ubc child="1,0,0"] 
-			// [/ubc]
-		// [/abc]
-		// [ubc child="1,1"]
-			// [abc child="1,1,0"] 
-			// [/abc]
-		// [/ubc]
-	// [/abc]';
+	$string = '
+	[abc child="0"]
+		[abc child="0,0"] 
+		[/abc]
+		[ubc child="0,1"]
+			[abc child="0,1,0"] 
+				[ubc child="0,1,0,0"] 
+				[/ubc]
+			[/abc]
+		[/ubc]
+	[/abc]
+	[abc child="1"]
+		[abc child="1,0"]
+			[ubc child="1,0,0"] 
+			[/ubc]
+		[/abc]
+		[ubc child="1,1"]
+			[abc child="1,1,0"] 
+			[/abc]
+		[/ubc]
+	[/abc]';
 	
 	// $BBCode_tags = array('abc', 'cbc', 'dbc');
 	$BBCode_tags = array('abc', 'ubc');
@@ -95,7 +96,7 @@
 				// $orderedTags[] = array(	'name' => $match[6][0],
 										// 'type' => 'closing_tag');
 				$tagsKind[$match[6][0]]['endingTags'][] = array('name' => $match[6][0],
-																'start_position' => $match[6][1],
+																'start_position' => $match[6][1] - 1,
 																'end_position' => $match[7][1]);
 			}
 			// If there's still no opening tag for this tag, this closing tag will not match any opening tag,
@@ -304,5 +305,57 @@
 	
 	
 	// Step 5: (Is there a step5)?
+	
+	
+	// Step 6: Build the tree with the current known nodes
+	
+	function joinContentsToElement(&$element){
+		global $string;
+		
+		//assumes that if the tag does not have children, the key children is not set
+		if(isset($element['children'])){
+			// for each child
+			// This assumes that the children are properly sorted by the ['start_tag']['start_position']
+			
+			// Well... needs a better name and... we cheat for the first iteration
+			$previousChild['end_tag']['end_position'] = &$element['start_tag']['end_position'];
+			
+			foreach ($element['children'] as $childKey => &$child) {
+				$element['text'][] = substr(
+										$string,
+										$previousChild['end_tag']['end_position'],
+										$child['start_tag']['start_position'] -
+											$previousChild['end_tag']['end_position'] - 1);
+				joinContentsToElement($child);
+				
+				$previousChild = &$child;
+			}
+			// remmeber that by the spec, $child is still set with the last child of the array
+			$element['text'][] = substr(
+									$string,
+									$child['end_tag']['end_position'],
+									$element['end_tag']['start_position'] -
+										$child['end_tag']['end_position'] - 1);
+		}else{
+			if($element['end_tag']['start_position'] -
+										$element['start_tag']['end_position'] - 1 === 0){
+				$element['text'][] = "";
+			}else{
+				$element['text'][] = substr(
+										$string,
+										$element['start_tag']['end_position'],
+										$element['end_tag']['start_position'] -
+											$element['start_tag']['end_position'] - 1);
+			}
+		}
+		
+	}
+	
+	foreach ($BBCodeTree as &$rootBBCode) {
+		joinContentsToElement($rootBBCode);		
+	}
+	
+	echo "\n\n";
+	var_dump($BBCodeTree);
 	
 	?>
