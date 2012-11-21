@@ -5,30 +5,35 @@
 	// $string =
 // '[/abc][abc=aij] [/ubc][ubc][ab]a [abc=badOverride][abc="I got a \"child\"!"][ubc rightBoss="true"] YAY[/ubc] [/abc][/ubc][/abc][abc param1="it is \"val1\"" param2="it is \"val2\"" ] [/ubc][/abc][/ab]b [abc][/abc] c[/ubc][ubc][/ubc][/ubc][/ubc][ubc]';
 	
-	$string = '
-	[abc child="0"]
-		[abc child="0,0"] 
-		[/abc]
-		[ubc child="0,1"]
-			[abc child="0,1,0"] 
-				[ubc child="0,1,0,0"] 
-				[/ubc]
-			[/abc]
-		[/ubc]
-	[/abc]
-	[abc child="1"]
-		[abc child="1,0"]
-			[ubc child="1,0,0"] 
-			[/ubc]
-		[/abc]
-		[ubc child="1,1"]
-			[abc child="1,1,0"] 
-			[/abc]
-		[/ubc]
-	[/abc]';
+	// $string = '
+	// [abc child="0"]
+		// [abc child="0,0"] 
+		// [/abc]
+		// [ubc child="0,1"]
+			// [abc child="0,1,0"] 
+				// [ubc child="0,1,0,0"] 
+				// [/ubc]
+			// [/abc]
+		// [/ubc]
+	// [/abc]
+	// [abc child="1"]
+		// [abc child="1,0"]
+			// [ubc child="1,0,0"] 
+			// [/ubc]
+		// [/abc]
+		// [ubc child="1,1"]
+			// [abc child="1,1,0"] 
+			// [/abc]
+		// [/ubc]
+	// [/abc]';
+	
+	$string = 'adasdsd[a]3231[b]dawdaw[c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a';
+	
 	
 	// $BBCode_tags = array('abc', 'cbc', 'dbc');
-	$BBCode_tags = array('abc', 'ubc');
+	// $BBCode_tags = array('abc', 'ubc');
+	// $BBCode_tags = array('b');
+	$BBCode_tags = array("a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z");
 	// $BBCode_tags = array('ubc', 'abc');
 	// $BBCode_tags = array('abc');
 	// $BBCode_tags = array('ubc');
@@ -36,6 +41,7 @@
 	// The list of BBCodes for the regex matcher
 	$regexedBBCode = implode('|', $BBCode_tags);
 	
+	$start = microtime(true);
 	
 	// Step 1: Find opening and closing tags in the text.
 	
@@ -143,18 +149,18 @@
 	
 	$BBCodeOrderedTagList = array();
 	
-	
+	$middle1 = microtime(true);
 	// Step 2: Pair opening and closing tags. 
 		
-	foreach ($tagsKind as $BBCodeName => $data){
+	foreach ($tagsKind as $BBCodeName => &$data){
 		
 		// echo "\n\n\n";
 		
-		while ($data['startingTags'] != array() && $data['endingTags'] != array()){
+		while ($data['startingTags'] != array() && current($data['endingTags']) != false){
 			// There's, at least, one possible
 			
 			// Got a closing tag!
-			$endingTag = array_shift($data['endingTags']);
+			$endingTag = current($data['endingTags']);
 			
 			reset($data['startingTags']);
 			
@@ -167,23 +173,24 @@
 			// 			If there's no opening tag before a close tag, that close tag is not matched.
 			prev($data['startingTags']);
 			
+			$currentStartTag = current($data['startingTags']);
 			
-			if (current($data['startingTags']) === false){
+			if ($currentStartTag === false){
 				// If I go beyond the top limits of the array. The only way to get back is by using end(), prev() will not work.
-				end($data['startingTags']);
+				$currentStartTag = end($data['startingTags']);
 			}
 			
-			if (current($data['startingTags'])['end_position'] < $endingTag['start_position']){
+			if ($currentStartTag['end_position'] < $endingTag['start_position']){
 								
 				// K'ay, this is a match for that closing tag
-				$BBCodeTagMatch[$BBCodeName][] = array(
-												'start_tag' => current($data['startingTags']),
-												'end_tag' => $endingTag
-											);
+				// $BBCodeTagMatch[$BBCodeName][] = array(
+												// 'start_tag' => $currentStartTag,
+												// 'end_tag' => $endingTag
+											// );
 				
-				$BBCodeOrderedTagList[current($data['startingTags'])['end_position']] = 
+				$BBCodeOrderedTagList[$currentStartTag['end_position']] = 
 											array(
-												'start_tag' => current($data['startingTags']),
+												'start_tag' => $currentStartTag,
 												'end_tag' => $endingTag
 											);
 				
@@ -194,8 +201,11 @@
 				// Malformed BBcode... I don't care, I'll see what I can do with the rest, anyway
 				// continue;
 			}
+			next($data['endingTags']);
 		}
 	}
+	
+	$middle2 = microtime(true);
 	
 	// echo "\n\n\n";
 	// var_dump($BBCodeTagMatch);
@@ -204,7 +214,7 @@
 	ksort($BBCodeOrderedTagList);
 	// var_dump($BBCodeOrderedTagList);
 	
-	$BBCodeOrderedTagListBak = $BBCodeOrderedTagList;
+	// $BBCodeOrderedTagListBak = $BBCodeOrderedTagList;
 	
 	
 	// Step 3: Build the tree of tags
@@ -212,8 +222,6 @@
 	$BBCodeTree = array();
 	
 	$tagStack = array();
-			
-	ksort($BBCodeOrderedTagList);
 	
 	// echo "\n\n\n";
 	// var_dump($BBCodeOrderedTagList);
@@ -242,10 +250,10 @@
 				$tagStack[] = &$currentParent;
 				
 				// Only needed while debugging. For production porpuses (and for the sake of speed) this should be removed
-				if (!isset($currentParent['children'])){
-					var_dump("newChild");
-					$currentParent['children'] = array();
-				}
+				// if (!isset($currentParent['children'])){
+					// // var_dump("newChild");
+					// $currentParent['children'] = array();
+				// }
 				// var_dump("child", $BBCodeOrderedTagList[key($BBCodeOrderedTagList)]['start_tag']['parameters']['child']);
 				// var_dump("pushInto", $currentParent['start_tag']['parameters']['child']);
 				
@@ -297,7 +305,7 @@
 	}
 	
 	echo "\n\n\n";
-	var_dump($BBCodeTree);
+	// var_dump($BBCodeTree);
 	
 	// Step 4: Filter out child nodes that are not allowed.
 	
@@ -355,7 +363,98 @@
 		joinContentsToElement($rootBBCode);		
 	}
 	
+	$end = microtime(true);
+	
 	echo "\n\n";
-	var_dump($BBCodeTree);
+	// var_dump($BBCodeTree); 
+	
+	function parseBBCode($name, $paramenters, $inside){
+		
+		$output = "<$name";
+		
+		foreach($paramenters AS $paramName => $value){
+			$output .= " $paramName='$value'";
+		}
+		
+		$output .= ">";
+		$output .= "$inside</$name>";
+		
+		return $output;
+	}
+	
+	
+	function replaceWithBBCode(&$element){
+		global $string;
+		
+		$finalString = '';
+		
+		//assumes that if the tag does not have children, the key children is not set
+		if(isset($element['children'])){
+			// for each child
+			// This assumes that the children are properly sorted by the ['start_tag']['start_position']
+			
+			// Well... needs a better name and... we cheat for the first iteration
+			$previousChild['end_tag']['end_position'] = &$element['start_tag']['end_position'];
+			
+			foreach ($element['children'] as $childKey => &$child) {
+				$finalString .= substr(
+										$string,
+										$previousChild['end_tag']['end_position'],
+										$child['start_tag']['start_position'] -
+											$previousChild['end_tag']['end_position'] - 1);
+				
+				$finalString .= replaceWithBBCode($child);
+				
+				$previousChild = &$child;
+			}
+			// remmeber that by the spec, $child is still set with the last child of the array
+			$finalString .= substr(
+									$string,
+									$child['end_tag']['end_position'],
+									$element['end_tag']['start_position'] -
+										$child['end_tag']['end_position'] - 1);
+		}else{
+			if($element['end_tag']['start_position'] -
+										$element['start_tag']['end_position'] - 1 === 0){
+				$finalString .= "";
+			}else{
+				$finalString .= substr(
+										$string,
+										$element['start_tag']['end_position'],
+										$element['end_tag']['start_position'] -
+											$element['start_tag']['end_position'] - 1);
+			}
+		}
+		
+		return parseBBCode($element['start_tag']['name'], isset($element['start_tag']['parameters'])? 
+															$element['start_tag']['parameters'] : array(), $finalString);
+		
+	}
+	
+	$finalString = '';
+	// Fake previousChild to give a kickstart
+	$previousChild = array();
+	$previousChild['end_tag']['end_position'] = 0;
+	
+	foreach ($BBCodeTree as &$rootBBCode) {
+		$finalString .= substr(		$string,
+									$previousChild['end_tag']['end_position'],
+									$rootBBCode['start_tag']['start_position'] -
+										$previousChild['end_tag']['end_position'] - 1);
+										
+		$finalString .= replaceWithBBCode($rootBBCode);	
+		$previousChild = &$rootBBCode;
+	}
+	
+	var_dump($string, $previousChild['end_tag']['end_position'], strlen($string), strlen($string) - $previousChild['end_tag']['end_position'] - 1);
+	
+	$finalString .= substr(		$string,
+								$previousChild['end_tag']['end_position'],
+								strlen($string) -
+									$previousChild['end_tag']['end_position']);
+	
+	var_dump($finalString);
+	
+	var_dump($start, $middle1, $middle2, $end, "", $middle1 - $start, $end - $middle2, $middle2 - $middle1, "", $end - $start);
 	
 	?>
