@@ -545,16 +545,14 @@ class UnderlineParser{
 		$finalString .= replaceWithBBCode($rootBBCode, 0);	
 		$previousChild = &$rootBBCode;
 	}
-	
-	var_dump($string, $previousChild['end_tag']['end_position'], strlen($string), strlen($string) - $previousChild['end_tag']['end_position'] - 1);
-	
+
 	$finalString .= substr(		$string,
 								$previousChild['end_tag']['end_position'],
 								strlen($string) -
 									$previousChild['end_tag']['end_position']);
-	
-	var_dump($finalString);
-	
+
+	var_dump($string, $finalString);
+
 	var_dump($start, $middle1, $middle2, $end, "", $middle1 - $start, $end - $middle2, $middle2 - $middle1, "", $end - $start);
-	
+
 	?>
