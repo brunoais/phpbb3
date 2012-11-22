@@ -21,7 +21,7 @@
 		 * @param integer $deepness Shows the level of how deep this is in the tree
 		 * @return  string The result of parsing this text with these parameters.
 		 */
-		public function parse($paramenters, $inside, $deepness){
+		public function parse($name, $paramenters, $inside, $deepness){
 			$output = "<example";
 		
 			foreach($paramenters AS $paramName => $value){
@@ -502,7 +502,7 @@ class UnderlineParser{
 				
 				$previousChild = &$child;
 			}
-			// remmeber that by the spec, $child is still set with the last child of the array
+			// remmeber that, by the spec, $child is still set with the last child of the array
 			$finalString .= substr(
 									$string,
 									$child['end_tag']['end_position'],
