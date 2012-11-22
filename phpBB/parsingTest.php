@@ -2,6 +2,59 @@
 	
 	header('content-type: text/plain');
 
+	abstract class ExampleParser{
+		/**
+		 * This method's job is to translate the input of the user into.
+		 * 
+		 * Note that the string $inside may contain any utf-8 characters that were not parsed incuding HTML contents translated from o ther tags. For example, If you are a parser for the [b] tag (and allow [b] inside [b]):
+		 * For an input like this:
+		 * [b]some[i]italic[b]bold[/b][/i]contents[/b]
+		 * you get the output here twice. The first time you get:
+		 * bold
+		 * the second time you get
+		 * some<i>italic<b>bold</b></i>contents
+		 * (this assumes that the BBCode transformers are working properly)
+		 * 
+		 * @param  String $name Shows the name of the BBCode tag. It's just a convenient parameter if you want to use the same method (and same object) to parse different BBCodes, for example.
+		 * @param  array $parameters A key pair with the parameters that the user wrote inside the tag
+		 * @param  string $inside The string that the user wrote between the BBCode tags
+		 * @param integer $deepness Shows the level of how deep this is in the tree
+		 * @return  string The result of parsing this text with these parameters.
+		 */
+		public function parse($paramenters, $inside, $deepness){
+			$output = "<example";
+		
+			foreach($paramenters AS $paramName => $value){
+				$output .= " $paramName='$value'";
+			}
+			
+			$output .= ">";
+			$output .= "$inside</example>";
+			
+			return $output;
+			
+		}
+	}
+
+class BoldParser{
+	public function parse($name, $paramenters, $inside){
+		return "<b>$inside</b>";
+	}
+}
+class ItalicParser{
+	public function parse($name, $paramenters, $inside){
+		return "<i>$inside</i>";
+	}
+}
+class UnderlineParser{
+	public function parse($name, $paramenters, $inside){
+		return "<u>$inside</u>";
+	}
+}
+	
+	
+	
+	
 	// $string =
 // '[/abc][abc=aij] [/ubc][ubc][ab]a [abc=badOverride][abc="I got a \"child\"!"][ubc rightBoss="true"] YAY[/ubc] [/abc][/ubc][/abc][abc param1="it is \"val1\"" param2="it is \"val2\"" ] [/ubc][/abc][/ab]b [abc][/abc] c[/ubc][ubc][/ubc][/ubc][/ubc][ubc]';
 	
@@ -27,19 +80,61 @@
 		// [/ubc]
 	// [/abc]';
 	
-	$string = 'adasdsd[a]3231[b]dawdaw[c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a';
+	$string = '
+	[b child="0"]
+		[b child="0,0"] 
+		boldy!
+		[/b]
+		[u child="0,1"]
+			[b child="0,1,0"] 
+				[u child="0,1,0,0"] 
+					underlined bold
+				[/u]
+			[/b]
+		[/u]
+	[/b]
+	[b child="1"]
+	another bold
+		[b child="1,0"]
+			[u child="1,0,0"] 
+			another underlined bold
+			[/u]
+		[/b]
+		[u child="1,1"]
+			[b child="1,1,0"] 
+			[/b]
+		[/u]
+	[/b]';
+	
+//	$string = 'adasdsd[a]3231[b]dawdaw[c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a';
 	
 	
 	// $BBCode_tags = array('abc', 'cbc', 'dbc');
 	// $BBCode_tags = array('abc', 'ubc');
 	// $BBCode_tags = array('b');
-	$BBCode_tags = array("a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z");
+	// $BBCode_tags = array("a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z");
 	// $BBCode_tags = array('ubc', 'abc');
 	// $BBCode_tags = array('abc');
 	// $BBCode_tags = array('ubc');
+	
+	
+	$BBCode_tags = array(
+				'b' => array(
+							'flags'		=> 0,
+							'callback'	=> new UnderlineParser()
+							),
+				'i' => array(
+							'flags'		=> 0,
+							'callback'	=> new ItalicParser()
+							),
+				'u' => array(
+							'flags'		=> 0,
+							'callback'	=> new UnderlineParser()
+							),
+				);
 
 	// The list of BBCodes for the regex matcher
-	$regexedBBCode = implode('|', $BBCode_tags);
+	$regexedBBCode = implode('|', array_keys($BBCode_tags));
 	
 	$start = microtime(true);
 	
@@ -383,8 +478,8 @@
 	}
 	
 	
-	function replaceWithBBCode(&$element){
-		global $string;
+	function replaceWithBBCode(&$element, $deepness){
+		global $string, $BBCode_tags;
 		
 		$finalString = '';
 		
@@ -403,7 +498,7 @@
 										$child['start_tag']['start_position'] -
 											$previousChild['end_tag']['end_position'] - 1);
 				
-				$finalString .= replaceWithBBCode($child);
+				$finalString .= replaceWithBBCode($child, $deepness + 1);
 				
 				$previousChild = &$child;
 			}
@@ -426,8 +521,13 @@
 			}
 		}
 		
-		return parseBBCode($element['start_tag']['name'], isset($element['start_tag']['parameters'])? 
-															$element['start_tag']['parameters'] : array(), $finalString);
+		return $BBCode_tags[$element['start_tag']['name']]['callback']->parse(
+							$element['start_tag']['name'],
+							isset($element['start_tag']['parameters'])? 
+								$element['start_tag']['parameters'] :
+								array(),
+							$finalString,
+							$deepness);
 		
 	}
 	
@@ -442,7 +542,7 @@
 									$rootBBCode['start_tag']['start_position'] -
 										$previousChild['end_tag']['end_position'] - 1);
 										
-		$finalString .= replaceWithBBCode($rootBBCode);	
+		$finalString .= replaceWithBBCode($rootBBCode, 0);	
 		$previousChild = &$rootBBCode;
 	}
 	
