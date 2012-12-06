@@ -264,7 +264,7 @@ class UnderlineParser{
 					// current($data['startingTags'])['end_position'] < $endingTag['start_position']);
 			while(	next($data['startingTags']) !== false
 					){
-						$temp = current($data['startingTags'])
+						$temp = current($data['startingTags']);
 						if($temp['end_position'] >= $endingTag['start_position']){
 							break;
 						}
