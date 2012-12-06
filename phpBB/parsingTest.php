@@ -260,8 +260,10 @@ class UnderlineParser{
 			reset($data['startingTags']);
 			
 			// Find an appropriate opening tag
+			// while(	next($data['startingTags']) !== false &&
+					// current($data['startingTags'])['end_position'] < $endingTag['start_position']);
 			while(	next($data['startingTags']) !== false &&
-					current($data['startingTags'])['end_position'] < $endingTag['start_position']);
+					(current($data['startingTags']))['end_position'] < $endingTag['start_position']);
 			
 			// The test showed that the next element is beyond what I'm looking for, so the previous is the one I want
 			// Notice: 	This assumes that the previous step went as expected.
