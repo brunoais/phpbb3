@@ -134,6 +134,7 @@ $lang = array_merge($lang, array(
 	'COLLAPSE_VIEW'			=> 'Collapse view',
 	'CLOSE_WINDOW'			=> 'Close window',
 	'COLOUR_SWATCH'			=> 'Colour swatch',
+	'COLON'					=> ':',
 	'COMMA_SEPARATOR'		=> ', ',	// Comma used to join lists into a single string, use localised comma if appropriate, eg: Ideographic or Arabic
 	'CONFIRM'				=> 'Confirm',
 	'CONFIRM_CODE'			=> 'Confirmation code',
@@ -342,7 +343,7 @@ $lang = array_merge($lang, array(
 	'LOGIN_EXPLAIN_VIEWONLINE'			=> 'In order to view the online list you have to be registered and logged in.',
 	'LOGOUT'							=> 'Logout',
 	'LOGOUT_USER'						=> 'Logout [ %s ]',
-	'LOG_ME_IN'							=> 'Log me on automatically each visit',
+	'LOG_ME_IN'							=> 'Remember me',
 
 	'MARK'					=> 'Mark',
 	'MARK_ALL'				=> 'Mark all',
@@ -604,9 +605,11 @@ $lang = array_merge($lang, array(
 	'SUBJECT'					=> 'Subject',
 	'SUBMIT'					=> 'Submit',
 
+	'TB'				=> 'TB',
 	'TERMS_USE'			=> 'Terms of use',
 	'TEST_CONNECTION'	=> 'Test connection',
 	'THE_TEAM'			=> 'The team',
+	'TIB'				=> 'TiB',
 	'TIME'				=> 'Time',
 	'TIMEOUT_PROCESSING_REQ'			=> 'Request timed out.',
 
