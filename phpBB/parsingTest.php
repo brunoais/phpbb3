@@ -342,10 +342,10 @@ class UnderlineParser{
 		
 		// echo "\n";
 		// var_dump("Currentparent", $currentParent['start_tag']['parameters']['child']);
-		
+		$current = current($BBCodeOrderedTagList)
 		// Check if this tag is inside the current parent
-		if (current($BBCodeOrderedTagList)['start_tag']['start_position'] <= $currentParent['end_tag']['end_position']){
-			if (current($BBCodeOrderedTagList)['end_tag']['end_position'] <= $currentParent['end_tag']['end_position']){
+		if ($current['start_tag']['start_position'] <= $currentParent['end_tag']['end_position']){
+			if ($current['end_tag']['end_position'] <= $currentParent['end_tag']['end_position']){
 				// Tag is inside this parent. So this tag is part of this parent's children
 				
 				// push the previous parent
