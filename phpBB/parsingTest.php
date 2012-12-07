@@ -15,16 +15,16 @@
 		 * some<i>italic<b>bold</b></i>contents
 		 * (this assumes that the BBCode transformers are working properly)
 		 * 
-		 * @param  String $name Shows the name of the BBCode tag. It's just a convenient parameter if you want to use the same method (and same object) to parse different BBCodes, for example.
-		 * @param  array $parameters A key pair with the parameters that the user wrote inside the tag
+		 * @param  string $name Shows the name of the BBCode tag. It's just a convenient parameter if you want to use the same method (and same object) to parse different BBCodes, for example.
+		 * @param  string|array $parameters A string with the single parameter the user wrote or a key pair with the parameters that the user wrote inside the tag.
 		 * @param  string $inside The string that the user wrote between the BBCode tags
 		 * @param integer $deepness Shows the level of how deep this is in the tree
 		 * @return  string The result of parsing this text with these parameters.
 		 */
-		public function parse($name, $paramenters, $inside, $deepness){
+		public function parse($name, $parameters, $inside, $deepness){
 			$output = "<example";
 		
-			foreach($paramenters AS $paramName => $value){
+			foreach($parameters AS $paramName => $value){
 				$output .= " $paramName='$value'";
 			}
 			
