@@ -121,7 +121,7 @@ class UnderlineParser{
 	$BBCode_tags = array(
 				'b' => array(
 							'flags'		=> 0,
-							'callback'	=> new UnderlineParser()
+							'callback'	=> new BoldParser()
 							),
 				'i' => array(
 							'flags'		=> 0,
@@ -342,7 +342,7 @@ class UnderlineParser{
 		
 		// echo "\n";
 		// var_dump("Currentparent", $currentParent['start_tag']['parameters']['child']);
-		$current = current($BBCodeOrderedTagList)
+		$current = current($BBCodeOrderedTagList);
 		// Check if this tag is inside the current parent
 		if ($current['start_tag']['start_position'] <= $currentParent['end_tag']['end_position']){
 			if ($current['end_tag']['end_position'] <= $currentParent['end_tag']['end_position']){
