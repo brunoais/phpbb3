@@ -329,7 +329,7 @@ class BBCodeParser{
 		
 		while(current($this->BBCodeOrderedTagList) !== false){
 			// While we didn't check about all tags found
-			$current = current($BBCodeOrderedTagList);
+			$current = current($this->BBCodeOrderedTagList);
 			// Check if this tag is inside the current parent
 			if ($current['start_tag']['start_position'] <= $currentParent['end_tag']['end_position']){
 				if ($current['end_tag']['end_position'] <= $currentParent['end_tag']['end_position']){
