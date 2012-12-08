@@ -272,8 +272,12 @@ class BBCodeParser{
 				reset($data['startingTags']);
 				
 				// Find an appropriate opening tag
-				while(	next($data['startingTags']) !== false &&
-						current($data['startingTags'])['end_position'] < $endingTag['start_position']);
+				while( next($data['startingTags']) !== false ){
+						$temp = current($data['startingTags']);
+						if($temp['end_position'] >= $endingTag['start_position']){
+							break;
+						}
+					}
 				
 				// The test showed that the next element is beyond what I'm looking for, so the previous is the one I want
 				// Notice: 	This assumes that the previous step went as expected.
@@ -325,10 +329,10 @@ class BBCodeParser{
 		
 		while(current($this->BBCodeOrderedTagList) !== false){
 			// While we didn't check about all tags found
-			
+			$current = current($BBCodeOrderedTagList);
 			// Check if this tag is inside the current parent
-			if (current($this->BBCodeOrderedTagList)['start_tag']['start_position'] <= $currentParent['end_tag']['end_position']){
-				if (current($this->BBCodeOrderedTagList)['end_tag']['end_position'] <= $currentParent['end_tag']['end_position']){
+			if ($current['start_tag']['start_position'] <= $currentParent['end_tag']['end_position']){
+				if ($current['end_tag']['end_position'] <= $currentParent['end_tag']['end_position']){
 					// Tag is inside this parent. So this tag is part of this parent's children
 					
 					// push the previous parent
