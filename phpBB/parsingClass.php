@@ -536,10 +536,15 @@ class BBCodeParser{
 	
 }
 
+$start = microtime(true);
 $parser = new BBCodeParser($string, $BBCode_tags);
 
 $finalString = $parser->parse();
 
-var_dump($string, $finalString);
+$end = microtime(true);
 
-	?>
+var_dump($string, $finalString);
+echo "\n\n";
+var_dump($end - $start);
+
+?>
