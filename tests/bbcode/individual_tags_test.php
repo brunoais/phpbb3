@@ -23,10 +23,10 @@ class phpbb_bbcode_parser_test extends phpbb_database_test_case
 	private $config;
 	private $phpbb_extension_manager;
 	
-	// public function getDataSet()
-	// {
-		// return $this->createXMLDataSet(dirname(__FILE__).'/fixtures/config.xml');
-	// }
+	public function getDataSet()
+	{
+		return $this->createXMLDataSet(dirname(__FILE__).'/fixtures/config.xml');
+	}
 	
 	public function setUp()
 	{
@@ -44,28 +44,28 @@ class phpbb_bbcode_parser_test extends phpbb_database_test_case
 		
 	}
 	
-	public function test_both_passes_old()
-	{
-		// $this->markTestIncomplete('New bbcode parser has not been backported from feature/ascraeus-experiment yet.');
-	    
-		$parser_part1 = new parse_message('[i]Italic [u]underlined text[/u][/i]');
+	private function parse_string($input){
+		$parser_part1 = new parse_message($input);
 		// Test only the BBCode parsing
 		$parser_part1->parse(true, false, false);
 		
 		$parser_part2 = new bbcode($parser_part1->bbcode_bitfield);
-		$result = $parser_part1->message;
+		$output = $parser_part1->message;
 		
-		$parser_part2->bbcode_second_pass($result, $parser_part1->bbcode_uid);
-
-		$expected = '<span style="font-style: italic">Italic <span style="text-decoration: underline">underlined text</span></span>';
-
-		$this->assertEquals($expected, $result, 'Simple nested BBCode first+second pass');
+		$parser_part2->bbcode_second_pass($output, $parser_part1->bbcode_uid);
+		
+		return $output;
 	}
-
+	
+	/**
+	 * Test if the tag shipped with phpBB is parsing as it should
+	 * (no parsing rules are checked here, just if the replacement (HTML) string is as it is supposed to)
+	 * 
+	 */
 	public function test_unnested_default_tags_old()
 	{
 		// $this->markTestIncomplete('New bbcode parser has not been backported from feature/ascraeus-experiment yet.');
-	    
+		
 		$input_message=
 		'[b]bold[/b]' .
 		'[i]italic[/i]' .
@@ -80,15 +80,8 @@ class phpbb_bbcode_parser_test extends phpbb_database_test_case
 		'[url=http://link.document.com/allok]urlok[/url]' .
 		'[color=#FF0000]red[/color]';
 		
-		$parser_part1 = new parse_message($input_message);
-		// Test only the BBCode parsing
-		$parser_part1->parse(true, false, false);
+		$result = parse_string($input_message);
 		
-		$parser_part2 = new bbcode($parser_part1->bbcode_bitfield);
-		$result = $parser_part1->message;
-		
-		$parser_part2->bbcode_second_pass($result, $parser_part1->bbcode_uid);
-
 		$expected = 
 			// [b]
 			'<span style="font-weight: bold">bold</span>' .
@@ -115,7 +108,7 @@ class phpbb_bbcode_parser_test extends phpbb_database_test_case
 			// [color=]
 			'<span style="color: #FF0000">red</span>';
 
-		$this->assertEquals($expected, $result, 'Simple test all default BBCodes. No nesting');
+		$this->assertEquals($expected, $result, '$expected');
 	}
-	
+
 }
