@@ -38,13 +38,82 @@ class phpbb_bbcode_parser_test extends phpbb_database_test_case
 		
 		$phpbb_extension_manager = new phpbb_extension_manager($db, $config, $table_prefix . 'extensions', __DIR__ . '/../../phpBB/');
 		
-		$request = new phpbb_request();
-		
-		$user = new phpbb_user();
+		$user = new phpbb_mock_user;
+		$request = new phpbb_mock_request;
 		
 	}
 	
-	private function parse_string($input){
+	public function test_tags()
+	{
+		return array(
+			array(
+				'bold',
+				'[b]bold[/b]',
+				'<span style="font-weight: bold">bold</span>'
+			),
+			array(
+				'italic',
+				'[i]italic[/i]',
+				'<span style="font-style: italic">italic</span>'
+			),
+			array(
+				'underline',
+				'[u]underlined[/u]',
+				'<span style="text-decoration: underline">underlined</span>'
+			),
+			array(
+				'quote (uncited)',
+				'[quote]quoted[/quote]',
+				'<blockquote class="uncited"><div>quoted</div></blockquote>'
+			),
+			array(
+				'quote (cited)',
+				'[quote="hi"]quoted by[/quote]',
+				'<blockquote><div><cite>hi wrote:</cite>quoted by</div></blockquote>'
+			),
+			array(
+				'code',
+				'[code]unparsed[/code]',
+				'<dl class="codebox"><dt>Code: <a href="#" onclick="selectCode(this); return false;">Select all</a></dt><dd><code>unparsed</code></dd></dl>'
+			),
+			array(
+				'list',
+				'[list][*]list[/list]',
+				'<ul><li>list</li></ul>'
+			),
+			array(
+				'list with known parameter',
+				'[list=1][*]list1[/list]',
+				'<ol style="list-style-type: decimal"><li>list1</li></ol>'
+			),
+			array(
+				'image',
+				'[img]http://area51.phpbb.com/phpBB/images/smilies/icon_e_biggrin.gif[/img]',
+				'<img src="http://area51.phpbb.com/phpBB/images/smilies/icon_e_biggrin.gif" alt="Image">'
+			),
+			array(
+				'url',
+				'[url]http://link.document.com/allok[/url]',
+				'<a href="http://link.document.com/allok" class="postlink">http://link.document.com/allok</a>'
+			),
+			array(
+				'url with text',
+				'[url=http://link.document.com/allok]urlok[/url]',
+				'<a href="http://link.document.com/allok" class="postlink">urlok</a>'
+			),
+			array(
+				'color',
+				'[color=#FF0000]red[/color]',
+				'<span style="color: #FF0000">red</span>'
+			),
+		);
+	}
+	
+	
+	/**
+	* @dataProvider test_tags
+	*/
+	public function test_parse_string($name, $input, $expected){
 		$parser_part1 = new parse_message($input);
 		// Test only the BBCode parsing
 		$parser_part1->parse(true, false, false);
@@ -54,61 +123,9 @@ class phpbb_bbcode_parser_test extends phpbb_database_test_case
 		
 		$parser_part2->bbcode_second_pass($output, $parser_part1->bbcode_uid);
 		
-		return $output;
+		$this->assertEquals($expected, $output, $name);
 	}
-	
-	/**
-	 * Test if the tag shipped with phpBB is parsing as it should
-	 * (no parsing rules are checked here, just if the replacement (HTML) string is as it is supposed to)
-	 * 
-	 */
-	public function test_unnested_default_tags_old()
-	{
-		// $this->markTestIncomplete('New bbcode parser has not been backported from feature/ascraeus-experiment yet.');
-		
-		$input_message=
-		'[b]bold[/b]' .
-		'[i]italic[/i]' .
-		'[u]underlined[/u]' .
-		'[quote]quoted[/quote]' .
-		'[quote="hi"]quoted by[/quote]' .
-		'[code]unparsed[/code]' .
-		'[list][/list]' .
-		'[list=1][/list]' .
-		'[img]http://area51.phpbb.com/phpBB/images/smilies/icon_e_biggrin.gif[/img]' .
-		'[url]http://link.document.com/allok[/url]' .
-		'[url=http://link.document.com/allok]urlok[/url]' .
-		'[color=#FF0000]red[/color]';
-		
-		$result = parse_string($input_message);
-		
-		$expected = 
-			// [b]
-			'<span style="font-weight: bold">bold</span>' .
-			// [i]
-			'<span style="font-style: italic">italic</span>' .
-			// [u]
-			'<span style="text-decoration: underline">underlined</span>' .
-			// [quote]
-			'<blockquote class="uncited"><div>quoted</div></blockquote>' .
-			// [quote="name"]
-			'<blockquote><div><cite>hi wrote:</cite>quoted by</div></blockquote>' .
-			// [code]
-			'<dl class="codebox"><dt>Code: <a href="#" onclick="selectCode(this); return false;">Select all</a></dt><dd><code>unparsed</code></dd></dl>' .
-			// [list]
-			'<ul></ul>' .
-			// [list=1]
-			'<ol style="list-style-type: decimal"></ol>' .
-			// [img]
-			'<img src="http://area51.phpbb.com/phpBB/images/smilies/icon_e_biggrin.gif" alt="Image">' .
-			// [url]
-			'<a href="http://link.document.com/allok" class="postlink">http://link.document.com/allok</a>' .
-			// [url=]
-			'<a href="http://link.document.com/allok" class="postlink">urlok</a>' .
-			// [color=]
-			'<span style="color: #FF0000">red</span>';
 
-		$this->assertEquals($expected, $result, '$expected');
-	}
+
 
 }
