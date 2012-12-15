@@ -124,7 +124,7 @@ class phpbb_bbcode_bbcode_parser
 					// so no need to register it
 				}
 			}
-			elseif (isset($match[1][0]) && $match[1][0] != "")
+			else if (isset($match[1][0]) && $match[1][0] != "")
 			{
 				// It's an opening tag.
 				$tag = array();
@@ -138,12 +138,12 @@ class phpbb_bbcode_bbcode_parser
 					// multiple parameters
 					$tag['parameters'] = self::parse_inner_parameters($match[4][0]);
 				}
-				elseif ($match[3][1] > -1)
+				else if ($match[3][1] > -1)
 				{
 					// 1 parameter bounded by the end of the start tag
 					$tag['parameters'] = $match[3][0];
 				}
-				elseif ($match[2][1] > -1)
+				else if ($match[2][1] > -1)
 				{
 					// 1 parameter bounded by quotes
 					// Replace currently needed due to the way this works.
