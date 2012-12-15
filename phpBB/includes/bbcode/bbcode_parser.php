@@ -1,6 +1,21 @@
 <?php
-		
-class phpbb_bbcode_parser{
+/**
+*
+* @package phpBB3
+* @copyright (c) 2005 phpBB Group
+* @license http://opensource.org/licenses/gpl-2.0.php GNU General Public License v2
+*
+*/
+
+/**
+* @ignore
+*/
+if (!defined('IN_PHPBB'))
+{
+	exit;
+}
+	
+class phpbb_bbcode_bbcode_parser{
 	
 	protected $bbcode_tags;
 	
@@ -409,4 +424,3 @@ class phpbb_bbcode_parser{
 	
 }
 
-?>
