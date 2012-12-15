@@ -114,7 +114,8 @@ class phpbb_bbcode_bbcode_parser
 				{
 					$this->tags_kind[$match[6][0]]['ending_tags'][] = array('name' => $match[6][0],
 																	'start_position' => $match[6][1] - 1,
-																	'end_position' => $match[7][1]);
+																	'end_position' => $match[7][1],
+																	);
 				/*
 				}
 				else
@@ -208,7 +209,7 @@ class phpbb_bbcode_bbcode_parser
 					$this->bbcode_ordered_tag_list[$current_start_tag['end_position']] =
 												array(
 													'start_tag' => $current_start_tag,
-													'end_tag' => $ending_tag
+													'end_tag' => $ending_tag,
 												);
 
 					unset($data['starting_tags'][key($data['starting_tags'])]);
