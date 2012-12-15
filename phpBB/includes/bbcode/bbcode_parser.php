@@ -58,7 +58,7 @@ class phpbb_bbcode_bbcode_parser
 		
 		$parameters = array();
 		
-		foreach($parameters_match AS $parameter)
+		foreach ($parameters_match AS $parameter)
 		{			
 			$parameters[$parameter[1]] = str_replace('\"', '&quot;', $parameter[2]);
 		}
@@ -70,7 +70,7 @@ class phpbb_bbcode_bbcode_parser
 	{
 		$bbcode_tags;
 		
-		foreach($this->bbcode_tags as $tag => $unused)
+		foreach ($this->bbcode_tags as $tag => $unused)
 		{
 			$bbcode_tags[] = preg_quote($tag, '%');
 		}
@@ -105,7 +105,7 @@ class phpbb_bbcode_bbcode_parser
 		'%',$this->string, $matched, PREG_SET_ORDER | PREG_OFFSET_CAPTURE);
 		
 		
-		foreach($matched AS $match)
+		foreach ($matched AS $match)
 		{
 			if (isset($match[6][0]))
 			{
@@ -178,10 +178,10 @@ class phpbb_bbcode_bbcode_parser
 				reset($data['starting_tags']);
 				
 				// Find an appropriate opening tag
-				while( next($data['starting_tags']) !== false )
+				while ( next($data['starting_tags']) !== false )
 				{
 						$temp = current($data['starting_tags']);
-						if($temp['end_position'] >= $ending_tag['start_position'])
+						if ($temp['end_position'] >= $ending_tag['start_position'])
 						{
 							break;
 						}
@@ -240,7 +240,7 @@ class phpbb_bbcode_bbcode_parser
 		// Get the next element of the list and start crackin'!
 		next($this->bbcode_ordered_tag_list);
 		
-		while(current($this->bbcode_ordered_tag_list) !== false)
+		while (current($this->bbcode_ordered_tag_list) !== false)
 		{
 			// While we didn't check about all tags found
 			$current = current($this->bbcode_ordered_tag_list);
@@ -314,7 +314,7 @@ class phpbb_bbcode_bbcode_parser
 	{
 		
 		//assumes that if the tag does not have children, the key children is not set
-		if(isset($element['children']))
+		if (isset($element['children']))
 		{
 			// for each child
 			// This assumes that the children are properly sorted by the ['start_tag']['start_position']
@@ -342,7 +342,7 @@ class phpbb_bbcode_bbcode_parser
 		}
 		else
 		{
-			if($element['end_tag']['start_position'] -
+			if ($element['end_tag']['start_position'] -
 										$element['start_tag']['end_position'] - 1 === 0)
 			{
 				$element['text'][] = "";
@@ -375,7 +375,7 @@ class phpbb_bbcode_bbcode_parser
 		$final_string = '';
 		
 		//assumes that if the tag does not have children, the key children is not set
-		if(isset($element['children']))
+		if (isset($element['children']))
 		{
 			// for each child
 			// This assumes that the children are properly sorted by the ['start_tag']['start_position']
@@ -404,7 +404,7 @@ class phpbb_bbcode_bbcode_parser
 		}
 		else
 		{
-			if($element['end_tag']['start_position'] -
+			if ($element['end_tag']['start_position'] -
 										$element['start_tag']['end_position'] - 1 === 0)
 			{
 				$final_string .= "";
