@@ -2,7 +2,7 @@
 /**
 *
 * @package phpBB3
-* @copyright (c) 2005 phpBB Group
+* @copyright (c) 2012 phpBB Group
 * @license http://opensource.org/licenses/gpl-2.0.php GNU General Public License v2
 *
 */
@@ -15,7 +15,8 @@ if (!defined('IN_PHPBB'))
 	exit;
 }
 	
-class phpbb_bbcode_bbcode_parser{
+class phpbb_bbcode_bbcode_parser
+{
 	
 	protected $bbcode_tags;
 	
@@ -30,7 +31,8 @@ class phpbb_bbcode_bbcode_parser{
 	protected $parse_result;
 	
 	
-	public function __construct(&$string, &$bbcode_tags){
+	public function __construct(&$string, &$bbcode_tags)
+	{
 		// The list of BBCodes for the regex matcher
 		
 		$this->tags_kind = array();
@@ -45,7 +47,8 @@ class phpbb_bbcode_bbcode_parser{
 	
 	// Step 1: Find opening and closing tags in the text.
 	
-	protected static function parse_inner_parameters($parameters_string){
+	protected static function parse_inner_parameters($parameters_string)
+	{
 	
 		// This will parse all parameters in this multiparameter tag
 		// These parameters must follow about the same rules as the parameters in XML.
@@ -55,17 +58,20 @@ class phpbb_bbcode_bbcode_parser{
 		
 		$parameters = array();
 		
-		foreach($parameters_match AS $parameter){			
+		foreach($parameters_match AS $parameter)
+		{			
 			$parameters[$parameter[1]] = str_replace('\"', '&quot;', $parameter[2]);
 		}
 		
 		return $parameters;
 	}
 	
-	public function step1(){
+	public function step1()
+	{
 		$bbcode_tags;
 		
-		foreach($this->bbcode_tags as $tag => $unused){
+		foreach($this->bbcode_tags as $tag => $unused)
+		{
 			$bbcode_tags[] = preg_quote($tag, '%');
 		}
 		
@@ -99,18 +105,26 @@ class phpbb_bbcode_bbcode_parser{
 		'%',$this->string, $matched, PREG_SET_ORDER | PREG_OFFSET_CAPTURE);
 		
 		
-		foreach($matched AS $match){
-			if (isset($match[6][0])){
+		foreach($matched AS $match)
+		{
+			if (isset($match[6][0]))
+			{
 				// It's a closing tag
-				if (isset($this->tags_kind[$match[6][0]]['starting_tags'])){
+				if (isset($this->tags_kind[$match[6][0]]['starting_tags']))
+				{
 					$this->tags_kind[$match[6][0]]['ending_tags'][] = array('name' => $match[6][0],
 																	'start_position' => $match[6][1] - 1,
 																	'end_position' => $match[7][1]);
-				/* }else{ */
+				/* 
+				}
+				else
+				{ */
 					// If there's still no opening tag for this tag, this closing tag will not match any opening tag,
 					// so no need to register it
 				}
-			}elseif (isset($match[1][0]) && $match[1][0] != ""){
+			}
+			elseif (isset($match[1][0]) && $match[1][0] != "")
+			{
 				// It's an opening tag.
 				$tag = array();
 				$tag['name'] = $match[1][0];
@@ -118,13 +132,18 @@ class phpbb_bbcode_bbcode_parser{
 				$tag['end_position'] = $match[5][1];
 				
 				// Only one of these will ever match
-				if ($match[4][1] > -1){
+				if ($match[4][1] > -1)
+				{
 					// multiple parameters
 					$tag['parameters'] = self::parse_inner_parameters($match[4][0]);
-				}elseif ($match[3][1] > -1){
+				}
+				elseif ($match[3][1] > -1)
+				{
 					// 1 parameter bounded by the end of the start tag
 					$tag['parameters'] = $match[3][0];
-				}elseif ($match[2][1] > -1){
+				}
+				elseif ($match[2][1] > -1)
+				{
 					// 1 parameter bounded by quotes
 					// Replace currently needed due to the way this works.
 					$tag['parameters'] = str_replace('\"', '&quot;', $match[2][0]);
@@ -137,17 +156,20 @@ class phpbb_bbcode_bbcode_parser{
 		
 	}
 
-	public function step2(){
+	public function step2()
+	{
 		
 		$tag_stack = array();
 		
 		// Step 2: Pair opening and closing tags. 
 			
-		foreach ($this->tags_kind as $bbcode_name => &$data){
+		foreach ($this->tags_kind as $bbcode_name => &$data)
+		{
 			
 			// echo "\n\n\n";
 			
-			while ($data['starting_tags'] != array() && current($data['ending_tags']) != false){
+			while ($data['starting_tags'] != array() && current($data['ending_tags']) != false)
+			{
 				// There's, at least, one possible
 				
 				// Got a closing tag!
@@ -156,9 +178,11 @@ class phpbb_bbcode_bbcode_parser{
 				reset($data['starting_tags']);
 				
 				// Find an appropriate opening tag
-				while( next($data['starting_tags']) !== false ){
+				while( next($data['starting_tags']) !== false )
+				{
 						$temp = current($data['starting_tags']);
-						if($temp['end_position'] >= $ending_tag['start_position']){
+						if($temp['end_position'] >= $ending_tag['start_position'])
+						{
 							break;
 						}
 					}
@@ -170,12 +194,14 @@ class phpbb_bbcode_bbcode_parser{
 				
 				$current_start_tag = current($data['starting_tags']);
 				
-				if ($current_start_tag === false){
+				if ($current_start_tag === false)
+				{
 					// If I go beyond the top limits of the array. The only way to get back is by using end(), prev() will not work.
 					$current_start_tag = end($data['starting_tags']);
 				}
 				
-				if ($current_start_tag['end_position'] < $ending_tag['start_position']){
+				if ($current_start_tag['end_position'] < $ending_tag['start_position'])
+				{
 									
 					// K'ay, this is a match for that closing tag
 					
@@ -187,7 +213,9 @@ class phpbb_bbcode_bbcode_parser{
 					
 					unset($data['starting_tags'][key($data['starting_tags'])]);
 					
-				}else{
+				}
+				else
+				{
 					// Oh dear... no match for this closing tag...
 					// Malformed BBcode... I don't care, I'll see what I can do with the rest, anyway
 					// continue;
@@ -199,7 +227,8 @@ class phpbb_bbcode_bbcode_parser{
 	
 	
 	
-	public function step3(){
+	public function step3()
+	{
 		ksort($this->bbcode_ordered_tag_list);
 		// Step 3: Build the tree of tags
 		
@@ -211,12 +240,15 @@ class phpbb_bbcode_bbcode_parser{
 		// Get the next element of the list and start crackin'!
 		next($this->bbcode_ordered_tag_list);
 		
-		while(current($this->bbcode_ordered_tag_list) !== false){
+		while(current($this->bbcode_ordered_tag_list) !== false)
+		{
 			// While we didn't check about all tags found
 			$current = current($this->bbcode_ordered_tag_list);
 			// Check if this tag is inside the current parent
-			if ($current['start_tag']['start_position'] <= $current_parent['end_tag']['end_position']){
-				if ($current['end_tag']['end_position'] <= $current_parent['end_tag']['end_position']){
+			if ($current['start_tag']['start_position'] <= $current_parent['end_tag']['end_position'])
+			{
+				if ($current['end_tag']['end_position'] <= $current_parent['end_tag']['end_position'])
+				{
 					// Tag is inside this parent. So this tag is part of this parent's children
 					
 					// push the previous parent
@@ -228,17 +260,22 @@ class phpbb_bbcode_bbcode_parser{
 					// Update the parent tag
 					$current_parent = &$this->bbcode_ordered_tag_list[key($this->bbcode_ordered_tag_list)];
 
-				}else{
+				}
+				else
+				{
 					// Bad nesting. This tag is meant to dissapear from this world! Well, not really... Just read it as text.
 					unset($this->bbcode_ordered_tag_list[key($this->bbcode_ordered_tag_list)]);
 				}
 				next($this->bbcode_ordered_tag_list);
-			}else /* if (current($this->bbcode_ordered_tag_list)['start_tag']['start_position'] > $current_parent['end_tag']['end_position']) */{
+			}
+			else /* if (current($this->bbcode_ordered_tag_list)['start_tag']['start_position'] > $current_parent['end_tag']['end_position']) */
+			{
 				// Close previous tag here. There are no more children.
 				
 				// var_dump("closing", $current_parent['start_tag']['parameters']['child']);
 				
-				if (end($tag_stack) === false){
+				if (end($tag_stack) === false)
+				{
 					// var_dump("stackEmpty", $current_parent['start_tag']['parameters']['child']);
 					
 					// This tag belongs to the root, so it needs to be directly added to the tree's root
@@ -248,7 +285,9 @@ class phpbb_bbcode_bbcode_parser{
 					
 					next($this->bbcode_ordered_tag_list);
 					// var_dump("nextVictim", $current_parent['start_tag']['parameters']['child']);
-				}else{
+				}
+				else
+				{
 					// Process the closing of the tag
 					$current_parent = &$tag_stack[key($tag_stack)];
 					// Pop from the stack
@@ -271,17 +310,20 @@ class phpbb_bbcode_bbcode_parser{
 	
 	// Step 6: Build the tree with the current known nodes
 	
-	protected function join_contents_to_element(&$element){
+	protected function join_contents_to_element(&$element)
+	{
 		
 		//assumes that if the tag does not have children, the key children is not set
-		if(isset($element['children'])){
+		if(isset($element['children']))
+		{
 			// for each child
 			// This assumes that the children are properly sorted by the ['start_tag']['start_position']
 			
 			// Well... needs a better name and... we cheat for the first iteration
 			$previous_child['end_tag']['end_position'] = &$element['start_tag']['end_position'];
 			
-			foreach ($element['children'] as $child_key => &$child) {
+			foreach ($element['children'] as $child_key => &$child)
+			{
 				$element['text'][] = substr(
 										$this->string,
 										$previous_child['end_tag']['end_position'],
@@ -297,11 +339,16 @@ class phpbb_bbcode_bbcode_parser{
 									$child['end_tag']['end_position'],
 									$element['end_tag']['start_position'] -
 										$child['end_tag']['end_position'] - 1);
-		}else{
+		}
+		else
+		{
 			if($element['end_tag']['start_position'] -
-										$element['start_tag']['end_position'] - 1 === 0){
+										$element['start_tag']['end_position'] - 1 === 0)
+			{
 				$element['text'][] = "";
-			}else{
+			}
+			else
+			{
 				$element['text'][] = substr(
 										$this->string,
 										$element['start_tag']['end_position'],
@@ -312,27 +359,32 @@ class phpbb_bbcode_bbcode_parser{
 		
 	}
 	
-	protected function step6(){
-		foreach ($this->bbcode_tree as &$rootBBCode) {
+	protected function step6()
+	{
+		foreach ($this->bbcode_tree as &$rootBBCode)
+		{
 			self::join_contents_to_element($rootBBCode);		
 		}
 		$this->parse_result = &$this->bbcode_tree;
 	}
 
 	
-	protected function replace_with_bbcode(&$element, $deepness){
+	protected function replace_with_bbcode(&$element, $deepness)
+	{
 		
 		$final_string = '';
 		
 		//assumes that if the tag does not have children, the key children is not set
-		if(isset($element['children'])){
+		if(isset($element['children']))
+		{
 			// for each child
 			// This assumes that the children are properly sorted by the ['start_tag']['start_position']
 			
 			// Well... needs a better name and... we cheat for the first iteration
 			$previous_child['end_tag']['end_position'] = &$element['start_tag']['end_position'];
 			
-			foreach ($element['children'] as $child_key => &$child) {
+			foreach ($element['children'] as $child_key => &$child)
+			{
 				$final_string .= substr(
 										$this->string,
 										$previous_child['end_tag']['end_position'],
@@ -349,11 +401,16 @@ class phpbb_bbcode_bbcode_parser{
 									$child['end_tag']['end_position'],
 									$element['end_tag']['start_position'] -
 										$child['end_tag']['end_position'] - 1);
-		}else{
+		}
+		else
+		{
 			if($element['end_tag']['start_position'] -
-										$element['start_tag']['end_position'] - 1 === 0){
+										$element['start_tag']['end_position'] - 1 === 0)
+			{
 				$final_string .= "";
-			}else{
+			}
+			else
+			{
 				$final_string .= substr(
 										$this->string,
 										$element['start_tag']['end_position'],
@@ -372,14 +429,16 @@ class phpbb_bbcode_bbcode_parser{
 		
 	}
 	
-	protected function step7(){
+	protected function step7()
+	{
 		
 		$final_string = '';
 		// Fake previous_child to give a kickstart
 		$previous_child = array();
 		$previous_child['end_tag']['end_position'] = 0;
 		
-		foreach ($this->bbcode_tree as &$rootBBCode) {
+		foreach ($this->bbcode_tree as &$rootBBCode)
+		{
 			$final_string .= substr(		$this->string,
 										$previous_child['end_tag']['end_position'],
 										$rootBBCode['start_tag']['start_position'] -
@@ -398,7 +457,8 @@ class phpbb_bbcode_bbcode_parser{
 	}
 	
 
-	public function parse_phase1(){
+	public function parse_phase1()
+	{
 		$this->step1();
 		$this->step2();
 		$this->step3();
@@ -407,18 +467,21 @@ class phpbb_bbcode_bbcode_parser{
 		$this->step6();
 		return $this->parse_result;
 	}
-	public function parse_phase2(){
+	public function parse_phase2()
+	{
 		$this->step7();
 		return $this->parse_result;
 	}
 	
-	public function parse(){
+	public function parse()
+	{
 		$this->parsePhase1();
 		$this->parsePhase2();
 		return $this->parse_result;
 	}
 	
-	public function get_result(){
+	public function get_result()
+	{
 		return $this->parse_result;
 	}
 	
