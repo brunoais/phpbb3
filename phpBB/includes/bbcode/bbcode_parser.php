@@ -47,7 +47,7 @@ class phpbb_bbcode_bbcode_parser
 
 	// Step 1: Find opening and closing tags in the text.
 
-	protected static function parse_inner_parameters($parameters_string)
+	static protected function parse_inner_parameters($parameters_string)
 	{
 
 		// This will parse all parameters in this multiparameter tag
