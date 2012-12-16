@@ -1,6 +1,6 @@
 <?php
 	
-	header('content-type: text/plain');
+	// header('content-type: text/plain');
 
 	abstract class ExampleParser{
 		/**
@@ -104,7 +104,8 @@ class UnderlineParser{
 			[b child="1,1,0"] 
 			[/b]
 		[/u]
-	[/b]';
+	[/b]
+	[uknown uk="[b]"][/unknown][/b]';
 	
 //	$string = 'adasdsd[a]3231[b]dawdaw[c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][m][n][o][p][q][r][s][t][u][v][w][x][y][z][a][b][c][d][e][f][g][h][i][j][k][l][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a][/z][/y][/x][/w][/v][/u][/t][/s][/r][/q][/p][/o][/n][/m][/l][/k][/j][/i][/h][/g][/f][/e][/d][/c][/b][/a';
 	
@@ -558,8 +559,36 @@ class UnderlineParser{
 								strlen($string) -
 									$previousChild['end_tag']['end_position']);
 
-	var_dump($string, $finalString);
+	//header('content-type: text/plain');
 
-	var_dump($start, $middle1, $middle2, $end, "", $middle1 - $start, $end - $middle2, $middle2 - $middle1, "", $end - $start);
+	$dump = array(
+		'string',
+		'finalString',
+		'start',
+		'middle1',
+		'middle2',
+		'end',
+		'middle1 - start' => $middle1 - $start,
+		'end - middle2' => $end - $middle2,
+		'middle2 - middle1' => $middle2 - $middle1,
+		'end - start' => $end - $start,
+	);
 
+	foreach ($dump as $name => $value)
+	{
+		if (is_numeric($name) && isset($$value))
+		{
+			echo $value . ': ';
+			var_dump($$value);
+			//echo "\n-------------------------------------\n";
+			echo '<br />-------------------------------------<br />';
+		}
+		else
+		{
+			echo $name . ': ';
+			var_dump($value);
+			//echo "\n-------------------------------------\n";
+			echo '<br />-------------------------------------<br />';
+		}
+	}
 	?>
