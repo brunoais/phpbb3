@@ -155,6 +155,14 @@ class phpbb_bbcode_bbcode_parser
 			}
 		}
 
+		foreach ($this->tags_kind AS $tag_name => $tag_data)
+		{
+			$parser = $this->bbcode_tags[$tag_name]['callback'];
+			if ( method_exists($parser, 'after_step1'))
+			{
+				$parser->after_step1($this->string, $this->tags_kind);
+			}
+		}
 	}
 
 	public function step2()
@@ -222,6 +230,17 @@ class phpbb_bbcode_bbcode_parser
 					// continue;
 				}
 				next($data['ending_tags']);
+			}
+		}
+
+		foreach ($this->bbcode_ordered_tag_list AS $open_close_tags)
+		{
+			$parser = $this->bbcode_tags[$open_close_tags['start_tag']['name']]['callback'];
+			// Just to make sure it is not modified
+			$tags_kind = $this->tags_kind;
+			if ( method_exists($parser, 'after_step2'))
+			{
+				$parser->after_step2($this->string, $tags_kind, $this->bbcode_ordered_tag_list);
 			}
 		}
 	}
@@ -299,6 +318,19 @@ class phpbb_bbcode_bbcode_parser
 			}
 
 		}
+
+		// bbcode_ordered_tag_list is the best input that it can have as no tags are deleted here.
+		foreach ($this->bbcode_ordered_tag_list AS $open_close_tags)
+		{
+			$parser = $this->bbcode_tags[$open_close_tags['start_tag']['name']]['callback'];
+			// Just to make sure it is not modified
+			$tags_kind = $this->tags_kind;
+			$bbcode_ordered_tag_list = $this->bbcode_ordered_tag_list;
+			if ( method_exists($parser, 'after_step3'))
+			{
+				$parser->after_step3($this->string, $tags_kind, $bbcode_ordered_tag_list, $this->bbcode_tree);
+			}
+		}
 	}
 
 	// Step 4: Filter out child nodes that are not allowed.
@@ -366,6 +398,19 @@ class phpbb_bbcode_bbcode_parser
 		{
 			self::join_contents_to_element($rootBBCode);
 		}
+
+		foreach ($this->bbcode_ordered_tag_list AS $open_close_tags)
+		{
+			$parser = $this->bbcode_tags[$open_close_tags['start_tag']['name']]['callback'];
+			// Just to make sure it is not modified
+			$tags_kind = $this->tags_kind;
+			$bbcode_ordered_tag_list = $this->bbcode_ordered_tag_list;
+			if ( method_exists($parser, 'after_step6'))
+			{
+				$parser->after_step6($this->string, $tags_kind, $bbcode_ordered_tag_list, $this->bbcode_tree);
+			}
+		}
+
 		$this->parse_result = &$this->bbcode_tree;
 	}
 
@@ -453,6 +498,19 @@ class phpbb_bbcode_bbcode_parser
 									$previous_child['end_tag']['end_position'],
 									strlen($this->string) -
 										$previous_child['end_tag']['end_position']);
+
+
+		foreach ($this->bbcode_ordered_tag_list AS $open_close_tags)
+		{
+			$parser = $this->bbcode_tags[$open_close_tags['start_tag']['name']]['callback'];
+			// Just to make sure it is not modified
+			$tags_kind = $this->tags_kind;
+			$bbcode_ordered_tag_list = $this->bbcode_ordered_tag_list;
+			if ( method_exists($parser, 'after_step7'))
+			{
+				$parser->after_step7($this->string, $tags_kind, $bbcode_ordered_tag_list, $this->bbcode_tree, $final_string);
+			}
+		}
 
 		$this->parse_result = &$final_string;
 	}
