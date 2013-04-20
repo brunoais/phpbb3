@@ -42,6 +42,12 @@ class bbcode_firstpass extends bbcode
 		}
 
 		global $user;
+		
+		/**
+		
+		TODO: THIS IS TAKEN CARE BY THE CONFIGURATOR OF textFormatter
+		
+		**/
 
 		$this->bbcode_bitfield = '';
 		$bitfield = new bitfield();
@@ -162,6 +168,13 @@ class bbcode_firstpass extends bbcode
 				'regexp'	=> array($row['first_pass_match'] => str_replace('$uid', $this->bbcode_uid, $row['first_pass_replace']))
 			);
 		}
+		/**
+		
+		TODO: REPLACEMENT! HERE LOAD THE PARSER OF textFormatter.
+		
+		**/
+		
+		
 	}
 
 	/**
@@ -186,6 +199,8 @@ class bbcode_firstpass extends bbcode
 
 	/**
 	* Transform some characters in valid bbcodes
+	*
+	* TODO: MAKE SURE THAT textFormatter TAKES CARE OF THIS PROPERLY
 	*/
 	function bbcode_specialchars($text)
 	{
@@ -880,6 +895,8 @@ class bbcode_firstpass extends bbcode
 
 	/**
 	* Validate email
+	*
+	* TODO: MAKE SURE THAT textFormatter TAKES CARE OF THIS PROPERLY
 	*/
 	function validate_email($var1, $var2)
 	{
@@ -920,6 +937,8 @@ class bbcode_firstpass extends bbcode
 	*
 	* @param string $var1 optional url parameter for url bbcode: [url(=$var1)]$var2[/url]
 	* @param string $var2 url bbcode content: [url(=$var1)]$var2[/url]
+	*
+	* TODO: MAKE SURE THAT textFormatter TAKES CARE OF THIS PROPERLY
 	*/
 	function validate_url($var1, $var2)
 	{
@@ -983,6 +1002,8 @@ class bbcode_firstpass extends bbcode
 	* @return true if the url is pointing to this domain/script_path/php-file, false if not
 	*
 	* @access private
+	*
+	* TODO: Merge this with textFormatter as a filter. TextFormatter does not come with this feature
 	*/
 	function path_in_domain($url)
 	{
@@ -1093,6 +1114,8 @@ class parse_message extends bbcode_firstpass
 			$this->decode_message();
 		}
 
+		// TODO: Does TextFormatter do this automatically?
+		
 		// Do some general 'cleanup' first before processing message,
 		// e.g. remove excessive newlines(?), smilies(?)
 		$match = array('#(script|about|applet|activex|chrome):#i');
@@ -1251,6 +1274,12 @@ class parse_message extends bbcode_firstpass
 			$this->message = $tmp_message;
 			return $return_message;
 		}
+		
+		/**
+		
+		TODO: REPLACE THIS FOR textFormatter
+		
+		**/
 
 		$this->message_status = 'plain';
 		return false;
@@ -1349,6 +1378,8 @@ class parse_message extends bbcode_firstpass
 
 	/**
 	* Parse Attachments
+	*
+	* TODO: check if should delete or not
 	*/
 	function parse_attachments($form_name, $mode, $forum_id, $submit, $preview, $refresh, $is_message = false)
 	{
