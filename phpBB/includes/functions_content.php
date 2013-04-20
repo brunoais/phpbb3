@@ -367,6 +367,13 @@ function decode_message(&$message, $bbcode_uid = '')
 {
 	global $config;
 
+	/**
+	
+	TODO: Call the proper method on textFormatter, delete the rest.
+	
+	**/
+	return;
+	
 	if ($bbcode_uid)
 	{
 		$match = array('<br />', "[/*:m:$bbcode_uid]", ":u:$bbcode_uid", ":o:$bbcode_uid", ":$bbcode_uid");
@@ -391,6 +398,14 @@ function decode_message(&$message, $bbcode_uid = '')
 */
 function strip_bbcode(&$text, $uid = '')
 {
+
+	/**
+	
+	TODO: Call the proper method on textFormatter, delete the rest.
+	
+	**/
+	return;
+
 	if (!$uid)
 	{
 		$uid = '[0-9a-z]{5,}';
@@ -432,6 +447,20 @@ function generate_text_for_display($text, $uid, $bitfield, $flags, $censor_text 
 	$vars = array('text', 'uid', 'bitfield', 'flags', 'censor_text');
 	extract($phpbb_dispatcher->trigger_event('core.modify_text_for_display_before', compact($vars)));
 
+	
+	/**
+	
+	TODO: Call the propper method on textFormatter, delete the rest.
+	
+		Renderer::render($inputXML);
+	
+	**/
+	return;
+	
+	
+	
+	
+	
 	if ($censor_text)
 	{		
 		$text = censor_text($text);
@@ -502,6 +531,21 @@ function generate_text_for_storage(&$text, &$uid, &$bitfield, &$flags, $allow_bb
 	$vars = array('text', 'uid', 'bitfield', 'flags', 'allow_bbcode', 'allow_urls', 'allow_smilies');
 	extract($phpbb_dispatcher->trigger_event('core.modify_text_for_storage_before', compact($vars)));
 
+	
+	/**
+	
+	TODO: Call the propper method on textFormatter, delete the rest.
+	
+		Parser::parse($inputText);
+	
+	**/
+	return;
+	
+	
+	
+	
+	
+	
 	$uid = $bitfield = '';
 	$flags = (($allow_bbcode) ? OPTION_FLAG_BBCODE : 0) + (($allow_smilies) ? OPTION_FLAG_SMILIES : 0) + (($allow_urls) ? OPTION_FLAG_LINKS : 0);
 
@@ -773,6 +817,20 @@ function censor_text($text)
 		return '';
 	}
 
+	
+	
+	/**
+	
+	TODO: textFormatter does this automatically while parsing.
+	
+	
+	**/
+	return;
+	
+	
+	
+	
+	
 	// We moved the word censor checks in here because we call this function quite often - and then only need to do the check once
 	if (!isset($censors) || !is_array($censors))
 	{
@@ -815,6 +873,14 @@ function smiley_text($text, $force_option = false)
 {
 	global $config, $user, $phpbb_root_path;
 
+	
+	/**
+	
+	TODO: This is useful, but textFormatter, does this also while parsing.
+	
+	**/
+	return;
+	
 	if ($force_option || !$config['allow_smilies'] || !$user->optionget('viewsmilies'))
 	{
 		return preg_replace('#<!\-\- s(.*?) \-\-><img src="\{SMILIES_PATH\}\/.*? \/><!\-\- s\1 \-\->#', '\1', $text);
