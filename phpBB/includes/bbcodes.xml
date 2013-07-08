@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<repository>
+
+	<bbcode name="B">
+		<usage>[B]{TEXT}[/B]</usage>
+		<template><![CDATA[
+			<span style="font-weight: bold">{TEXT}</span>
+		]]></template>
+	</bbcode>
+
+	<bbcode name="CODE">
+		<usage>[CODE]{TEXT}[/CODE]</usage>
+		<template><![CDATA[
+			<dl class="codebox"><dt>{L_CODE}{L_COLON} <a href="#" onclick="selectCode(this); return false;">{L_SELECT_ALL_CODE}</a></dt><dd><code>{TEXT}</code></dd></dl>
+		]]></template>
+		<rules>
+			<denyAll />
+		</rules>
+	</bbcode>
+
+	<bbcode name="COLOR">
+		<usage>[COLOR={COLOR}]{TEXT}[/COLOR]</usage>
+		<template><![CDATA[
+			<span style="color: {COLOR}">{TEXT}</span>
+		]]></template>
+	</bbcode>
+
+	<bbcode name="EMAIL">
+		<usage>[EMAIL={EMAIL;useContent}]{TEXT}[/EMAIL]</usage>
+		<template><![CDATA[
+			<a href="mailto:{EMAIL}">{TEXT}</a>
+		]]></template>
+	</bbcode>
+
+	<bbcode name="FLASH">
+		<usage>[FLASH={NUMBER1},{NUMBER2}]{URL}[/FLASH]</usage>
+		<template><![CDATA[
+			<object classid="clsid:D27CDB6E-AE6D-11CF-96B8-444553540000" codebase="http://active.macromedia.com/flash2/cabs/swflash.cab#version=5,0,0,0" width="{NUMBER1}" height="{NUMBER2}"><param name="movie" value="{URL}" /><param name="play" value="false" /><param name="loop" value="false" /><param name="quality" value="high" /><param name="allowScriptAccess" value="never" /><param name="allowNetworking" value="internal" /><embed src="{URL}" type="application/x-shockwave-flash" pluginspage="http://www.macromedia.com/shockwave/download/index.cgi?P1_Prod_Version=ShockwaveFlash" width="{NUMBER1}" height="{NUMBER2}" play="false" loop="false" quality="high" allowscriptaccess="never" allownetworking="internal"></embed></object>
+		]]></template>
+	</bbcode>
+
+	<bbcode name="I">
+		<usage>[I]{TEXT}[/I]</usage>
+		<template><![CDATA[
+			<span style="font-style: italic">{TEXT}</span>
+		]]></template>
+	</bbcode>
+
+	<bbcode name="IMG">
+		<usage>[IMG src={URL;useContent}]</usage>
+		<template><![CDATA[
+			<img src="{URL}" alt="{L_IMAGE}" />
+		]]></template>
+	</bbcode>
+
+	<bbcode name="LIST">
+		<usage>[LIST type={MAP=1:decimal,a:lower-alpha,A:upper-alpha,i:lower-roman,I:upper-roman;caseSensitive;optional;postFilter=#simpletext}]{TEXT}[/LIST]</usage>
+		<template><![CDATA[
+			<ul><xsl:apply-templates /></ul>
+		]]></template>
+		<template predicate="@type"><![CDATA[
+			<ul style="list-style-type: {@type}"><xsl:apply-templates /></ul>
+		]]></template>
+		<!-- Use an ol element if @type starts with "upper" "lower" or "decim" -->
+		<template predicate="@type and contains('upperlowerdecim',substring(@type,1,5))"><![CDATA[
+			<ol style="list-style-type: {@type}"><xsl:apply-templates /></ol>
+		]]></template>
+	</bbcode>
+
+	<bbcode name="*" tagName="LI">
+		<usage>[*]{TEXT}[/*]</usage>
+		<template><![CDATA[
+			<li><xsl:apply-templates /></li>
+		]]></template>
+	</bbcode>
+
+	<bbcode name="QUOTE">
+		<usage>[QUOTE author={TEXT1;optional}]{TEXT2}[/QUOTE]</usage>
+		<template predicate="@author"><![CDATA[
+			<blockquote><div><cite>{TEXT1} {L_WROTE}{L_COLON}</cite><xsl:apply-templates/></div></blockquote>
+		]]></template>
+		<template predicate="not(@author)"><![CDATA[
+			<blockquote class="uncited"><div><xsl:apply-templates/></div></blockquote>
+		]]></template>
+	</bbcode>
+
+	<bbcode name="SIZE">
+		<!-- Uses custom filter #fontsize -->
+		<usage>[SIZE={FONTSIZE}]{TEXT}[/SIZE]</usage>
+		<template><![CDATA[
+			<span style="font-size: {FONTSIZE}%; line-height: 116%;">{TEXT}</span>
+		]]></template>
+	</bbcode>
+
+	<bbcode name="U">
+		<usage>[U]{TEXT}[/U]</usage>
+		<template><![CDATA[
+			<span style="text-decoration: underline">{TEXT}</span>
+		]]></template>
+	</bbcode>
+
+	<bbcode name="URL">
+		<usage>[URL={URL;useContent}]{TEXT}[/URL]</usage>
+		<template><![CDATA[
+			<a href="{URL}" class="postlink">{TEXT}</a>
+		]]></template>
+	</bbcode>
+
+</repository>
