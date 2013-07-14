@@ -220,7 +220,7 @@ function get_text_formatter_parser()
 	// Try to get the parser from the cache
 	$parser = $cache->get('_text_formatter_parser');
 
-	// Otherwise, regenerate a set of parser/renderers
+	// Otherwise, regenerate a set of parser/renderer
 	if ($parser === false)
 	{
 		$text_formatter = regenerate_text_formatter();
@@ -284,7 +284,7 @@ function get_text_formatter_renderer()
 /**
 * Generate, cache and return a set of parser and renderer(s)
 *
-* @return array Associative array containing a "parser" element and a "renderers" element
+* @return array Associative array containing a "parser" element and a "renderer" element
 */
 function regenerate_text_formatter()
 {
@@ -333,7 +333,7 @@ function get_text_formatter(s9e\TextFormatter\Configurator $configurator = null)
 /**
 * Cache given set of parser and renderer
 *
-* @param  array Associative array containing a "parser" element and a "renderers" element
+* @param  array Associative array containing a "parser" element and a "renderer" element
 * @return null
 */
 public function cache_text_formatter(array $text_formatter)
