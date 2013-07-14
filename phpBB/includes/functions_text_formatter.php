@@ -298,7 +298,7 @@ function regenerate_text_formatter()
 * Generate and return a set of parser and renderer(s)
 *
 * @param  s9e\TextFormatter\Configurator $configurator A configured instance of the configurator. If none is given, one will be created automatically
-* @return array Associative array containing a "parser" element and a "renderers" element
+* @return array Associative array containing a "parser" element and a "renderer" element
 */
 function get_text_formatter(s9e\TextFormatter\Configurator $configurator = null)
 {
