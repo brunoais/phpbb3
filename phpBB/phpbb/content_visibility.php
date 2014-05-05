@@ -142,6 +142,8 @@ class content_visibility
 	*/
 	public function get_forums_visibility_sql($mode, $forum_ids = array(), $table_alias = '')
 	{
+		// [ONLY_OP_INJECT] <- Needs to be checked for 'f_brunoais_read_other' check forumId, if failed, include for check for userId.
+
 		$where_sql = '(';
 
 		$approve_forums = array_intersect($forum_ids, array_keys($this->auth->acl_getf('m_approve', true)));
@@ -189,6 +191,8 @@ class content_visibility
 	public function get_global_visibility_sql($mode, $exclude_forum_ids = array(), $table_alias = '')
 	{
 		$where_sqls = array();
+		
+		// [ONLY_OP_INJECT] <- Needs to be checked for 'f_brunoais_read_other'. Check forumId, if failed, include for check for userId.
 
 		$approve_forums = array_diff(array_keys($this->auth->acl_getf('m_approve', true)), $exclude_forum_ids);
 
