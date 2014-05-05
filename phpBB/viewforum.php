@@ -615,6 +615,8 @@ if (sizeof($shadow_topic_list))
 
 			continue;
 		}
+		
+		// [ONLY_OP_INJECT] <- Needs to be checked for 'f_brunoais_read_other' too
 
 		// We want to retain some values
 		$row = array_merge($row, array(
@@ -664,6 +666,7 @@ $topic_tracking_info = $tracking_topics = array();
 */
 $vars = array('topic_list', 'rowset', 'total_topic_count');
 extract($phpbb_dispatcher->trigger_event('core.viewforum_modify_topics_data', compact($vars)));
+// [ONLY_OP_INJECT] <- Use event; filter by 'f_brunoais_read_other'.
 
 // Okay, lets dump out the page ...
 if (sizeof($topic_list))
