@@ -95,6 +95,8 @@ if ($post_id)
 	// Check required permissions
 	$acl_check_ary = array('f_list' => 'POST_NOT_EXIST', 'f_read' => 'USER_CANNOT_READ', 'f_report' => 'USER_CANNOT_REPORT');
 
+	// [ONLY_OP_INJECT] <- Needs to be checked for 'f_brunoais_read_other'
+
 	foreach ($acl_check_ary as $acl => $error)
 	{
 		if (!$auth->acl_get($acl, $forum_id))
