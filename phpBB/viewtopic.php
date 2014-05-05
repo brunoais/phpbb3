@@ -343,6 +343,8 @@ if (!$auth->acl_get('f_read', $forum_id))
 	login_box('', $user->lang['LOGIN_VIEWFORUM']);
 }
 
+// [ONLY_OP_INJECT] <- Needs to be checked for 'f_brunoais_read_other' too; use $topic_data array
+
 // Forum is passworded ... check whether access has been granted to this
 // user this session, if not show login box
 if ($topic_data['forum_password'])
