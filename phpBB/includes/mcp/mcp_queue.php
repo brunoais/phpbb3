@@ -354,6 +354,8 @@ class mcp_queue
 				$forum_list_approve = get_forum_list($m_perm, false, true);
 				$forum_list_read = array_flip(get_forum_list('f_read', true, true)); // Flipped so we can isset() the forum IDs
 
+				// [ONLY_OP_INJECT] <- for now, just array_intersect()
+
 				// Remove forums we cannot read
 				foreach ($forum_list_approve as $k => $forum_data)
 				{

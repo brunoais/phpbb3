@@ -132,6 +132,8 @@ if ($forum_id && !$auth->acl_get('f_read', $forum_id))
 	trigger_error('NOT_AUTHORISED');
 }
 
+// [ONLY_OP_INJECT] <- If the topic (or post) is defined, filter by 'f_brunoais_read_other'
+
 if ($forum_id)
 {
 	$module->acl_forum_id = $forum_id;
@@ -693,6 +695,8 @@ function mcp_sorting($mode, &$sort_days, &$sort_key, &$sort_dir, &$sort_by_sql, 
 			$default_dir = 'd';
 			$where_sql .= ($topic_id) ? ' p.topic_id = ' . $topic_id . ' AND' : '';
 
+			// [ONLY_OP_INJECT] <- STOP! I also need to filter by 'f_brunoais_read_other'!
+
 			$sql = 'SELECT COUNT(p.post_id) AS total
 				FROM ' . POSTS_TABLE . ' p, ' . TOPICS_TABLE . " t
 				$where_sql " . $db->sql_in_set('p.forum_id', ($forum_id) ? array($forum_id) : array_intersect(get_forum_list('f_read'), get_forum_list('m_approve'))) . '
@@ -712,6 +716,8 @@ function mcp_sorting($mode, &$sort_days, &$sort_key, &$sort_dir, &$sort_by_sql, 
 			$type = 'topics';
 			$default_key = 't';
 			$default_dir = 'd';
+
+			// [ONLY_OP_INJECT] <- STOP! I also need to filter by 'f_brunoais_read_other'!
 
 			$sql = 'SELECT COUNT(topic_id) AS total
 				FROM ' . TOPICS_TABLE . "

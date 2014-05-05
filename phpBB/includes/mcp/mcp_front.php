@@ -76,6 +76,8 @@ function mcp_front_view($id, $mode, $action)
 				}
 			}
 
+			// [ONLY_OP_INJECT] <- if($total && !empty(array_diff(f_read, f_brunoais_read_other))) I need the topic poster
+
 			if ($total)
 			{
 				$sql = 'SELECT p.post_id, p.post_subject, p.post_time, p.post_attachment, p.poster_id, p.post_username, u.username, u.username_clean, u.user_colour, t.topic_id, t.topic_title, t.topic_first_post_id, p.forum_id
@@ -142,6 +144,8 @@ function mcp_front_view($id, $mode, $action)
 			$result = $db->sql_query($sql);
 			$total = (int) $db->sql_fetchfield('total');
 			$db->sql_freeresult($result);
+
+			// [ONLY_OP_INJECT] <- if($total && !empty(array_diff(f_read, f_brunoais_read_other))) I need the topic poster
 
 			if ($total)
 			{
