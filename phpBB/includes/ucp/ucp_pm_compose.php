@@ -262,6 +262,7 @@ function compose_pm($id, $mode, $action, $user_folders = array())
 			{
 				trigger_error('NOT_AUTHORISED');
 			}
+			// [ONLY_OP_INJECT] <- Also filter by 'f_brunoais_read_other'; $post has the topic poster
 
 			// Passworded forum?
 			if ($post['forum_id'])
