@@ -1123,6 +1123,8 @@ function display_user_activity(&$userdata)
 		$active_t_pct = ($userdata['user_posts']) ? ($active_t_count / $userdata['user_posts']) * 100 : 0;
 	}
 
+	// [ONLY_OP_INJECT] <- I need to test/filter the listed topics for f_brunoais_read_other
+
 	$l_active_pct = ($userdata['user_id'] != ANONYMOUS && $userdata['user_id'] == $user->data['user_id']) ? $user->lang['POST_PCT_ACTIVE_OWN'] : $user->lang['POST_PCT_ACTIVE'];
 
 	$template->assign_vars(array(
