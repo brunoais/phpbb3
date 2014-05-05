@@ -284,6 +284,8 @@ if (!$auth->acl_get('f_read', $forum_id))
 	login_box('', $message);
 }
 
+// [ONLY_OP_INJECT] <- Given that he has f_read, does he have 'f_brunoais_read_other'?
+
 // Permission to do the action asked?
 $is_authed = false;
 
