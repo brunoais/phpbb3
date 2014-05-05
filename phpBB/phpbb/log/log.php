@@ -388,6 +388,8 @@ class log implements \phpbb\log\log_interface
 				$sql_additional = '';
 		}
 
+		// [ONLY_OP_INJECT] <- Use event. Prepare filtering; Check if filtering will be required
+
 		/**
 		* Overwrite log type and limitations before we count and get the logs
 		*
@@ -515,6 +517,8 @@ class log implements \phpbb\log\log_interface
 				'action'			=> (isset($this->user->lang[$row['log_operation']])) ? $row['log_operation'] : '{' . ucfirst(str_replace('_', ' ', $row['log_operation'])) . '}',
 			);
 
+			// [ONLY_OP_INJECT] <- Use event. Note: Only need to focus on the topic
+
 			/**
 			* Modify the entry's data before it is returned
 			*
@@ -629,6 +633,8 @@ class log implements \phpbb\log\log_interface
 				$log[$key]['reportee_username_full'] = get_username_string('full', $row['reportee_id'], $reportee_data_list[$row['reportee_id']]['username'], $reportee_data_list[$row['reportee_id']]['user_colour'], false, $profile_url);
 			}
 		}
+		
+		// [ONLY_OP_INJECT] <- Iterate on $topic_auth and $log. Locate according to f_brunoais_read_other. Navigate into $log[$key]['viewtopic'] to false where innaccessible
 
 		return $log;
 	}
@@ -714,6 +720,7 @@ class log implements \phpbb\log\log_interface
 		$forum_auth = array('f_read' => array(), 'm_' => array());
 		$topic_ids = array_unique($topic_ids);
 
+		// [ONLY_OP_INJECT] <- Need 1 extra column in the SELECT
 		$sql = 'SELECT topic_id, forum_id
 			FROM ' . TOPICS_TABLE . '
 			WHERE ' . $this->db->sql_in_set('topic_id', array_map('intval', $topic_ids));
@@ -728,6 +735,8 @@ class log implements \phpbb\log\log_interface
 			{
 				$forum_auth['f_read'][$row['topic_id']] = $row['forum_id'];
 			}
+
+			// [ONLY_OP_INJECT] <- Additionally to f_read, I have to do the same to f_brunoais_read_other
 
 			if ($this->auth->acl_gets('a_', 'm_', $row['forum_id']))
 			{
