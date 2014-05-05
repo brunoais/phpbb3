@@ -932,6 +932,7 @@ function load_drafts($topic_id = 0, $forum_id = 0, $id = 0, $pm_action = '', $ms
 	$topic_rows = array();
 	if (sizeof($topic_ids))
 	{
+		// [ONLY_OP_INJECT] <- if(!empty( array_diff(f_read, f_brunoais_read_other))) I need the topic poster
 		$sql = 'SELECT topic_id, forum_id, topic_title
 			FROM ' . TOPICS_TABLE . '
 			WHERE ' . $db->sql_in_set('topic_id', array_unique($topic_ids));
@@ -981,6 +982,8 @@ function load_drafts($topic_id = 0, $forum_id = 0, $id = 0, $pm_action = '', $ms
 			$link_pm = true;
 			$insert_url = append_sid("{$phpbb_root_path}ucp.$phpEx", "i=$id&amp;mode=compose&amp;d={$draft['draft_id']}" . (($pm_action) ? "&amp;action=$pm_action" : '') . (($msg_id) ? "&amp;p=$msg_id" : ''));
 		}
+		
+		// [ONLY_OP_INJECT] <- if($link_topic) I may need to filter
 
 		$template->assign_block_vars('draftrow', array(
 			'DRAFT_ID'		=> $draft['draft_id'],
