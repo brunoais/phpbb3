@@ -91,6 +91,8 @@ class bookmark extends \phpbb\notification\type\post
 		{
 			return array();
 		}
+		
+		// [ONLY_OP_INJECT] <- Needs to be checked for 'f_brunoais_read_other' too; use $post array
 
 		$notify_users = $this->check_user_notification_options($auth_read[$post['forum_id']]['f_read'], $options);
 

@@ -102,6 +102,8 @@ class topic_in_queue extends \phpbb\notification\type\topic
 		{
 			return array();
 		}
+		
+		// [ONLY_OP_INJECT] <- Needs to be checked for 'f_brunoais_read_other' too; use $topic array; $auth_read[$topic['forum_id']]['f_read'] has userId's
 
 		return $this->check_user_notification_options($auth_read[$topic['forum_id']]['f_read'], array_merge($options, array(
 			'item_type'		=> self::$notification_option['id'],

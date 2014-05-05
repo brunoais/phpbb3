@@ -79,6 +79,8 @@ class approve_topic extends \phpbb\notification\type\topic
 
 		$auth_read = $this->auth->acl_get_list(array_keys($users), 'f_read', $post['forum_id']);
 
+		// [ONLY_OP_INJECT] <- One approves a post from another user, so just intersect with 'f_brunoais_read_other'
+
 		if (empty($auth_read))
 		{
 			return array();

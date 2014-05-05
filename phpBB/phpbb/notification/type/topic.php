@@ -118,6 +118,8 @@ class topic extends \phpbb\notification\type\base
 		{
 			return array();
 		}
+		
+		// [ONLY_OP_INJECT] <- Needs to be checked for 'f_brunoais_read_other' too; use $topic array; $auth_read[$topic['forum_id']]['f_read'] has userId's
 
 		return $this->check_user_notification_options($auth_read[$topic['forum_id']]['f_read'], $options);
 	}
