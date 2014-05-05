@@ -40,6 +40,7 @@ class topics_active extends \phpbb\feed\topic_base
 
 		$in_fid_ary = array_intersect($forum_ids_read, $this->get_forum_ids());
 		$in_fid_ary = array_diff($in_fid_ary, $this->get_passworded_forums());
+		// [ONLY_OP_INJECT] <- if(array_intersect($in_fid_ary, 'f_brunoais_read_other' )) Also get the topic poster OR use topic_first_post_id later to evaluate permissions
 		if (empty($in_fid_ary))
 		{
 			return false;

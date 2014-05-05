@@ -67,6 +67,7 @@ class news extends \phpbb\feed\topic_base
 			WHERE topic_moved_id = 0
 				AND ' . $this->content_visibility->get_forums_visibility_sql('topic', $in_fid_ary) . '
 			ORDER BY topic_time DESC';
+		// [ONLY_OP_INJECT] <- I need one of: Inject the topic ownership test (uid == topic poster), add topic poster to the select(event1) and then filter later(event2) or add topic poster to SELECT and then place event to filter it
 		$result = $this->db->sql_query_limit($sql, $this->num_items);
 
 		$post_ids = array();

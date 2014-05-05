@@ -32,6 +32,7 @@ class topics extends \phpbb\feed\topic_base
 		{
 			return false;
 		}
+		// [ONLY_OP_INJECT] <- if(array_intersect($forum_ids_read, 'f_brunoais_read_other' )) Also get the topic poster OR use topic_first_post_id later to evaluate permissions
 
 		// We really have to get the post ids first!
 		$sql = 'SELECT topic_first_post_id, topic_time
