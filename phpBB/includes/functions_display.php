@@ -1105,6 +1105,8 @@ function display_user_activity(&$userdata)
 	$userdata['active_t_row'] = $active_t_row;
 	$userdata['active_f_row'] = $active_f_row;
 
+	// [ONLY_OP_INJECT] <- I need to test/filter the listed topics for f_brunoais_read_other
+	
 	$active_f_name = $active_f_id = $active_f_count = $active_f_pct = '';
 	if (!empty($active_f_row['num_posts']))
 	{
@@ -1122,8 +1124,6 @@ function display_user_activity(&$userdata)
 		$active_t_count = $active_t_row['num_posts'];
 		$active_t_pct = ($userdata['user_posts']) ? ($active_t_count / $userdata['user_posts']) * 100 : 0;
 	}
-
-	// [ONLY_OP_INJECT] <- I need to test/filter the listed topics for f_brunoais_read_other
 
 	$l_active_pct = ($userdata['user_id'] != ANONYMOUS && $userdata['user_id'] == $user->data['user_id']) ? $user->lang['POST_PCT_ACTIVE_OWN'] : $user->lang['POST_PCT_ACTIVE'];
 
