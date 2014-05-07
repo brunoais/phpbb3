@@ -227,6 +227,8 @@ function compose_pm($id, $mode, $action, $user_folders = array())
 		trigger_error('NO_AUTH_EDIT_MESSAGE');
 	}
 
+	// [ONLY_OP_INJECT] <- if ($action == 'quotepost') I need to also add the topic poster to the DB query
+
 	if ($sql)
 	{
 		$result = $db->sql_query($sql);
