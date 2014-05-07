@@ -98,12 +98,12 @@ class post_in_queue extends \phpbb\notification\type\post
 		sort($has_permission);
 
 		$auth_read = $this->auth->acl_get_list($has_permission, 'f_read', $post['forum_id']);
+
+		// [ONLY_OP_INJECT] <- Needs to be checked for 'f_brunoais_read_other' too; use $post array
 		if (empty($auth_read))
 		{
 			return array();
 		}
-		
-		// [ONLY_OP_INJECT] <- Needs to be checked for 'f_brunoais_read_other' too; use $post array
 
 		return $this->check_user_notification_options($auth_read[$post['forum_id']]['f_read'], array_merge($options, array(
 			'item_type'		=> self::$notification_option['id'],
