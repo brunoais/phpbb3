@@ -1102,11 +1102,11 @@ function display_user_activity(&$userdata)
 		}
 	}
 
+	// [ONLY_OP_INJECT] <- I need to test/filter the listed topics for f_brunoais_read_other
+	
 	$userdata['active_t_row'] = $active_t_row;
 	$userdata['active_f_row'] = $active_f_row;
 
-	// [ONLY_OP_INJECT] <- I need to test/filter the listed topics for f_brunoais_read_other
-	
 	$active_f_name = $active_f_id = $active_f_count = $active_f_pct = '';
 	if (!empty($active_f_row['num_posts']))
 	{
