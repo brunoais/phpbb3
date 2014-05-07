@@ -615,8 +615,6 @@ if (sizeof($shadow_topic_list))
 
 			continue;
 		}
-		
-		// [ONLY_OP_INJECT] <- Needs to be checked for 'f_brunoais_read_other' too
 
 		// We want to retain some values
 		$row = array_merge($row, array(
