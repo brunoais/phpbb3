@@ -634,7 +634,7 @@ class log implements \phpbb\log\log_interface
 			}
 		}
 		
-		// [ONLY_OP_INJECT] <- Iterate on $topic_auth and $log. Locate according to f_brunoais_read_other. Navigate into $log[$key]['viewtopic'] to false where innaccessible
+		// [ONLY_OP_INJECT] <- Iterate on $topic_auth and $log. Locate according to f_brunoais_read_other. Navigate into $log[$key]['viewtopic'] to false where innaccessible (!)OR(!) place above (after calling $this->get_topic_auth()): Do the same as the others for f_brunoais_read_other $log[$key]['viewtopic'] to false where appropriate
 
 		return $log;
 	}
