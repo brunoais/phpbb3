@@ -145,7 +145,6 @@ function mcp_front_view($id, $mode, $action)
 			$total = (int) $db->sql_fetchfield('total');
 			$db->sql_freeresult($result);
 
-			// [ONLY_OP_INJECT] <- if($total && !empty(array_diff(f_read, f_brunoais_read_other))) I need the topic poster
 
 			if ($total)
 			{
@@ -178,6 +177,8 @@ function mcp_front_view($id, $mode, $action)
 
 					'ORDER_BY'	=> 'p.post_time DESC',
 				);
+				
+				// [ONLY_OP_INJECT] <- if(!empty(array_diff(f_read, f_brunoais_read_other))) I need to inject poster check
 				$sql = $db->sql_build_query('SELECT', $sql_ary);
 				$result = $db->sql_query_limit($sql, 5);
 
