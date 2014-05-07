@@ -86,13 +86,13 @@ class bookmark extends \phpbb\notification\type\post
 		sort($users);
 
 		$auth_read = $this->auth->acl_get_list($users, 'f_read', $post['forum_id']);
+		
+		// [ONLY_OP_INJECT] <- Needs to be checked for 'f_brunoais_read_other' too; use $post array
 
 		if (empty($auth_read))
 		{
 			return array();
 		}
-		
-		// [ONLY_OP_INJECT] <- Needs to be checked for 'f_brunoais_read_other' too; use $post array
 
 		$notify_users = $this->check_user_notification_options($auth_read[$post['forum_id']]['f_read'], $options);
 
