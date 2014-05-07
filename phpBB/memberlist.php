@@ -788,15 +788,18 @@ switch ($mode)
 		}
 		else if ($topic_id)
 		{
-			// [ONLY_OP_INJECT] <- Also get the topic poster
-
 			// Send topic heads-up to email address
 			$sql = 'SELECT forum_id, topic_title
 				FROM ' . TOPICS_TABLE . "
 				WHERE topic_id = $topic_id";
+
+			// [ONLY_OP_INJECT] <- Also get the topic poster
+
 			$result = $db->sql_query($sql);
 			$row = $db->sql_fetchrow($result);
 			$db->sql_freeresult($result);
+
+			// [ONLY_OP_INJECT] <- Also evaluate based on topic poster and f_brunoais_read_other
 
 			if (!$row)
 			{
@@ -814,7 +817,6 @@ switch ($mode)
 				{
 					trigger_error('NO_EMAIL');
 				}
-				// [ONLY_OP_INJECT] <- Also evaluate based on topic poster and f_brunoais_read_other
 			}
 			else
 			{
