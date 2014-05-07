@@ -354,8 +354,6 @@ class mcp_queue
 				$forum_list_approve = get_forum_list($m_perm, false, true);
 				$forum_list_read = array_flip(get_forum_list('f_read', true, true)); // Flipped so we can isset() the forum IDs
 
-				// [ONLY_OP_INJECT] <- for now, just array_intersect()
-
 				// Remove forums we cannot read
 				foreach ($forum_list_approve as $k => $forum_data)
 				{
@@ -428,6 +426,9 @@ class mcp_queue
 								OR t.topic_delete_user = 0)
 							$limit_time_sql
 						ORDER BY $sort_order_sql";
+				
+					// [ONLY_OP_INJECT] <- add topic poster restriction
+
 					$result = $db->sql_query_limit($sql, $config['topics_per_page'], $start);
 
 					$i = 0;
@@ -447,6 +448,9 @@ class mcp_queue
 								AND t.topic_id = p.topic_id
 								AND u.user_id = p.poster_id
 							ORDER BY ' . $sort_order_sql;
+
+						// [ONLY_OP_INJECT] <- add topic poster restriction
+
 						$result = $db->sql_query($sql);
 
 						$post_data = $rowset = array();
