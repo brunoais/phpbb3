@@ -246,8 +246,6 @@ class mcp_reports
 				$forum_list_reports = get_forum_list('m_report', false, true);
 				$forum_list_read = array_flip(get_forum_list('f_read', true, true)); // Flipped so we can isset() the forum IDs
 
-				// [ONLY_OP_INJECT] <- For now, just intersect with $forum_list_read
-
 				// Remove forums we cannot read
 				foreach ($forum_list_reports as $k => $forum_data)
 				{
@@ -355,6 +353,9 @@ class mcp_reports
 						AND r.pm_id = 0
 						$limit_time_sql
 					ORDER BY $sort_order_sql";
+
+					// [ONLY_OP_INJECT] <- Inject the f_brunoais_read_other permission here
+				
 				$result = $db->sql_query_limit($sql, $config['topics_per_page'], $start);
 
 				$i = 0;
