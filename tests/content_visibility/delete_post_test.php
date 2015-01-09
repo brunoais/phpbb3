@@ -296,9 +296,6 @@ class phpbb_content_visibility_delete_post_test extends phpbb_database_test_case
 		$cache = new phpbb_mock_cache;
 		$db = $this->new_dbal();
 		$phpbb_config = new \phpbb\config\config(array('num_posts' => 3, 'num_topics' => 1));
-		$phpbb_dispatcher = $this->getMockBuilder('\phpbb\event\dispatcher')
-			->disableOriginalConstructor()
-			->getMock();
 		set_config_count(null, null, null, $phpbb_config);
 
 		// Create auth mock
@@ -311,10 +308,7 @@ class phpbb_content_visibility_delete_post_test extends phpbb_database_test_case
 			)));
 		$user = new \phpbb\user('\phpbb\datetime');
 
-		
-		$phpbb_dispatcher = $this->getMockBuilder('\phpbb\event\dispatcher')
-			->disableOriginalConstructor()
-			->getMock();
+		$phpbb_dispatcher = new phpbb_mock_event_dispatcher();
 
 		$phpbb_container = new phpbb_mock_container_builder();
 		$phpbb_container->set('notification_manager', new phpbb_mock_notification_manager());
