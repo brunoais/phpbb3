@@ -68,8 +68,24 @@
 	</div>
 
 	<!-- EVENT posting_editor_message_before -->
-
-	<div id="message-box">
+	
+	<!-- INCLUDEJS {T_THEME_PATH}/SCE/jquery.sceditor.bbcode.js -->
+	
+	<script>
+	window.addEventListener('load', function() {
+		var messageTextarea = $("#signature, #message");
+		messageTextarea.sceditor({
+			plugins: 'bbcode,undo',
+			style: "{T_THEME_PATH}/SCE/jquery.sceditor.default.css"
+		});
+		messageTextarea[0].onselect = messageTextarea.a;
+		messageTextarea[0].onclick = messageTextarea.a;
+		messageTextarea[0].onkeyup = messageTextarea.a;
+		messageTextarea[0].onfocus = messageTextarea.a;
+	});
+	</script>
+	
+	<div id="message-box" class="ttext-icon">
 		<textarea <!-- IF S_UCP_ACTION and not S_PRIVMSGS and not S_EDIT_DRAFT -->name="signature" id="signature" style="height: 9em;"<!-- ELSE -->name="message" id="message"<!-- ENDIF --> rows="15" cols="76" tabindex="4" onselect="storeCaret(this);" onclick="storeCaret(this);" onkeyup="storeCaret(this);" onfocus="initInsertions();" class="inputbox">{MESSAGE}{DRAFT_MESSAGE}{SIGNATURE}</textarea>
 	</div>
 
