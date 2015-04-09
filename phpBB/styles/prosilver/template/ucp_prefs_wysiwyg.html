@@ -1,0 +1,42 @@
+<!-- INCLUDE ucp_header.html -->
+
+<form id="ucp" method="post" action="{S_UCP_ACTION}"{S_FORM_ENCTYPE}>
+
+<h2>{L_TITLE}</h2>
+<div class="panel">
+	<div class="inner">
+
+	<fieldset>
+	<!-- IF ERROR --><p class="error">{ERROR}</p><!-- ENDIF -->
+	<!-- EVENT ucp_prefs_wysiwyg_prepend -->
+	<dl>
+		<dt><label for="wysiwyg_default_mode0">{L_WYSIWYG_DEFAULT_MODE}{L_COLON}</label></dt>
+		<dd>
+			<label><input type="radio" name="wysiwyg_default_mode" id="wysiwyg_default_mode0" value="0"<!-- IF S_WYSIWYG_DEFAULT_MODE == 0 --> checked="checked"<!-- ENDIF --> /> {L_WYSIWYG_DEFAULT_MODE_WYSIWYG}</label>
+			<label><input type="radio" name="wysiwyg_default_mode" id="wysiwyg_default_mode1" value="1"<!-- IF S_WYSIWYG_DEFAULT_MODE == 1 --> checked="checked"<!-- ENDIF --> /> {L_WYSIWYG_DEFAULT_MODE_SOURCE}</label> 
+		</dd>
+	</dl>
+	<!-- IF HAS_WYSIWYG_BUTTONS_MODE -->
+	<dl>
+		<dt><label for="wysiwyg_buttons_mode1">{L_WYSIWYG_BUTTONS_MODE}{L_COLON}</label></dt>
+		<dd>
+			<label><input type="radio" name="wysiwyg_buttons_mode" id="wysiwyg_buttons_mode1" value="1"<!-- IF S_WYSIWYG_BUTTONS_MODE == 1 --> checked="checked"<!-- ENDIF --> /> {L_WYSIWYG_BUTTONS_MODE_ICON}</label>
+			<label><input type="radio" name="wysiwyg_buttons_mode" id="wysiwyg_buttons_mode3" value="3"<!-- IF S_WYSIWYG_BUTTONS_MODE == 3 --> checked="checked"<!-- ENDIF --> /> {L_WYSIWYG_BUTTONS_MODE_TEXT_ICON}</label>
+			<label><input type="radio" name="wysiwyg_buttons_mode" id="wysiwyg_buttons_mode2" value="2"<!-- IF S_WYSIWYG_BUTTONS_MODE == 2 --> checked="checked"<!-- ENDIF --> /> {L_WYSIWYG_BUTTONS_MODE_TEXT}</label>
+		</dd>
+	</dl>
+	<!-- ENDIF -->
+	<!-- EVENT ucp_prefs_wysiwyg_append -->
+	</fieldset>
+	
+	</div>
+</div>
+
+<fieldset class="submit-buttons">
+	{S_HIDDEN_FIELDS}<input type="reset" value="{L_RESET}" name="reset" class="button2" />&nbsp; 
+	<input type="submit" name="submit" value="{L_SUBMIT}" class="button1" />
+	{S_FORM_TOKEN}
+</fieldset>
+</form>
+
+<!-- INCLUDE ucp_footer.html -->

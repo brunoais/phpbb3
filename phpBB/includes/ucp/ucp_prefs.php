@@ -461,6 +461,73 @@ class ucp_prefs
 					'S_NOTIFY'	=> $data['notify'])
 				);
 			break;
+
+			case 'wysiwyg':
+
+				$data = array(
+					'wysiwyg_default_mode'		=> $request->variable('wysiwyg_default_mode', (!empty($user->data['user_wysiwyg_default_mode'])) ? (int) $user->data['user_wysiwyg_default_mode'] : 0),
+					'wysiwyg_buttons_mode'		=> $request->variable('wysiwyg_buttons_mode', (!empty($user->data['user_wysiwyg_buttons_mode'])) ? (int) $user->data['user_wysiwyg_buttons_mode'] : 1),
+				);
+				add_form_key('ucp_prefs_wysiwyg');
+				
+
+				$template->assign_vars(array(
+						'S_WYSIWYG_DEFAULT_MODE'	=> $data['wysiwyg_default_mode'],
+						'HAS_WYSIWYG_BUTTONS_MODE'	=> true,
+						'S_WYSIWYG_BUTTONS_MODE'	=> $data['wysiwyg_buttons_mode'],
+					)
+				);
+
+				/**
+				* Add UCP; edit WYSWIYG editor defaults data before they are assigned to the template or submitted
+				*
+				* To assign data to the template, use $template->assign_vars()
+				*
+				* @event core.ucp_prefs_wysiwyg
+				* @var	bool	submit		Do we display the form only
+				*							or did the user press submit
+				* @var	array	data		Array with current ucp options data
+				* @since 3.2.0-a1
+				*/
+				$vars = array('submit', 'data');
+				extract($phpbb_dispatcher->trigger_event('core.ucp_prefs_wysiwyg', compact($vars)));
+
+				if ($submit)
+				{
+					if (check_form_key('ucp_prefs_wysiwyg'))
+					{
+						$sql_ary = array(
+							'user_wysiwyg_default_mode'	=> $data['wysiwyg_default_mode'],
+							'user_wysiwyg_buttons_mode'	=> $data['wysiwyg_buttons_mode'],
+						);
+
+						/**
+						* Update UCP; edit WYSWIYG editor defaults data on form submit
+						*
+						* @event core.ucp_prefs_wysiwyg_update_data
+						* @var	array	data		Submitted display options data
+						* @var	array	sql_ary		Display options data we update
+						* @since 3.2.0-a1
+						*/
+						$vars = array('data', 'sql_ary');
+						extract($phpbb_dispatcher->trigger_event('core.ucp_prefs_wysiwyg_update_data', compact($vars)));
+
+						$sql = 'UPDATE ' . USERS_TABLE . '
+							SET ' . $db->sql_build_array('UPDATE', $sql_ary) . '
+							WHERE user_id = ' . $user->data['user_id'];
+						$db->sql_query($sql);
+
+						$msg = $user->lang['PREFERENCES_UPDATED'];
+					}
+					else
+					{
+						$msg = $user->lang['FORM_INVALID'];
+					}
+					meta_refresh(3, $this->u_action);
+					$message = $msg . '<br /><br />' . sprintf($user->lang['RETURN_UCP'], '<a href="' . $this->u_action . '">', '</a>');
+					trigger_error($message);
+				}
+			break;
 		}
 
 		/**

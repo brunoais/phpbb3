@@ -534,6 +534,7 @@ $lang = array_merge($lang, array(
 	'UCP_PREFS_PERSONAL'		=> 'Edit global settings',
 	'UCP_PREFS_POST'			=> 'Edit posting defaults',
 	'UCP_PREFS_VIEW'			=> 'Edit display options',
+	'UCP_PREFS_WYSIWYG'			=> 'Edit WYSIWYG editor options',
 
 	'UCP_PM'					=> 'Private messages',
 	'UCP_PM_COMPOSE'			=> 'Compose message',
@@ -605,6 +606,14 @@ $lang = array_merge($lang, array(
 	'WATCHED_FORUMS'			=> 'Watched forums',
 	'WATCHED_TOPICS'			=> 'Watched topics',
 	'WRONG_ACTIVATION'			=> 'The activation key you supplied does not match any in the database.',
+
+	'WYSIWYG_DEFAULT_MODE'				=> 'Load WYSIWYG editor in',
+	'WYSIWYG_DEFAULT_MODE_SOURCE'		=> 'source mode',
+	'WYSIWYG_DEFAULT_MODE_WYSIWYG'		=> 'WYSIWYG mode',
+	'WYSIWYG_BUTTONS_MODE'				=> 'Show editor’s buttons as',
+	'WYSIWYG_BUTTONS_MODE_ICON'			=> 'icons',
+	'WYSIWYG_BUTTONS_MODE_TEXT_ICON'	=> 'icons + text',
+	'WYSIWYG_BUTTONS_MODE_TEXT'			=> 'text',
 
 	'YOUR_DETAILS'				=> 'Your activity',
 	'YOUR_FOES'					=> 'Your foes',

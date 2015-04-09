@@ -201,6 +201,26 @@ extract($phpbb_dispatcher->trigger_event('core.index_modify_page_title', compact
 // Output page
 page_header($page_title, true);
 
+
+// Select which WYSIWYG editor to use
+$wysiwyg_type = $config['wysiwyg_type'];
+
+if (!class_exists($wysiwyg_type))
+{
+	trigger_error('NO_SUCH_WYSIWYG_MODULE');
+}
+// We do some additional checks in the module to ensure it can actually be utilised
+try
+{
+	$wysiwyg = new $wysiwyg_type($phpbb_root_path, $phpEx, $auth, $config, $db, $user, $phpbb_dispatcher);
+	// $wysiwyg->convert_bbcode_to_editor($phpbb_container->get('wysiwyg.text_formatter.s9e.factory'));
+	$wysiwyg->convert_bbcode_to_editor($phpbb_container->get('text_formatter.s9e.factory'));
+}
+catch (\Exception $e)
+{
+	trigger_error($e->getMessage());
+}
+
 $template->set_filenames(array(
 	'body' => 'index_body.html')
 );
