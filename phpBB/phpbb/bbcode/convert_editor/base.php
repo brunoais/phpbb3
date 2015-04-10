@@ -28,7 +28,6 @@ class base
 	const DEFAULT_WYSIWYG_MODE	= 0x1;
 	const DEFAULT_SOURCE_MODE	= 0x3;
 	
-	const XSLNS = "http://www.w3.org/1999/XSL/Transform";
 
 	/**
 	 *
@@ -88,103 +87,10 @@ class base
 		
 	}
 	
-	
-	public function parse_tag_templates($bbcodes, $tags){
-		
-		$doc = new \DOMDocument();
-		$doc->loadXML(
-			'<?xml version="1.0"?>
-			<xsl:stylesheet version="1.0" xmlns:xsl="' . base::XSLNS . '">
-			<xsl:param name="type" select="$type"/>
-			<xsl:output method="text" encoding="iso-8859-1" indent="no"/>
-			</xsl:stylesheet>',
-			LIBXML_DTDLOAD
-		);
-		
-		$parseTrees = array();
-		
-		// [11] => xsl:copy-of
-		// [20] => xsl:attribute -> https://msdn.microsoft.com/en-us/library/ms256232%28v=vs.110%29.aspx
-		// [22] => xsl:value-of -> https://msdn.microsoft.com/en-us/library/ms256232%28v=vs.110%29.aspx
-
-		// [17] => xsl:if -> https://developer.mozilla.org/en-US/docs/Web/XSLT/if
-		// [25] => xsl:choose
-		// [26] => xsl:when
-		// [30] => xsl:otherwise
-		// xsl:variable
-		// xsl:for-each -> Postponed until examples arrive
-		
-		
-		foreach($bbcodes as $bbcode){
-			
-			var_dump($tags[$bbcode->tagName]->template->__toString());
-			$parseTrees[$bbcode->tagName] = $this->parse_tag_template($tags[$bbcode->tagName]->template);
-			
-		}
-		
-		var_dump($parseTrees);
-	}
-	
-	public function parse_tag_template($template){
-		
-		$doc = $template->asDOM();
-		// var_dump($doc->saveXML($doc->firstChild->firstChild));
-		
-		$top = array();
-		// Childnodes of the template Element
-		foreach($doc->firstChild->childNodes AS $childNode){
-			$top[] = $this->parse_tag_template_childNode($childNode);
-		}
-		
-		return $top;
-	}
-	
-	public function parse_tag_template_childNode($parent){
-		$current = array(
-			'xsl' => $parent->prefix === 'xsl',
-			'element' => $parent,
-			'children' => array(),
-		);
-		
-		if ($parent->hasChildNodes()){
-			foreach($parent->childNodes AS $childNode){
-				$current['children'][] = $this->parse_tag_template_childNode($childNode);
-			}
-		}
-		
-		return $current;
+	public function parse_tag_templates($bbcodes, $tags)
+	{
+		$xsl_helper = new \phpbb\bbcode\xsl_parse_helper();
+		$xsl_helper->parse_tag_templates($bbcodes, $tags);
 	}
 	
 }
-
-
-
-
-
-		// $xslt = new \XSLTProcessor();
-		// $xslt->importStylesheet(new \SimpleXMLElement(
-		// '<?xml version="1.0"?\>
-		// <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
-		// <xsl:param name="type" select="$type"/>
-		// <xsl:output method="xml" encoding="iso-8859-1" indent="no"/>
-		// <xsl:template match="data1[@d=\'1\']">
-			// <xsl:choose>
-				// <xsl:when test="not($type)">a</xsl:when>
-				// <xsl:when test="contains(\'upperlowerdecim\',substring($type,1,5))">b</xsl:when>
-				// <xsl:otherwise>c</xsl:otherwise>
-			// </xsl:choose>
-		// </xsl:template>
-		// <xsl:template match="data1">
-			// <xsl:choose>
-				// <xsl:when test="not($type)">d</xsl:when>
-				// <xsl:when test="contains(\'upperlowerdecim\',substring($type,1,5))">e</xsl:when>
-				// <xsl:otherwise>f</xsl:otherwise>
-			// </xsl:choose>
-		// </xsl:template>
-		// </xsl:stylesheet>'
-				// ));
-				
-		// $xslt->setParameter('', 'type', '');
-		
-		// var_dump($xslt->transformToXml(new \SimpleXMLElement('<container><data1 d="1">u</data1><data1>u</data1><data1>u</data1></container>')));
-				
