@@ -26,16 +26,79 @@ class xsl_parse_helper
 	private $current_bbcode;
 	private $conditions_document;
 	
+	private $attr_to_param;
+	
+	const EDITOR_JS_GLOBAL_OBJ = 'editorData';
+	
 	const XSLNS = "http://www.w3.org/1999/XSL/Transform";
 	
+	
+	public function __construct(){
+		$this->attr_to_param = false;
+	}
+	
+	public function translate_attribute_vars_to_params($option){
+		$this->attr_to_param = true;
+	}
+	
+	/**
+	 * @note: This method applies data set using translate_attribute_vars_to_params()
+	 * @seealso: translate_attribute_vars_to_params()
+	 * @param DOMElement $node The node to get the params from analysis (maybe also edit)
+	 * @param string $match_find $match_find must contain 5 RegEx matching groups. Each one means as follows:
+	 *				1. The full name of the variable and its definition
+	 *				2. Where "@" or "$" are.
+	 *				3. The variable name with the kind ("L_" or "S_")
+	 *				4. The identification of the kind of variable (single capital letter)
+	 *				5. The name of the variable without prefixes
+	 * @return array List of all the variables found with their data and metadata in an associative array
+	*/
+	public function parse_attributes($node, $match_find)
+	{
+		$stylesheet_root = $this->conditions_document->documentElement;
+		$vars = array();
+		
+		foreach ($node->attributes as $attr)
+		{
+			$attr->value = preg_replace_callback($match_find, 
+					function ($match) use ($stylesheet_root, $attr, &$vars)
+					{
+						$var_data = $vars[] = array(
+							'attr' 			=> $attr->nodeName,
+							'fullname' 		=> $match[1],
+							'prefixedName'	=> $match[3],
+							'name' 			=> $match[5],
+							 // Is it an xsl parameter ($) or as a BBCode attribute (@)?
+							'isParameter' 	=> $match[2] === '$',
+							'isAttribute' 	=> $match[2] === '@',
+							'isSetting' 	=> $match[4] === 'S',
+							'isLanguage' 	=> $match[4] === 'L',
+						);
+						
+						$param = $this->conditions_document->createElementNS(self::XSLNS, 'xsl:param');
+						$param->setAttribute('name', $match[3]);
+						$stylesheet_root->insertBefore($param, $stylesheet_root->firstChild);
+						
+						if ($this->attr_to_param && $var_data['isAttribute'])
+						{
+							return str_replace($var_data['fullname'], '$' . $var_data['prefixedName'], $match[0]);
+						}
+						
+						return $match[0];
+						
+					}, $attr->value);
+		}
+		return $vars;
+	}
 	
 	public function parse_tag_templates($bbcodes, $tags){
 		
 		$this->conditions_document = new DOMDocument();
+		$this->conditions_document->preserveWhiteSpace = false;
+		$this->conditions_document->formatOutput = true;
 		$this->conditions_document->loadXML(
 			'<?xml version="1.0"?>
 			<xsl:stylesheet version="1.0" xmlns:xsl="' . self::XSLNS . '">
-			<xsl:param name="type" select="$type"/>
 			<xsl:output method="text" encoding="iso-8859-1" indent="yes"/>
 			</xsl:stylesheet>',
 			LIBXML_DTDLOAD
@@ -56,12 +119,12 @@ class xsl_parse_helper
 		
 		
 		foreach($bbcodes as $bbcode){
-			
-			var_dump($tags[$bbcode->tagName]->template->__toString());
+			$bbcode_name = strtolower($bbcode->tagName);
+			// var_dump($tags[$bbcode_name]->template->__toString());
 			try{
-				$this->current_bbcode = $bbcode->tagName;
+				$this->current_bbcode = $bbcode_name;
 				$this->choose_num = 0;
-				$parseTrees[$bbcode->tagName] = $this->parse_tag_template($tags[$bbcode->tagName]->template);
+				$parseTrees[$bbcode_name] = $this->parse_tag_template($tags[$bbcode_name]->template);
 			}catch(Exception $e){
 				var_dump($e->getMessage());
 			}
@@ -79,8 +142,10 @@ class xsl_parse_helper
 		// }
 		
 		
-		var_dump($parseTrees);
-		exit;
+		// var_dump($this->conditions_document->saveXML());
+		// exit;
+		
+		return $parseTrees;
 	}
 	
 	public function parse_tag_template($template){
@@ -89,9 +154,13 @@ class xsl_parse_helper
 		// var_dump($doc->saveXML($doc->firstChild->firstChild));
 		
 		$top = array();
-		// Childnodes of the template Element
-		foreach($doc->firstChild->childNodes AS $childNode){
-			$top[] = $this->parse_tag_template_childNode($childNode);
+		// Child nodes of the template Element
+		foreach($doc->firstChild->childNodes AS $child_node){
+			$result = $this->parse_tag_template_childNode($child_node);
+			if ($result != null)
+			{
+				$top[] = $result;
+			}
 		}
 		
 		return $top;
@@ -99,12 +168,17 @@ class xsl_parse_helper
 	
 	protected function parse_tag_template_childNode($currentNode){
 		
+		$name = isset($currentNode->localName) ? $currentNode->localName : $currentNode->nodeName;
+		
 		$current = array(
 			'xsl' => $currentNode->prefix === 'xsl',
-			'tagName' => $currentNode->localName,
+			'tagName' => $name,
 			'node' => $currentNode,
+			'js' => array(),
 			'children' => array(),
 		);
+		
+		$xsl_var_match = null;
 		
 		if($current['xsl']){
 			
@@ -112,11 +186,9 @@ class xsl_parse_helper
 				case 'copy-of':
 					// TODO: How to handle a deep copy
 					break;
-				case 'value-of':
-					// $this->identifyValue($currentNode);
-					
-					break;
 				case 'if':
+					// TODO: "if" is somewhat like choose... Still different, though!
+					break;
 				case 'choose':
 					return $this->translateConditions($currentNode);
 					
@@ -126,9 +198,12 @@ class xsl_parse_helper
 				break;
 				case 'apply-templates':
 				case 'text':
+				case 'value-of':
+					/* NOOP */
 				break;
 				case 'comment':
-					return;
+					// Comments are not instructions. Do not read this or anything inside.
+					return null;
 				break;
 				default:
 					throw new Exception (
@@ -136,37 +211,27 @@ class xsl_parse_helper
 					);
 			}
 			
+			$xsl_var_match = "%(([@$])((?:([SL])_)?([a-zA-Z_0-9]+)))%";
 			
-			foreach ($currentNode->attributes as $attr)
-			{
-				
-				preg_match_all("%(([@$])(?:([SL])_)?([a-zA-Z_0-9]+))%", $attr->textContent,
-					$variables_match, PREG_SET_ORDER);
-				
-				$attr->nodeName, 
-				
-			}
 		}else{
-			
-			foreach ($currentNode->attributes as $attr)
-			{
-				
-				preg_match_all("%{(([@$])(?:([SL])_)?([a-zA-Z_0-9]+))}%", $attr->textContent,
-					$variables_match, PREG_SET_ORDER);
-				
-			
-				
-			}
-			
+			$xsl_var_match = "%{(([@$])((?:([SL])_)?([a-zA-Z_0-9]+)))}%";
 		}
 		
+		// Text nodes cannot have attributes. Not using hasAttributes so that it can warn unpredictability by outputting warnings
+		if ($name !== '#text' || ($current['xsl'] && $name !== 'text'))
+		{
+			$current['vars'] = $this->parse_attributes($currentNode, $xsl_var_match);
+		}
 		
-		
-			
-		
-		if ($currentNode->hasChildNodes()){
-			foreach($currentNode->childNodes AS $childNode){
-				$current['children'][] = $this->parse_tag_template_childNode($childNode);
+		if ($currentNode->hasChildNodes())
+		{
+			foreach ($currentNode->childNodes AS $child_node)
+			{
+				$nextChild = $this->parse_tag_template_childNode($child_node);
+				if ($nextChild !== null)
+				{
+					$current['children'][] = $nextChild;
+				}
 			}
 		}
 		
@@ -179,10 +244,12 @@ class xsl_parse_helper
 		$data = array(
 			'num' => $this->choose_num,
 			'case' => array(),
+			'js' => array(),
 		);
+		$this->choose_num++;
 		
 		$template = $this->conditions_document->createElementNS(self::XSLNS, 'xsl:template');
-		$template->setAttribute('match', $this->current_bbcode . "[@d='" . $this->choose_num . "']");
+		$template->setAttribute('match', $this->current_bbcode . "[@d='" . $data['num'] . "']");
 		
 		$choose = $this->conditions_document->createElementNS(self::XSLNS, 'xsl:choose');
 		
@@ -197,9 +264,16 @@ class xsl_parse_helper
 			// <xsl:when test>$chr</xsl:when>
 			$when->appendChild($this->conditions_document->createTextNode($chr));
 			
-			$case[$chr] = array();
-			foreach ($whenNode->childNodes as $childNode){
-				$case[$chr][] = $this->parse_tag_template_childNode($childNode);
+			$case[$chr] = array(
+				'vars' => array(),
+				'js' => array(),
+				'children' => array(),
+			);
+			
+			$case[$chr]['vars'] = $this->parse_attributes($whenNode, "%(([@$])((?:([SL])_)?([a-zA-Z_0-9]+)))%");
+			
+			foreach ($whenNode->childNodes as $child_node){
+				$case[$chr]['children'][] = $this->parse_tag_template_childNode($child_node);
 			}
 			
 			$choose->appendChild($when);

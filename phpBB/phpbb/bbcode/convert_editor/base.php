@@ -28,6 +28,31 @@ class base
 	const DEFAULT_WYSIWYG_MODE	= 0x1;
 	const DEFAULT_SOURCE_MODE	= 0x3;
 	
+	/**
+	 * This is the list of HTML void elements as defined by w3c
+	 * @link http://www.w3.org/TR/html-markup/syntax.html#void-elements
+	 * This list is meant to be used with the php isset() construct
+	 *
+	*/
+	// const HTML_VOID_ELEMENTS = array(
+									// 'area'		=> 1,
+									// 'base'		=> 1,
+									// 'br'		=> 1,
+									// 'col'		=> 1,
+									// 'command'	=> 1,
+									// 'embed'		=> 1,
+									// 'hr'		=> 1,
+									// 'img'		=> 1,
+									// 'input'		=> 1,
+									// 'keygen'	=> 1,
+									// 'link'		=> 1,
+									// 'meta'		=> 1,
+									// 'param'		=> 1,
+									// 'source'	=> 1,
+									// 'track'		=> 1,
+									// 'wbr'	=> 1,
+								// );
+	
 
 	/**
 	 *
@@ -87,10 +112,41 @@ class base
 		
 	}
 	
-	public function parse_tag_templates($bbcodes, $tags)
+	public function get_container_tags($child_nodes)
 	{
-		$xsl_helper = new \phpbb\bbcode\xsl_parse_helper();
-		$xsl_helper->parse_tag_templates($bbcodes, $tags);
+		
+		foreach ($child_nodes as $child_node)
+		{
+			if(isset($child_node['case']))
+			{
+				$containers = array();
+				foreach($child_node['case'] as $case)
+				{
+					$tag = $this->get_container_tags($case['children']);
+					if(is_array($tag))
+					{
+						array_merge($containers, $tag);
+					}
+					else
+					{
+						$containers[] = $tag;
+					}
+				}
+				
+				return $containers;
+			}
+			else if($child_node['xsl'])
+			{
+				return $this->get_container_tags($child_node['children']);
+			}
+			else
+			{
+				return $child_node['tagName'];
+			}
+		}
+		
+		return null;
+		
 	}
 	
 }

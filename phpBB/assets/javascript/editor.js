@@ -21,10 +21,27 @@ function helpline(help) {
  * @return A javascript object that allows adding parameters and 
  * @source Based on s9e\TextFormatter\render.js
 */
-var xslt = (function (xsl){
+var xslt = function (xsl){
 	// older IE has its own way of doing it
-	var MSXML = (typeof DOMParser === 'undefined' || typeof XSLTProcessor === 'undefined');
-	if (MSXML) {
+	var standardsBrowser = (typeof DOMParser !== 'undefined' && typeof XSLTProcessor !== 'undefined');
+	if (standardsBrowser) {
+		var xslDoc = (new DOMParser).parseFromString(xsl, 'text/xml');
+
+		var processor = new XSLTProcessor();
+		processor.importStylesheet(xslDoc);
+		
+		return {
+			'setParameter': function (name, value){
+				processor.setParameter(null, name, value);
+			},
+			
+			'transformToFragment' : function (xml, onDocument){
+				var xmlDoc = (new DOMParser).parseFromString(xml, 'text/xml');
+				// NOTE: importNode() is used because of https://code.google.com/p/chromium/issues/detail?id=266305
+				return onDocument.importNode(processor.transformToFragment(xmlDoc, onDocument), true);
+			}
+		};
+	}else{
 		var ieStylesheet = new ActiveXObject('MSXML2.FreeThreadedDOMDocument.6.0');
 		ieStylesheet.async = false;
 		ieStylesheet.validateOnParse = false;
@@ -59,23 +76,5 @@ var xslt = (function (xsl){
 				return fragment;
 			}
 		};
-	}else{
-		var xslDoc = (new DOMParser).parseFromString(xml, 'text/xml');
-
-		var processor = new XSLTProcessor();
-		processor.importStylesheet(xslDoc);
-		
-		return {
-			'setParameter': function (name, value){
-				processor.setParameter(null, name, value);
-			},
-			
-			'transformToFragment' : function (xml, onDocument){
-				var xmlDoc = (new DOMParser).parseFromString(xml, 'text/xml');
-				// NOTE: importNode() is used because of https://code.google.com/p/chromium/issues/detail?id=266305
-				return onDocument.importNode(processor.transformToFragment(xmlDoc, onDocument), true);
-			}
-		};
-		
-	}	
-})("");
+	}
+};
