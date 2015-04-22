@@ -11,14 +11,9 @@
 *
 */
 
-namespace phpbb\bbcode\convert_editor;
+namespace phpbb\bbcode;
 
-/**
-* Data access layer that fetchs BBCodes, smilies and censored words from the database.
-* To be extended to include insert/update/delete operations.
-*
-* Also used to get templates.
-*/
+
 class text_formatter_data_access extends phpbb\textformatter\data_access
 {
 	/**

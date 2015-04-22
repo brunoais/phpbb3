@@ -204,17 +204,13 @@ page_header($page_title, true);
 
 // Select which WYSIWYG editor to use
 $wysiwyg_type = $config['wysiwyg_type'];
-
-if (!class_exists($wysiwyg_type))
-{
-	trigger_error('NO_SUCH_WYSIWYG_MODULE');
-}
-// We do some additional checks in the module to ensure it can actually be utilised
 try
 {
-	$wysiwyg = new $wysiwyg_type($phpbb_root_path, $phpEx, $auth, $config, $db, $user, $phpbb_dispatcher);
-	// $wysiwyg->convert_bbcode_to_editor($phpbb_container->get('wysiwyg.text_formatter.s9e.factory'));
-	$wysiwyg->convert_bbcode_to_editor($phpbb_container->get('text_formatter.s9e.factory'));
+	// substr(strrchr(get_class(), '\\'), 1);
+
+	$wysiwyg = $phpbb_container->get('wysiwyg.converters.' . $wysiwyg_type);
+	// $wysiwyg->recalculate_editor_setup_javascript($phpbb_container->get('wysiwyg.text_formatter.s9e.factory'));
+	$wysiwyg->recalculate_editor_setup_javascript($phpbb_container->get('text_formatter.s9e.factory'));
 }
 catch (\Exception $e)
 {

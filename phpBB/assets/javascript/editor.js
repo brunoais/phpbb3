@@ -7,15 +7,268 @@ function helpline(help) {
 }
 
 
-/**
-* Allow to use tab character when typing code
-* Keep indentation of last line of code when typing code
-*/
 (function($) {
 	$(document).ready(function() {
 		
 	});
 })(jQuery);
+
+// If there's no console or any of the used console methods, just make them noop as there's nothing I can do
+window.console || (window.console = {});
+console.log || (console.log = function (){});
+console.info || (console.info = console.log);
+console.warn || (console.warn = console.log);
+console.error || (console.error = console.log);
+
+
+
+
+var editorConstants = {
+	'NO_VALUE' 			: -1,
+	'VALUE_IN_CONTENT' 	: -2,
+	
+};
+
+var editor = {
+	
+	tokenRegex: {
+		'ALPHANUM': /^[0-9A-Za-z]+$/,
+		'SIMPLETEXT': /^[a-z0-9,.\-+_]+$/i,
+		'IDENTIFIER': /^[a-z0-9-_]+$/i,
+		'INTTEXT': /^[a-zA-Z\u00C0-\u017F]+,\s[a-zA-Z\u00C0-\u017F]+$/,
+		'NUMBER': /^[0-9]+$/,
+		'INTEGER': /^(?:0|-?[1-9]\d*)$/,
+		
+		'EMAIL': /[a-z0-9!#$%&'*+\/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+\/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+(?:[A-Z]{2}|com|org|net|edu|gov|mil|me|biz|info|mobi|name|aero|asia|jobs|museum)\b/,
+		
+		'URL': /^(?:(?:https?|ftps?):\/\/)?(?:(?:[a-z]+@)?(([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})|((?:[A-F0-9]{1,4}:){7}[A-F0-9]{1,4})|((?:[A-F0-9]{1,4}:){1,4}:(?:[A-F0-9]{1,4}:){0,4}[A-F0-9]{1,4})|(?:(?:(?:[a-z0-9-]|%\d\d)+\.)+[a-z]{2,7})|localhost))?(?:\/([a-z0-9-\/.]*))?(?:\?((?:[^=]+=[^&]+&)*(?:[^=]+=[^#]+)?))?(?:#.*)?$/im,
+		'LOCAL_URL': /^(?:\/([a-z0-9-\/.]*))?(?:\?((?:[^=]+=[^&]+&)*(?:[^=]+=[^#$]+)?))?(?:#[^$]*)?$/,
+		'RELATIVE_URL': /^(?:\/([a-z0-9-\/.]*))?(?:\?((?:[^=]+=[^&]+&)*(?:[^=]+=[^#$]+)?))?(?:#[^$]*)?$/,
+		
+		'COLOR': /^(?:#[0-9a-f]{3,6}|rgb\(\d{1,3}, *\d{1,3}, *\d{1,3}\)|aqua|black|blue|fuchsia|gray|green|lime|maroon|navy|olive|orange|purple|red|silver|teal|white|yellow)$/i
+	},
+	
+	getElementDefaultDisplay: function () {
+		var tag = document.createElement(tag);
+		if(window.getComputedStyle){
+			return function (tagName){
+				var tag = document.createElement(tagName);
+				document.body.appendChild(tag);
+				var cStyle = window.getComputedStyle(tag, "").display; 
+				document.body.removeChild(tag);
+				return cStyle;
+			}
+		}else{
+			return function (tagName){
+				var tag = document.createElement(tagName);
+				document.body.appendChild(tag);
+				var cStyle = tag.currentStyle.display; 
+				document.body.removeChild(tag);
+				return cStyle;
+			}
+		}
+	}(),
+	
+	paramFilters: {
+		filterUrl: function (url){
+			return tokenRegexTranslator.URL.test(url);
+		},
+		
+		filterHashmap: function(attrValue, map, strict){
+			if (attrValue in map){
+				return map[attrValue];
+			}
+
+			return (strict) ? false : attrValue;
+		},
+		
+		filterIdentifier: function(attrValue){
+			return editor.tokenRegex.IDENTIFIER.test(attrValue) ? attrValue : false;
+		},
+		
+		filterInt: function(attrValue){
+			return editor.tokenRegex.INTEGER.test(attrValue) ? attrValue : false;
+		},
+		
+		filterUrl: function(attrValue){
+			return editor.tokenRegex.URL.test(value) ? attrValue : false;
+		},
+	
+		filterIp: function(attrValue){
+			return filterURL(attrValue);
+		},
+		filterIpv4: function(attrValue){
+			return filterURL(attrValue);
+		},
+		filterIpv6: function(attrValue){
+			return filterURL(attrValue);
+		},
+		
+		filterNumber: function(attrValue){
+			return editor.tokenRegex.NUMBER.test(attrValue) ? attrValue : false;
+		},
+		
+		
+		filterRange: function(attrValue, min, max){
+			if (!editor.tokenRegex.INTEGER.test(value)){
+				return false;
+			}
+
+			value = parseInt(value, 10);
+
+			if (value < min){
+				console.info('Value ' + value + ' out of range. Value raised to ' + min + ' (min value).');
+				return min;
+			}
+
+			if (value > max){
+				console.info('Value ' + value + ' out of range. Value lowered to ' + max + ' (max value).');
+				return max;
+			}
+
+			return value;
+		},
+		
+		filterRegexp: function(attrValue, regexp){
+			return regexp.test(attrValue) ? attrValue : false;
+		},
+		
+		filterSimpletext: function(attrValue){
+			return /^[-\w+., ]+$/.test(attrValue) ? attrValue : false;
+		},
+
+		filterUint: function(attrValue){
+			return /^(?:0|[1-9]\d*)$/.test(attrValue) ? attrValue : false;
+		},
+	}
+	
+	/*
+	 * A port in javascript of the PHP functions textFormatter allows.
+	 *
+	 * @source s9e/TextFormatter/src/Configurator/JavaScript/functions
+	 */
+	phpFuncFilters: {
+		addslashes: function(str){
+			return str.replace(/["'\\]/g, '\\$&').replace(/\u0000/g, '\\0');
+		},
+
+		dechex: function(str){
+			return parseInt(str).toString(16);
+		},
+
+		intval: function(str){
+			return parseInt(str) || 0;
+		},
+
+		ltrim: function(str){
+			return str.replace(/^[ \n\r\t\0\x0B]+/g, '');
+		},
+
+		mb_strtolower: function(str){
+			return str.toLowerCase();
+		},
+
+		mb_strtoupper: function(str){
+			return str.toUpperCase();
+		},
+
+		mt_rand: function(min, max){
+			return (min + Math.floor(Math.random() * (max + 1 - min)));
+		},
+
+		rawurlencode: function(str){
+			return encodeURIComponent(str).replace(
+				/[!'()*]/g,
+				/**
+				* @param {!string} c
+				*/
+				function(c)){
+					return '%' + c.charCodeAt(0).toString(16).toUpperCase();
+				}
+			);
+		},
+
+		rtrim: function(str){
+			return str.replace(/[ \n\r\t\0\x0B]+$/g, '');
+		},
+
+		str_rot13: function(str){
+			return str.replace(
+				/[a-z]/gi,
+				function(c)){
+					return String.fromCharCode(c.charCodeAt(0) + ((c.toLowerCase() < 'n') ? 13 : -13));
+				}
+			);
+		},
+
+		stripslashes: function(str){
+			// NOTE: this will not correctly transform \0 into a NULL byte. I consider this a feature
+			//       rather than a bug. There's no reason to use NULL bytes in a text.
+			return str.replace(/\\([\s\S]?)/g, '\\1');
+		},
+
+		strrev: function(str){
+			return str.split('').reverse().join('');
+		},
+
+		strtolower: function(str){
+			return str.toLowerCase();
+		},
+
+		strtotime: function(str){
+			return Date.parse(str) / 1000;
+		},
+
+		strtoupper: function(str){
+			return str.toUpperCase();
+		},
+
+		trim: function(str){
+			return str.replace(/^[ \n\r\t\0\x0B]+/g, '').replace(/[ \n\r\t\0\x0B]+$/g, '');
+		},
+
+		ucfirst: function(str){
+			return str.charAt(0).toUpperCase() + str.substr(1);
+		},
+
+		ucwords: function(str){
+			return str.replace(
+				/(?:^|\s)[a-z]/g,
+				function(m)){
+					return m.toUpperCase()
+				}
+			);
+		},
+
+		urlencode: function(str){
+			return encodeURIComponent(str);
+		},
+		
+		
+		
+		revertBackToBBCode: function (name, attributes, content){
+			var attributeStr = ' ';
+			if(attributes.defaultattr){
+				attributeStr = '="' + attributes.defaultattr + '" ';
+				delete attributes.defaultattr;
+			}
+			
+			for(attributeName in attributes){
+				attributeStr += attributeName + '="' + attributes[attributeName] + '" ';
+			}
+			
+			if(attributeStr === ' '){
+				attributeStr = '';
+			}
+			
+			return '[' + name + attributeStr + ']' + content + '[/' + name + ']';
+		},
+		
+	}
+	
+
+}
+
 
 /**
  * @return A javascript object that allows adding parameters and 
@@ -32,6 +285,13 @@ var xslt = function (xsl){
 		
 		return {
 			'setParameter': function (name, value){
+				if(!value){
+					if(value === ''){
+						value = ' ';
+					}else{
+						value = '';
+					}
+				}
 				processor.setParameter(null, name, value);
 			},
 			
@@ -53,6 +313,13 @@ var xslt = function (xsl){
 		
 		return {
 			'setParameter' : function (name, value){
+				if(!value){
+					if(value === ''){
+						value = ' ';
+					}else{
+						value = '';
+					}
+				}
 				ieTransformer.addParameter(name, value, '');
 			},
 			

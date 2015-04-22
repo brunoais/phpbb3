@@ -28,6 +28,7 @@ class xsl_parse_helper
 	
 	private $attr_to_param;
 	
+	// If edited, also edit posting_editor.html (in the templates)
 	const EDITOR_JS_GLOBAL_OBJ = 'editorData';
 	
 	const XSLNS = "http://www.w3.org/1999/XSL/Transform";
@@ -39,6 +40,10 @@ class xsl_parse_helper
 	
 	public function translate_attribute_vars_to_params($option){
 		$this->attr_to_param = true;
+	}
+	
+	public function get_built_xsl_sheet(){
+		return $this->conditions_document->saveXML();
 	}
 	
 	/**
@@ -118,14 +123,14 @@ class xsl_parse_helper
 		// xsl:for-each -> Postponed until examples arrive
 		
 		
-		foreach($bbcodes as $bbcode){
-			$bbcode_name = strtolower($bbcode->tagName);
+		foreach($bbcodes as $bbcode_name => $bbcode){
+			$bbcode_name = strtolower($bbcode_name);
 			// var_dump($tags[$bbcode_name]->template->__toString());
 			try{
 				$this->current_bbcode = $bbcode_name;
 				$this->choose_num = 0;
-				$parseTrees[$bbcode_name] = $this->parse_tag_template($tags[$bbcode_name]->template);
-			}catch(Exception $e){
+				$parseTrees[$bbcode_name] = $this->parse_tag_template($tags[$bbcode->tagName]->template);
+			}catch(xsl_parse_helper_exception $e){
 				var_dump($e->getMessage());
 			}
 		}
@@ -135,7 +140,7 @@ class xsl_parse_helper
 			// $this->current_bbcode = 'list';
 			// $this->choose_num = 0;
 			// $parseTrees['list'] = $this->parse_tag_template($tags['list']->template);
-		// }catch(Exception $e){
+		// }catch(xsl_parse_helper_exception $e){
 			// var_dump($e->getMessage());
 			// var_dump($e->getTraceAsString());
 			// return;
@@ -146,6 +151,10 @@ class xsl_parse_helper
 		// exit;
 		
 		return $parseTrees;
+	}
+	
+	public function get_generated_xml(){
+		return $this->conditions_document->saveXML();
 	}
 	
 	public function parse_tag_template($template){
@@ -206,7 +215,7 @@ class xsl_parse_helper
 					return null;
 				break;
 				default:
-					throw new Exception (
+					throw new xsl_parse_helper_exception (
 						'Tag ' . $currentNode->tagName . ' is not recognized to translate for WYSIWYG'
 					);
 			}
@@ -291,6 +300,10 @@ class xsl_parse_helper
 	}
 }
 
+class xsl_parse_helper_exception extends Exception
+{
+	
+}
 
 
 		// $xslt = new XSLTProcessor();

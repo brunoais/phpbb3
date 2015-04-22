@@ -34,49 +34,31 @@ function var_dump(){
 class sce extends base
 {
 
-	/**
-	 * Config object
-	 * @var \phpbb\config\config
-	 */
-	protected $config;
-
-	/**
-	 * Database connection
-	 * @var \phpbb\db\driver\driver_interface
-	 */
-	protected $db;
-
-	/**
-	* Event dispatcher object
-	* @var \phpbb\event\dispatcher_interface
-	*/
-	protected $phpbb_dispatcher;
-	
 	
 	/**
 	 * Stores all js variables in order to avoid clashes
 	 */
 	protected $js_variables;
+	
+	protected $extra_variables;
 
 
 	/**
 	 * Constructor
 	 * 
 	 *
-	 * @param string|bool $error Any error that occurs is passed on through this reference variable otherwise false
-	 * @param string $phpbb_root_path Relative path to phpBB root
-	 * @param string $phpEx PHP file extension
-	 * @param \phpbb\auth\auth $auth Auth object
+	 * @param \phpbb\cache\driver\driver_interface $cache Cache object
+	 * @param string $cache_prefix A string to prefix to the cache file name (includes the path)
 	 * @param \phpbb\config\config $config Config object
-	 * @param \phpbb\db\driver\driver_interface Database object
+	 * @param \phpbb\event\dispatcher_interface $phpbb_dispatcher Where to send events to
 	 */
-	public function __construct($phpbb_root_path, $phpEx, \phpbb\auth\auth $auth, \phpbb\config\config $config, \phpbb\db\driver\driver_interface $db, \phpbb\user $user, \phpbb\event\dispatcher_interface $phpbb_dispatcher)
+	public function __construct(\phpbb\cache\driver\driver_interface $cache, $cache_prefix,
+		\phpbb\config\config $config, \phpbb\event\dispatcher_interface $phpbb_dispatcher)
 	{
-		$this->config = $config;
-		$this->db = $db;
-		$this->phpbb_dispatcher = $phpbb_dispatcher;
-		$this->js_variables = array();
+		parent::__construct($cache, $cache_prefix, $config, $phpbb_dispatcher);
 		
+		$this->js_variables = array();
+		$this->extra_variables = array();
 		
 		ob_start();
 		// This is the topmost of the file. File editors support the embedded HTML with javascript.
@@ -206,6 +188,7 @@ class sce extends base
 							else
 							{
 								echo xsl_parse_helper::EDITOR_JS_GLOBAL_OBJ . '.' . $varData['prefixedName'];
+								$this->extra_variables[] = $varData['prefixedName'];
 							}
 						?>);
 <?php					
@@ -244,20 +227,34 @@ class sce extends base
 						{
 							foreach ($parsed_child['vars'] as $var)
 							{
-								$replacement;
-								if ($var['isAttribute'])
-								{
-									// TODO: Do this properly when decided about variable names
-									$replacement = "attributes['" . $var['name'] . "']";
-									$bbcode_attributes[$var['attr']] = $var['name'];
-								}
-								else
-								{
-									$replacement = '" + ' . xsl_parse_helper::EDITOR_JS_GLOBAL_OBJ . $var['prefixedName'] . ' + "';
-								}
-								$tag_attributes[$var['attr']] = 
-									str_replace("'{\$" . $var['name'] . "}'", $replacement, $tag_attributes[$var['attr']]);
-									
+								$tag_attributes[$var['attr']] = preg_replace_callback(
+									// Note: The lookaround are required in case multiple variables are next to eachother
+									"%((?<=[^'])|')" . preg_quote("{\${$var['name']}}", '%') . "((?=[^'])|')%",
+									function ($match) use ($var, &$tag_attributes, $bbcode_attributes)
+									{
+										$replacement = '';
+										if ($match[1] !== "'")
+										{
+											$replacement .= "' + ";
+										}
+										if ($var['isAttribute'])
+										{
+											$replacement .= "attributes['" . $var['name'] . "']";
+											$bbcode_attributes[$var['attr']] = $var['name'];
+										}
+										else
+										{
+											$replacement = xsl_parse_helper::EDITOR_JS_GLOBAL_OBJ . '.' . $var['prefixedName'];
+											$this->extra_variables[] = $var['prefixedName'];
+										}
+										if($match[2] !== "'")
+										{
+											$replacement .= " + '";
+										}
+										return $replacement;
+									}, 
+									$tag_attributes[$var['attr']]
+								);
 							}
 						}				
 						$js_var_name = $this->make_new_js_var($parsed_child['tagName'] . 'Tag');
@@ -272,10 +269,20 @@ class sce extends base
 <?php
 							if(isset($bbcode_attributes[$name]))
 							{
+								// TODO: Make this a js function in assets/editor.js
 								?>
-						<?=$js_var_name?>.setAttribute('data-bbcode-type', 'attr');
-						<?=$js_var_name?>.setAttribute('data-bbcode-name', "<?=$bbcode_attributes[$name]?>");
-						<?=$js_var_name?>.setAttribute('data-bbcode-value', attributes["<?=$var['name']?>"]);
+						
+						previousType = <?=$js_var_name?>.getAttribute('data-bbcode-type');
+						attrData = <?=$js_var_name?>.getAttribute('data-bbcode-data') || [];
+						
+						attrData.push({
+							name : "<?=$bbcode_attributes[$name]?>",
+							value: attributes["<?=$bbcode_attributes[$name]?>"]
+						});
+								
+						<?=$js_var_name?>.setAttribute('data-bbcode-type', 
+							(previousType && previousType + '|attr')|| 'attr');
+						<?=$js_var_name?>.setAttribute('data-bbcode-data', JSON.stringify(attrData));
 <?php
 							}
 						}
@@ -314,9 +321,20 @@ class sce extends base
 						$js_join .= $parsed_child['js']['before'];
 						if(isset($parsed_child['js']['parentEditable']) && $parsed_child['js']['parentEditable'])
 						{
+							// It's OK to use the "|"(pipe) as separator as it is an illegal character for a tag (but not in a value)
+							$varName = $parsed_child['js']['varName'];
 							?>
-						<?=$append_to?>.setAttribute('data-bbcode-type', 'attr');
-						<?=$append_to?>.setAttribute('data-bbcode-name', '<?=$parsed_child['js']['varName']?>');
+						previousType = <?=$append_to?>.getAttribute('data-bbcode-type');
+						attrData = <?=$append_to?>.getAttribute('data-bbcode-data') || [];
+						
+						attrData.push({
+							name : "<?=$varName?>",
+							value: editorConstants.VALUE_IN_CONTENT
+						});
+								
+						<?=$append_to?>.setAttribute('data-bbcode-type', 
+							(previousType && previousType + '|attr')|| 'attr');
+						<?=$append_to?>.setAttribute('data-bbcode-data',JSON.stringify(attrData))
 						<?=$append_to?>.contentEditable = "true";
 <?php
 						}
@@ -331,7 +349,9 @@ class sce extends base
 					else if ($parsed_child['js']['type'] === 'PARSED_CHILDREN_SET')
 					{
 						?>
-						<?=$append_to?>.setAttribute('data-bbcode-type', 'content');
+						previousType = <?=$append_to?>.getAttribute('data-bbcode-type');
+						<?=$append_to?>.setAttribute('data-bbcode-type', 
+							(previousType && previousType + '|content')|| 'content');
 						<?=$append_to?>.contentEditable = "true";
 						<?=$append_to?><?php
 						$js_join .= ob_get_contents();
@@ -376,112 +396,365 @@ class sce extends base
 	 *
 	 *
 	 */
-	public function convert_bbcode_to_editor($text_formatter_factory)
+	public function generate_editor_setup_javascript($text_formatter_factory)
 	{
 		
 		$configurator = $text_formatter_factory->get_configurator();
 		$configurator->addHTML5Rules();
+		$configurator->enableJavaScript();
+		 // echo "a";
 		
 		// var_dump($configurator->javascript);
+		// var_dump($configurator->BBcodes);
 		// var_dump($configurator->tags);
+		// var_dump($configurator->BBCodes['bug']);
+		// var_dump($configurator->tags['bug']);
+		// var_dump($configurator->BBCodes['hr']);
+		// var_dump($configurator->tags['hr']);
+		// var_dump($configurator->BBCodes['CODE']);
+		// var_dump($configurator->tags['CODE']);
+		// var_dump($configurator->BBCodes['LIST']);
 		// var_dump($configurator->tags['LIST']);
+		// var_dump($configurator->BBCodes['*']);
+		// var_dump($configurator->tags['li']);
+		// exit;
 		
 		
 		$xsl_helper = new \phpbb\bbcode\xsl_parse_helper();
 		$xsl_helper->translate_attribute_vars_to_params(true);
 		$parsed_templates = $xsl_helper->parse_tag_templates($configurator->BBCodes, $configurator->tags);
+		$xsl_text = $xsl_helper->get_built_xsl_sheet();
 		
-		// var_dump($configurator->tags['quote']);
+		
+		// foreach ($configurator->BBCodes AS $bbcode){
+			// var_dump($bbcode);
+			// var_dump($configurator->tags[$bbcode->tagName]);
+		// }
+		// foreach ($configurator->BBCodes AS $name => $bbcode){
+			// var_dump($name);
+			// var_dump($configurator->tags[$bbcode->tagName]);
+			// foreach ($configurator->tags[$bbcode->tagName]->attributes as $attr){
+				// // var_dump($attr);
+				// foreach ($attr->filterChain as $filter){
+					// if($filter->getJS()){
+						// var_dump($filter->getJS()->__toString());
+					// }else{
+						// var_dump("");
+					// }
+						// // var_dump($attr->filterChain);
+						// // var_dump($filter->getJS());
+					
+				// }
+			// }
+		// }
+		
+		
 		// exit;
+		
+		$tagnames = array();
+		foreach ($configurator->tags as $name => $data)
+		{
+			$tagnames[] = $name;
+		}
 		
 		// There is a lot of javascript output in this method that is meant to be caught like this.
 		ob_start();
 		
-		$tag_id = 0;
-		$bbcode_name = 'quote';
-		$parsed_template = $parsed_templates[$bbcode_name];
-		
-		$js_text = '';
 		
 		?>
-		$.sceditor.plugins.bbcode.bbcode.set('<?=$bbcode_name?>',
-				{<?php
-		$js_text .= ob_get_contents();
-		ob_clean();
 		
+		xslt = xslt('<?=str_replace("\n", "' +\n'", addcslashes($xsl_text, "'"))?>');
+<?php
 		
-		$tags = $this->get_container_tags($parsed_template);
-		$tags = array_unique($tags);
-		?>
+		$tag_id = -1;
+		$js_texts = array();
+		
+		foreach ($configurator->BBCodes as $bbcode_name => $bbcode)
+		{
+			$tag_id++;
+			$bbcode_name = strtolower($bbcode_name);
+			
+			$parsed_template = $parsed_templates[$bbcode_name];
+			
+			$tag = $configurator->tags[$bbcode->tagName];
+			
+			$bbcode_data = $this->extract_and_normalize_bbcode_data($bbcode, $tag, $tagnames);
+			
+			// var_dump($bbcode_data);
+			// exit;
+			$js_text = '';
+			
+			?>
+	$.sceditor.plugins.bbcode.bbcode.set('<?=$bbcode_name?>',
+			{
+<?php
+			$js_text .= ob_get_contents();
+			ob_clean();
+			
+			
+			$tags = $this->get_container_tags($parsed_template);
+			$tags = array_unique($tags);
+			?>
 				tags: {
 <?php
-		foreach($tags as $htmlTag)
-		{
-			?>
-			'<?=$htmlTag?>': {
-				'data-tag-id': "<?=$tag_id?>"
+			foreach($tags as $htmlTag)
+			{
+				?>
+					'<?=$htmlTag?>': {
+						'data-tag-id': "<?=$tag_id?>"
+					}
+<?php
 			}
+			?>
+				},
 <?php
-		}
-		?>
-					},
+			$js_text .= ob_get_contents();
+			ob_clean();
+			?>		
+				isInline: false,
+<?php				
+			if (isset($bbcode_data['autoCloseOn']))
+			{
+				?>
+				excludeClosing: true,
 <?php
-		$js_text .= ob_get_contents();
-		ob_clean();
-		?>		
-					isInline: false,
-					format: function (element, content) {
-						var	author = '';
-						var $elm  = $(element);
-						var $cite = $elm.children('cite').first();
+			}
+	?>
+<?php		
+			if (empty($bbcode_data['useContent']) &&
+				(!empty($bbcode_data['autoClose']) || 
+					(!empty($bbcode_data['ignoreBBCodeInside']) && !empty($bbcode_data['ignoreTextInside'])))
+				)
+			{
+				?>
+				isSelfClosing: true,
+<?php
+			}
+			else if (empty($bbcode_data['ignoreBBCodeInside']))
+			{
+				?>
+				allowedChildren: ['#'],
+<?php
+			}
+			else if (!empty($bbcode_data['allowedChildren']))
+			{
+				?>
+				allowedChildren: ['<?php
+				echo !empty($bbcode_data['ignoreTextInside']) ? "" : "#','";
+				echo implode("','", array_map('strtolower', $bbcode_data['allowedChildren']));
+				?>'],
+<?php
+			}
+			?>
+				allowsEmpty : true,
+				html: function (token, attributes, content) {
+					var originalAttributes = attributes;
+					var originalContent = content;
+					var previousType;
+					var attrData;
+					var usedContents = [];
+<?php
+			if($bbcode_data['defaultAttribute'])
+			{
+				?>
+					if(!attributes["<?=$bbcode_data['defaultAttribute']?>"] &&
+						attributes["<?=$bbcode_data['defaultAttribute']?>"] !=== '' && attributes.defaultattr){
+						attributes["<?=$bbcode_data['defaultAttribute']?>"] = attributes.defaultattr;
+					}	
+<?php
+			}
+			?>
+<?php
+			foreach($bbcode_data['useContent'] as $use_content_attr)
+			{
+				?>
+					if(!attributes["<?=$use_content_attr?>"] &&
+						attributes["<?=$use_content_attr?>"] !=== '' && 
+						(content || content === '')						
+						){
+						attributes["<?=$use_content_attr?>"] = content;
+						usedContents.push("<?=$use_content_attr?>");
+					}	
+<?php
+			}
+			?>
+<?php
+			foreach ($bbcode_data['attrPresets'] as $name => $value)
+			{
+				?>
+					if(!attributes['<?=$name?>'] && attributes['<?=$name?>'] !== ''){
+						attributes['<?=$name?>'] = <?=addcslashes($value, "'")?>;
+					}	
+<?php
+			}
+			if(!empty($bbcode_data['preProcessors'])){
+				?>
+				var searchResult;
+<?php
+				foreach ($bbcode_data['preProcessors'] as $pre_processor)
+				{
+					?>
+				searchResult = <?=$pre_processor['regexFixed']?>.exec(attributes['<?=$pre_processor['sourceAttribute']?>']);
+				if(searchResult){
+<?php
+					foreach ($pre_processor['matchNumVsAttr'] as $num => $attr)
+					{
+					?>
+					if(!attributes["<?=$use_content_attr?>"] && attributes["<?=$use_content_attr?>"] !=== ''){
+						attributes['<?=$attr?>'] = searchResult[<?=$num?>];
+					}
+<?php
+					}
+					?>
+				}
+<?php	
+				}
+			}
 
-						if ($cite.length === 1 || $elm.data('author')) {
-							author = $cite.text() || $elm.data('author');
+			foreach ($bbcode_data['attr'] as $attr_name => $attr_data)
+			{
+				foreach ($attr_data['filters'] as $filter)
+				{
+					if (isset($filter['name']))
+					{
+						?>
+						attributes['<?=$attr_name?>'] = 
+							editor.paramFilters['<?=$filter['name']?>'](attributes['<?=$attr_name?>']<?=$filter['extraVars']?>);
+<?php
+					}
+					else
+					{
+						?>
+						attributes['<?=$attr_name?>'] = 
+							(<?=$filter['inlineFunc']?>)(attributes['<?=$attr_name?>']<?=$filter['extraVars']?>);
+<?php
+					}
+				?>	
+					if(attributes['<?=$attr_name?>'] === false){
+						console.warn("Attribute <?=$attr_name?> from BBCode <?=$bbcode_name?> failed to validate <?=isset($filter['name']) ? $filter['name'] : addcslashes($filter['inlineFunc'], "\n\"")?>");
+					}
+<?php
+				}
+				if ($attr_data['defaultValue'])
+				{
+				?>				
+					if(!attributes['<?=$attr_name?>'] && attributes['<?=$attr_name?>'] !== ''){
+						attributes['<?=$attr_name?>'] = "<?=$attr_data['defaultValue']?>";
+					}
+<?php
+				}
+				if ($attr_data['required'])
+				{
+				?>				
+					if(!attributes['<?=$attr_name?>'] && attributes['<?=$attr_name?>'] !== ''){
+						return editor.revertBackToBBCode("<?=$bbcode_name?>", originalAttributes, originalContent);
+					}
+<?php
+				}
+			}
+			?>
+<?php
+			$js_text .= ob_get_contents();
+			ob_clean();
+			
+			$this->parse_node($bbcode_name, $parsed_template);
+			
+			// var_dump($parsed_template);
+			
+			// var_dump("------------------------------");
+			
+			?>
+			var mainContainerFragment = document.createDocumentFragment();
+			<?php
+			$js_text .= ob_get_contents();
+			ob_clean();
 
-							$elm.data('author', author);
-							$cite.remove();
-
-							content	= this.elementToBbcode($(element));
-							author  = '=' + author.replace(/(^\s+|\s+$)/g, '');
-
-							$elm.prepend($cite);
+			$js_text .= $this->join_template_js('mainContainerFragment', $parsed_template);
+			
+			?>
+			
+				if(mainContainerFragment.firstChild.getAttribute('contentEditable') !== 'yes'){
+					mainContainerFragment.firstChild.contentEditable = 'false';
+				}
+				mainContainerFragment.firstChild.setAttribute('data-tag-id', "<?=$tag_id?>");
+				return mainContainerFragment.firstChild.outerHTML;
+			},
+			<?php
+			$js_text .= ob_get_contents();
+			ob_clean();
+			?>
+				format: function (element, content) {
+					var infos = element.querySelectorAll('[data-bbcode-type]');
+					var params = [];
+					var useContent = false;
+					
+					for(var i = 0; i < infos.length; i++){
+						var current = infos[i];
+						var type = current.getAttribute('data-bbcode-type');
+						var data = current.getAttribute('data-bbcode-data');
+						if(!type){
+							console.error("To BBCode translation error at BBCode <?=$bbcode_name?>.\n" 
+										+ "Unexpected empty data-bbcode-type parameter. Value and node as follows:");
+							console.error(type);
+							console.error(current);
+							return;
 						}
-
-						return '[quote' + author + ']' + content + '[/quote]';
-					},
-					html: function (token, attributes, content) {
-		<?php
-		$js_text .= ob_get_contents();
-		ob_clean();
-		
-		$this->parse_node($bbcode_name, $parsed_template);
-		
-		// var_dump($parsed_template);
-		
-		// var_dump("------------------------------");
-		
-		?>
-		var mainContainerFragment = document.createDocumentFragment();
-		<?php
-		$js_text = ob_get_contents();
-		ob_clean();
-
-		$js_text .= $this->join_template_js('mainContainerFragment', $parsed_template);
-		
-		?>
-		
-		if(mainContainerFragment.firstChild.getAttribute('contentEditable') !== 'yes'){
-			mainContainerFragment.firstChild.contentEditable = 'false';
+						var types = type.split("|");
+						var data = JSON.parse(data);
+						var extraOffset = 0;
+						for(var j = 0; j < types.length; j++){
+							if(types[j] === 'content'){
+								useContent = true;
+								extraOffset--;
+							}else if(types[j] === 'attr'){
+								var name = data[j + extraOffset].name;
+								var value = data[j + extraOffset].value;
+								if(value === editorConstants.VALUE_IN_CONTENT){
+									value = current.textContent;
+								}
+								params.push(
+									name + '="' + value + '"'
+								);
+							}else{
+								console.warn("To BBCode translation warning at BBCode <?=$bbcode_name?>.\n" + 
+											 "Unexpected value for data-bbcode-type parameter." + 
+											 "Skipping to the next value. Value and node were as follows:");
+								console.warn(types[j]);
+								console.warn(types);
+								console.warn(current);
+								continue;
+							}
+						}
+					}
+					
+					return '[<?=$bbcode_name?>' + 
+						(params ? ' ' : '') +
+						params.join(' ') +
+						']' + (useContent ? content : '') + '[/<?=$bbcode_name?>]';
+				}
+			});
+<?php
+			$js_text .= ob_get_contents();
+			ob_clean();
+			
+			$js_texts[] = $js_text;
 		}
-		mainContainerFragment.firstChild.setAttribute('data-tag-id', "<?=$tag_id?>");
-		return mainContainerFragment.firstChild.outerHTML;
-		<?php
-		$js_text .= ob_get_contents();
-		ob_clean();
 		
-		var_dump($js_text);
+		?>
+		var <?=xsl_parse_helper::EDITOR_JS_GLOBAL_OBJ?> = {
+<?php
+		foreach ($this->extra_variables as $editor_data_var)
+		{
+?>
+			'<?=$editor_data_var?>': '{<?=$editor_data_var?>}',
+		var_dump($this->extra_variables);
+<?php	
+		}
+?>
+		};
+<?php	
+		return implode($js_texts, "\n\t");
 		
-		exit;
 		foreach($configurator->BBCodes AS $bbcode)
 		{
 			var_dump($bbcode, $configurator->tags[$bbcode->tagName]);

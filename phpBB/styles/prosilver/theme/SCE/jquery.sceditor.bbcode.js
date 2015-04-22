@@ -9024,6 +9024,9 @@
 			}
 
 			SCEditor.dom.removeWhiteSpace($body[0]);
+			// Remove all the stuff that is marked to be ignored
+			$(".sceditor-ignore", $body).remove();
+			
 			bbcode = base.elementToBbcode($body);
 
 			if ($tmpContainer) {
@@ -9084,11 +9087,6 @@
 					}
 
 					if (nodeType === 1) {
-						// skip ignored elements
-						if ($node.hasClass('sceditor-ignore')) {
-							return;
-						}
-
 						// skip empty nlf elements (new lines automatically
 						// added after block level elements like quotes)
 						if ($node.hasClass('sceditor-nlf')) {
