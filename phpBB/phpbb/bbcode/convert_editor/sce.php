@@ -41,8 +41,11 @@ class sce extends base
 	protected $js_variables;
 	
 	protected $extra_variables;
-
-
+	
+	protected $main_js;
+	
+	protected $dynamic_variables;
+	
 	/**
 	 * Constructor
 	 * 
@@ -53,18 +56,31 @@ class sce extends base
 	 * @param \phpbb\event\dispatcher_interface $phpbb_dispatcher Where to send events to
 	 */
 	public function __construct(\phpbb\cache\driver\driver_interface $cache, $cache_prefix,
-		\phpbb\config\config $config, \phpbb\event\dispatcher_interface $phpbb_dispatcher)
+		\phpbb\config\config $config, \phpbb\event\dispatcher_interface $phpbb_dispatcher,
+		\phpbb\request\request $request, \phpbb\template\template $template)
 	{
-		parent::__construct($cache, $cache_prefix, $config, $phpbb_dispatcher);
+		parent::__construct($cache, $cache_prefix, $config, $phpbb_dispatcher, $request, $template);
 		
 		$this->js_variables = array();
 		$this->extra_variables = array();
+		$this->main_js = NULL;
+		$this->dynamic_variables = NULL;
 		
 		ob_start();
 		// This is the topmost of the file. File editors support the embedded HTML with javascript.
 		// This allows javascript code to be syntax highlighted by the editors.
 		?><script><?php
 		ob_end_clean();
+	}
+	
+	public function get_static_javascript()
+	{
+		return $this->main_js;
+	}
+	
+	public function get_dynamic_javascript()
+	{
+		return $this->dynamic_variables;
 	}
 	
 	
@@ -103,6 +119,10 @@ class sce extends base
 				if ($execution_var['isAttribute'])
 				{
 					$vars[$execution_var['name']] = 1;
+				}
+				else
+				{
+					$this->extra_variables[$execution_var['prefixedName']] = true;
 				}
 			}
 			
@@ -154,6 +174,13 @@ class sce extends base
 		
 		foreach ($parsed_template as &$parsed_child)
 		{
+			foreach ($parsed_child['vars'] as $var_data)
+			{
+				if ($var_data['isLanguage'] || $var_data['isSetting'])
+				{
+					$this->extra_variables[$var_data['prefixedName']] = true;
+				}
+			}
 			if (isset($parsed_child['case']))
 			{
 				$this->parse_case($bbcode, $parsed_child);
@@ -175,27 +202,26 @@ class sce extends base
 						break;
 						case 'value-of':
 							// Here it is easier due to how TextFormatter uses this tag
-							$varData = $parsed_child['vars'][0];
+							$var_data = $parsed_child['vars'][0];
 							$js_var_name = $this->make_new_js_var('textNode');
 							?>
 						var <?=$js_var_name?> = document.createTextNode(<?php
 							
-							if ($varData['isAttribute'])
+							if ($var_data['isAttribute'])
 							{
 								// TODO!! First check how variables in js code should be called
-								?>attributes['<?=$varData['name']?>']<?php
+								?>attributes['<?=$var_data['name']?>']<?php
 							}
 							else
 							{
-								echo xsl_parse_helper::EDITOR_JS_GLOBAL_OBJ . '.' . $varData['prefixedName'];
-								$this->extra_variables[] = $varData['prefixedName'];
+								echo xsl_parse_helper::EDITOR_JS_GLOBAL_OBJ . '.' . $var_data['prefixedName'];
 							}
 						?>);
 <?php					
 							$parsed_child['js']['nodeName'] = $js_var_name;
 							$parsed_child['js']['type'] = 'NODE_DEFINITION';
-							$parsed_child['js']['parentEditable'] = $varData['isAttribute'];
-							$parsed_child['js']['varName'] = $varData['name'];
+							$parsed_child['js']['parentEditable'] = $var_data['isAttribute'];
+							$parsed_child['js']['varName'] = $var_data['name'];
 							$parsed_child['js']['before'] = ob_get_contents();
 							ob_clean();
 						break;
@@ -245,7 +271,7 @@ class sce extends base
 										else
 										{
 											$replacement = xsl_parse_helper::EDITOR_JS_GLOBAL_OBJ . '.' . $var['prefixedName'];
-											$this->extra_variables[] = $var['prefixedName'];
+											$this->extra_variables[$var['prefixedName']] = true;
 										}
 										if($match[2] !== "'")
 										{
@@ -322,13 +348,13 @@ class sce extends base
 						if(isset($parsed_child['js']['parentEditable']) && $parsed_child['js']['parentEditable'])
 						{
 							// It's OK to use the "|"(pipe) as separator as it is an illegal character for a tag (but not in a value)
-							$varName = $parsed_child['js']['varName'];
+							$var_name = $parsed_child['js']['varName'];
 							?>
 						previousType = <?=$append_to?>.getAttribute('data-bbcode-type');
 						attrData = <?=$append_to?>.getAttribute('data-bbcode-data') || [];
 						
 						attrData.push({
-							name : "<?=$varName?>",
+							name : "<?=$var_name?>",
 							value: editorConstants.VALUE_IN_CONTENT
 						});
 								
@@ -428,7 +454,7 @@ class sce extends base
 		
 		// foreach ($configurator->BBCodes AS $bbcode){
 			// var_dump($bbcode);
-			// var_dump($configurator->tags[$bbcode->tagName]);
+			// var_dump($configurator->tags[$bbcode->tagName]->template->__toString());
 		// }
 		// foreach ($configurator->BBCodes AS $name => $bbcode){
 			// var_dump($name);
@@ -462,7 +488,7 @@ class sce extends base
 		
 		
 		?>
-		
+(function($, window, document, undefined) {  // Avoid conflicts with other libraries
 		xslt = xslt('<?=str_replace("\n", "' +\n'", addcslashes($xsl_text, "'"))?>');
 <?php
 		
@@ -497,10 +523,10 @@ class sce extends base
 			?>
 				tags: {
 <?php
-			foreach($tags as $htmlTag)
+			foreach($tags as $html_tag)
 			{
 				?>
-					'<?=$htmlTag?>': {
+					'<?=$html_tag?>': {
 						'data-tag-id': "<?=$tag_id?>"
 					}
 <?php
@@ -733,6 +759,7 @@ class sce extends base
 						']' + (useContent ? content : '') + '[/<?=$bbcode_name?>]';
 				}
 			});
+})(jQuery, window, document); // Avoid conflicts with other libraries
 <?php
 			$js_text .= ob_get_contents();
 			ob_clean();
@@ -740,20 +767,27 @@ class sce extends base
 			$js_texts[] = $js_text;
 		}
 		
+		$this->main_js = implode($js_texts, "\n\t");
+		
 		?>
 		var <?=xsl_parse_helper::EDITOR_JS_GLOBAL_OBJ?> = {
 <?php
-		foreach ($this->extra_variables as $editor_data_var)
+		foreach ($this->extra_variables as $editor_data_var => $truth)
 		{
 ?>
 			'<?=$editor_data_var?>': '{<?=$editor_data_var?>}',
-		var_dump($this->extra_variables);
 <?php	
 		}
-?>
+		// older IE breaks if I don't do this one
+?>			'':''
 		};
 <?php	
-		return implode($js_texts, "\n\t");
+		$this->dynamic_variables = ob_get_contents();
+		ob_clean();
+		
+		
+		
+		return;
 		
 		foreach($configurator->BBCodes AS $bbcode)
 		{
@@ -813,7 +847,7 @@ class sce extends base
 		
 	}
 
-	public static function get_name(){
+	public function get_name(){
 		return 'SCE';
 	}
 	

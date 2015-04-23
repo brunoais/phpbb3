@@ -13,6 +13,8 @@
 
 namespace phpbb\bbcode\convert_editor;
 
+use \phpbb\request\request_interface;
+
 /**
 * 
 */
@@ -26,7 +28,8 @@ abstract class base
 	const HAS_BUTTON_MODE_MIXED 	= 0x8;
 	
 	const DEFAULT_WYSIWYG_MODE	= 0x1;
-	const DEFAULT_SOURCE_MODE	= 0x3;
+	const DEFAULT_SOURCE_MODE	= 0x2;
+	const DEFAULT_MIXED_MODE	= 0x4;
 	
 	
 	/**
@@ -46,13 +49,34 @@ abstract class base
 	 * @var \phpbb\config\config
 	 */
 	protected $config;
-
 	
 	/**
 	* Event dispatcher object
 	* @var \phpbb\event\dispatcher_interface
 	*/
 	protected $phpbb_dispatcher;
+	
+	/**
+	* Template object
+	* @var \phpbb\template\template
+	*/
+	protected $template;
+	
+	/**
+	* Request object
+	* @var \phpbb\request\request
+	*/
+	protected $request;
+	
+	/**
+	 * Dictate the name of the handler.
+	 * The result should only contain alphanumeric characters
+	 *
+	 */
+	protected function get_name()
+	{
+		return '';
+	}
 	
 	/**
 	 * Constructor
@@ -64,12 +88,15 @@ abstract class base
 	 * @param \phpbb\event\dispatcher_interface $phpbb_dispatcher Where to send events to
 	 */
 	protected function __construct(\phpbb\cache\driver\driver_interface $cache, $cache_prefix,
-		\phpbb\config\config $config, \phpbb\event\dispatcher_interface $phpbb_dispatcher)
+		\phpbb\config\config $config, \phpbb\event\dispatcher_interface $phpbb_dispatcher, 
+		\phpbb\request\request $request, \phpbb\template\template $template)
 	{
 		$this->cache = $cache;
 		$this->cache_prefix = $cache_prefix;
 		$this->config = $config;
 		$this->phpbb_dispatcher = $phpbb_dispatcher;
+		$this->template = $template;
+		$this->request = $request;
 		
 	}
 	
@@ -101,26 +128,36 @@ abstract class base
 	
 	abstract protected function generate_editor_setup_javascript($text_formatter_factory);
 	
+	abstract protected function get_static_javascript();
+	abstract protected function get_dynamic_javascript();
+	
 	
 	public function recalculate_editor_setup_javascript($text_formatter_factory)
 	{
-		$setup_javascript = $this->generate_editor_setup_javascript($text_formatter_factory);
+		$this->generate_editor_setup_javascript($text_formatter_factory);
 		
-		$compressed_setup_javascript = gzencode($setup_javascript, 9);
+		$setup_javascript = $this->get_static_javascript();
+		$dynamic_javascript = $this->get_dynamic_javascript();
+		
+		$gzip_setup_javascript = gzencode($setup_javascript, 9);
+		
+		$cache_name = $this->get_name();
 		
 		$etag = sha1($setup_javascript);
-		$compressed_etag = $etag . '|gzip';
+		$uncompressed_etag = $cache_name . '|normal|' . $etag;
+		$compressed_etag = $cache_name . '|gzip|'. $etag;
 		
-		$this->cache->put('wysiwyg_etag', $etag);
-		$this->cache->put('wysiwyg_etag_gzip', $compressed_etag);
-		
-		// The class name here is only for debugging purposes
-		$file_name = $this->cache_prefix . '.' . substr(strrchr(get_class(), '\\'), 1) . '.js';
+		$file_name = $this->cache_prefix . '.' . $cache_name . '.js';
 		file_put_contents($file_name, $setup_javascript, LOCK_EX);
-		file_put_contents($file_name . '.gz', $compressed_setup_javascript, LOCK_EX);
+		file_put_contents($file_name . '.gz', $gzip_setup_javascript, LOCK_EX);
 		
-		echo $setup_javascript;
-		exit;
+		// Only change or create the cached information after changing the files
+		// This prevents corrupted data in the client
+		$this->cache->put('wysiwyg_dynamic_js|' . $cache_name, $dynamic_javascript);
+		$this->cache->put('wysiwyg_etag' . $cache_name, $uncompressed_etag);
+		$this->cache->put('wysiwyg_etag_gzip' . $cache_name, $compressed_etag);
+		
+		$config->increment('bbcode_version', 1);
 	}
 	
 	/**
@@ -129,11 +166,118 @@ abstract class base
 	 *
 	 *
 	 */
-	public function get_setup_javascript()
+	public function get_setup_javascript($use_gz_version = false)
 	{
+		$file_name = $this->cache_prefix . '.' . $this->get_name() . '.js';
 		
+		if($use_gz_version)
+		{
+			$file_name .= '.gz';
+		}
+		
+		if (!file_exists($file_name))
+		{
+			$this->recalculate_editor_setup_javascript
+			if (!file_exists($file_name))
+			{
+				return false;
+			}
+		}
+		
+		$read_js = file_get_contents($file_name);
+		
+		
+		return $read_js;
+	}
+	
+	/**
+	 * This handles all the required HTTP cache headers additionally to
+	 * get_setup_javascript()
+	 * If successful (returning true), the headers were set and the setup javascript was outputed to the user or
+	 * the headers were set and status code 304 NOT MODIFIED was sent.
+	 *
+	 * @return boolean|null true on success, false on failure, null if no setup has been called yet (should never happen)
+	 */
+	public function handle_user_request_setup_javascript($text_formatter_factory = null)
+	{
+		$cache_name = $this->get_name();
+		
+		$accepted_encodings = $this->request->variable("HTTP_ACCEPT_ENCODING", '', request_interface::SERVER);
+		
+		header('Content-Type: application/javascript', true);
+		header('Vary: Accept-Encoding', true);
+		// 1 week
+		header('Cache-Control: public, max-age=604800', true);
+		
+		$etag_match = $this->request->variable("HTTP_IF_NONE_MATCH", '', request_interface::SERVER);
+		
+		if ($etag_match)
+		{
+			$etag_data = explode('|', $etag_match, 3);
+			$current_etag = null;
+			
+			if($etag_data[1] === 'gzip')
+			{
+				$current_etag = $this->cache->get('wysiwyg_etag_gzip'. $cache_name);
+				header('Content-Encoding: gzip', true);
+			}
+			else
+			{
+				$current_etag = $this->cache->get('wysiwyg_etag' . $cache_name);
+			}
+			
+			if ($current_etag === $etag_match)
+			{
+				// not modified
+				header('', false, 304);
+				return true;
+			}
+		}
+		
+		$accepts_gzip = strpos($accepted_encodings, 'gzip') !== false;
+		
+		$setup_javascript = $this->get_setup_javascript($accepts_gzip);
+		if ($setup_javascript !== false)
+		{
+			if($accepts_gzip)
+			{
+				header('Content-Encoding: gzip', true);
+			}
+			echo $setup_javascript;
+			return true;
+		}
+		if (empty($text_formatter_factory))
+		{
+			return false;
+		}
+		$this->recalculate_editor_setup_javascript($text_formatter_factory);
+		$setup_javascript = $this->get_setup_javascript();
+		if ($setup_javascript !== false)
+		{
+			if($accepts_gzip)
+			{
+				header('Content-Encoding: gzip', true);
+			}
+			echo $setup_javascript;
+			return true;
+		}
+		return null;
+	}
+	
+	public function get_request_javascript()
+	{
+		$cache_name = $this->get_name();
+		$dynamic_javascript = $this->cache->get('wysiwyg_dynamic_js|' . $cache_name);
+		
+		if($dynamic_javascript === false)
+		{
+			$this->recalculate_editor_setup_javascript($text_formatter_factory);
+			$dynamic_javascript = $this->cache->get('wysiwyg_dynamic_js|' . $cache_name);
+			return false;
+		}
 		
 	}
+	
 
 	public function get_container_tags($child_nodes)
 	{
@@ -176,9 +320,9 @@ abstract class base
 		$config = array();
 		$config['useContent'] = array();
 		
-		foreach ($bbcode->contentAttributes as $useContent_attribute)
+		foreach ($bbcode->contentAttributes as $use_content_attribute)
 		{
-			$config['useContent'][] = $useContent_attribute;
+			$config['useContent'][] = $use_content_attribute;
 		}
 		
 		$config['defaultAttribute'] = $bbcode->defaultAttribute;

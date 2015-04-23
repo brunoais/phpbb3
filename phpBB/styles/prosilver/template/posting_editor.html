@@ -70,191 +70,20 @@
 	<!-- EVENT posting_editor_message_before -->
 	
 	<!-- INCLUDEJS {T_THEME_PATH}/SCE/jquery.sceditor.bbcode.js -->
+	<!-- INCLUDEJS ./posting.php?mode=wysiwyg_definition&amp;bbcode_version={T_BBCODE_VERSION} -->
 	
 	<script>
-	window.addEventListener('load', function() {
-		var editorData = {
-			'L_WROTE': "{L_WROTE}",
-			'L_COLON': "{L_COLON}",
-		}
-		xslt = xslt('<?xml version="1.0"?>\
-<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">\
-  <xsl:param name="url" />\
-  <xsl:param name="author" />\
-  <xsl:param name="type" />\
-  <xsl:param name="type" />\
-  <xsl:param name="S_VIEWIMG" />\
-  <xsl:param name="S_VIEWFLASH" />\
-  <xsl:output method="text" encoding="iso-8859-1" indent="yes"/>\
-  <xsl:template match="flash[@d=\'0\']">\
-    <xsl:choose>\
-      <xsl:when test="$S_VIEWFLASH">a</xsl:when>\
-      <xsl:otherwise>b</xsl:otherwise>\
-    </xsl:choose>\
-  </xsl:template>\
-  <xsl:template match="img[@d=\'0\']">\
-    <xsl:choose>\
-      <xsl:when test="$S_VIEWIMG">a</xsl:when>\
-      <xsl:otherwise>b</xsl:otherwise>\
-    </xsl:choose>\
-  </xsl:template>\
-  <xsl:template match="list[@d=\'0\']">\
-    <xsl:choose>\
-      <xsl:when test="not(@type)">a</xsl:when>\
-      <xsl:when test="contains(\'upperlowerdecim\',substring(@type,1,5))">b</xsl:when>\
-      <xsl:otherwise>c</xsl:otherwise>\
-    </xsl:choose>\
-  </xsl:template>\
-  <xsl:template match="quote[@d=\'1\']">\
-    <xsl:choose>\
-      <xsl:when test="$url">a</xsl:when>\
-      <xsl:otherwise>b</xsl:otherwise>\
-    </xsl:choose>\
-  </xsl:template>\
-  <xsl:template match="quote[@d=\'0\']">\
-    <xsl:choose>\
-      <xsl:when test="$author">a</xsl:when>\
-      <xsl:otherwise>b</xsl:otherwise>\
-    </xsl:choose>\
-  </xsl:template>\
-</xsl:stylesheet>')
-		$.sceditor.plugins.bbcode.bbcode.set('quote',
-				{
-					tags: {
-						blockquote: null
-					},
-					isInline: false,
-					format: function (element, content) {
-						var	author = '';
-						var $elm  = $(element);
-						var $cite = $elm.children('cite').first();
-
-						if ($cite.length === 1 || $elm.data('author')) {
-							author = $cite.text() || $elm.data('author');
-
-							$elm.data('author', author);
-							$cite.remove();
-
-							content	= this.elementToBbcode($(element));
-							author  = '=' + author.replace(/(^\s+|\s+$)/g, '');
-
-							$elm.prepend($cite);
-						}
-
-						return '[quote' + author + ']' + content + '[/quote]';
-					},
-					html: function (token, attributes, content) {
-						
-						if(!attributes['author'] && attributes.defaultattr){
-							attributes['author'] = attributes.defaultattr;
-						}
-						if(attributes['author'] === this.undefined){
-							attributes['author'] = "";
-						}
-						if(attributes['url'] === this.undefined){
-							attributes['url'] = "";
-						}
-						
-						var mainContainerFragment = document.createDocumentFragment();
-						xslt.setParameter('author', attributes['author']);
-						var conditionResult = xslt.transformToFragment(
-							'<quote d="0"></quote>',
-							document
-						).firstChild.nodeValue;
-
-						switch (conditionResult[0]) {
-							case 'a':
-								var blockquoteTag = document.createElement('blockquote');
-								mainContainerFragment.appendChild(blockquoteTag);
-
-								var divTag = document.createElement('div');
-								blockquoteTag.appendChild(divTag);
-
-								var citeTag = document.createElement('cite');
-								divTag.appendChild(citeTag);
-
-								xslt.setParameter('url', attributes['url']);
-								var conditionResult = xslt.transformToFragment(
-									'<quote d="1"></quote>',
-									document
-								).firstChild.nodeValue;
-
-								switch (conditionResult[0]) {
-									case 'a':
-										var aTag = document.createElement('a');
-										aTag.setAttribute('href', attributes['url']);
-										aTag.setAttribute('data-bbcode-type', 'attr');
-										aTag.setAttribute('data-bbcode-name', "url");
-										aTag.setAttribute('data-bbcode-value', attributes["url"]);
-										aTag.setAttribute('class', 'postlink');
-										citeTag.appendChild(aTag);
-
-										var textNode = document.createTextNode(attributes['author']);
-										aTag.setAttribute('data-bbcode-type', 'attr');
-										aTag.setAttribute('data-bbcode-name', 'author');
-										aTag.contentEditable = "true";
-										aTag.appendChild(textNode);
-
-										break;
-									case 'b':
-										var textNode1 = document.createTextNode(attributes['author']);
-										citeTag.setAttribute('data-bbcode-type', 'attr');
-										citeTag.setAttribute('data-bbcode-name', 'author');
-										citeTag.contentEditable = "true";
-										citeTag.appendChild(textNode1);
-
-										break;
-								}
-								var textNode2 = document.createTextNode(' ');
-								citeTag.appendChild(textNode2);
-
-								var textNode3 = document.createTextNode(editorData.L_WROTE);
-								citeTag.appendChild(textNode3);
-
-								var textNode4 = document.createTextNode(editorData.L_COLON);
-								citeTag.appendChild(textNode4);
-
-								divTag.setAttribute('data-bbcode-type', 'content');
-								divTag.contentEditable = "true";
-								divTag.innerHTML += content;
-								break;
-							case 'b':
-								var blockquoteTag1 = document.createElement('blockquote');
-								blockquoteTag1.setAttribute('class', 'uncited');
-								mainContainerFragment.appendChild(blockquoteTag1);
-
-								var divTag1 = document.createElement('div');
-								blockquoteTag1.appendChild(divTag1);
-
-								divTag1.setAttribute('data-bbcode-type', 'content');
-								divTag1.contentEditable = "true";
-								divTag1.innerHTML += content;
-								break;
-						}
-
-						if (mainContainerFragment.firstChild.getAttribute('contentEditable') !== 'true') {
-							mainContainerFragment.firstChild.contentEditable = 'false';
-						}
-						mainContainerFragment.firstChild.setAttribute('data-tag-id', "0");
-						return mainContainerFragment.firstChild.outerHTML;
-					}
-				}
-		);
-		
+	
 		var messageTextarea = $("#signature, #message");
 		messageTextarea.sceditor({
 			plugins: 'bbcode,undo',
 			style: "{T_THEME_PATH}/SCE/jquery.sceditor.default.css"
 		});
-		messageTextarea[0].onselect = messageTextarea.a;
-		messageTextarea[0].onclick = messageTextarea.a;
-		messageTextarea[0].onkeyup = messageTextarea.a;
-		messageTextarea[0].onfocus = messageTextarea.a;
 	});
 	</script>
 	
-	<div id="message-box" class="ttext-icon">
-		<textarea <!-- IF S_UCP_ACTION and not S_PRIVMSGS and not S_EDIT_DRAFT -->name="signature" id="signature" style="height: 9em;"<!-- ELSE -->name="message" id="message"<!-- ENDIF --> rows="15" cols="76" tabindex="4" onselect="storeCaret(this);" onclick="storeCaret(this);" onkeyup="storeCaret(this);" onfocus="initInsertions();" class="inputbox">{MESSAGE}{DRAFT_MESSAGE}{SIGNATURE}</textarea>
+	<div id="message-box" class="text">
+		<textarea <!-- IF S_UCP_ACTION and not S_PRIVMSGS and not S_EDIT_DRAFT -->name="signature" id="signature" style="height: 9em;"<!-- ELSE -->name="message" id="message"<!-- ENDIF --> rows="15" cols="76" tabindex="4" class="inputbox">{MESSAGE}{DRAFT_MESSAGE}{SIGNATURE}</textarea>
 	</div>
 
 	<!-- EVENT posting_editor_message_after -->

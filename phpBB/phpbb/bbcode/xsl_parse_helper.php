@@ -26,7 +26,9 @@ class xsl_parse_helper
 	private $current_bbcode;
 	private $conditions_document;
 	
-	private $attr_to_param;
+	protected $attr_to_param;
+	
+	protected $stylesheet_params;
 	
 	// If edited, also edit posting_editor.html (in the templates)
 	const EDITOR_JS_GLOBAL_OBJ = 'editorData';
@@ -36,6 +38,7 @@ class xsl_parse_helper
 	
 	public function __construct(){
 		$this->attr_to_param = false;
+		$this->stylesheet_params = array();
 	}
 	
 	public function translate_attribute_vars_to_params($option){
@@ -60,13 +63,12 @@ class xsl_parse_helper
 	*/
 	public function parse_attributes($node, $match_find)
 	{
-		$stylesheet_root = $this->conditions_document->documentElement;
 		$vars = array();
 		
 		foreach ($node->attributes as $attr)
 		{
 			$attr->value = preg_replace_callback($match_find, 
-					function ($match) use ($stylesheet_root, $attr, &$vars)
+					function ($match) use ($attr, &$vars)
 					{
 						$var_data = $vars[] = array(
 							'attr' 			=> $attr->nodeName,
@@ -80,9 +82,7 @@ class xsl_parse_helper
 							'isLanguage' 	=> $match[4] === 'L',
 						);
 						
-						$param = $this->conditions_document->createElementNS(self::XSLNS, 'xsl:param');
-						$param->setAttribute('name', $match[3]);
-						$stylesheet_root->insertBefore($param, $stylesheet_root->firstChild);
+						$this->stylesheet_params[$match[3]] = true;
 						
 						if ($this->attr_to_param && $var_data['isAttribute'])
 						{
@@ -133,6 +133,14 @@ class xsl_parse_helper
 			}catch(xsl_parse_helper_exception $e){
 				var_dump($e->getMessage());
 			}
+		}
+		
+		$stylesheet_root = $this->conditions_document->documentElement;
+		foreach ($this->stylesheet_params as $param_name => $truth)
+		{
+			$param = $this->conditions_document->createElementNS(self::XSLNS, 'xsl:param');
+			$param->setAttribute('name', $param_name);
+			$stylesheet_root->insertBefore($param, $stylesheet_root->firstChild);
 		}
 		
 		// var_dump($tags['list']->template->__toString());
