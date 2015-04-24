@@ -769,22 +769,11 @@ class sce extends base
 		
 		$this->main_js = implode($js_texts, "\n\t");
 		
-		?>
-		var <?=xsl_parse_helper::EDITOR_JS_GLOBAL_OBJ?> = {
-<?php
-		foreach ($this->extra_variables as $editor_data_var => $truth)
-		{
-?>
-			'<?=$editor_data_var?>': '{<?=$editor_data_var?>}',
-<?php	
-		}
-		// older IE breaks if I don't do this one
-?>			'':''
-		};
-<?php	
-		$this->dynamic_variables = ob_get_contents();
-		ob_clean();
 		
+		$this->dynamic_variables = array(
+			'container_variable' => xsl_parse_helper::EDITOR_JS_GLOBAL_OBJ,
+			'variables' => array_keys($this->extra_variables),
+		);
 		
 		
 		return;

@@ -73,7 +73,15 @@
 	<!-- INCLUDEJS ./posting.php?mode=wysiwyg_definition&amp;bbcode_version={T_BBCODE_VERSION} -->
 	
 	<script>
-	
+	var {JS_BBCODE_VARS_CONTAINER} = {
+{% for key in JS_BBCODE_VARS %}
+	{% if key|slice(0, 2) === 'L_' %}
+		'{{ key }}': '{{ lang(key[2:]) |e('js') }}',
+	{% else %}
+		'{{ key }}': '{{ attribute(_context, key) |e('js') }}',
+	{% endif %}
+{% endfor %}
+	}
 		var messageTextarea = $("#signature, #message");
 		messageTextarea.sceditor({
 			plugins: 'bbcode,undo',

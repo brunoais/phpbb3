@@ -153,10 +153,12 @@ abstract class base
 		
 		// Only change or create the cached information after changing the files
 		// This prevents corrupted data in the client
-		$this->cache->put('wysiwyg_dynamic_js|' . $cache_name, $dynamic_javascript);
+		$this->cache->put('wysiwyg_dynamic_js' . $cache_name, $dynamic_javascript);
 		$this->cache->put('wysiwyg_etag' . $cache_name, $uncompressed_etag);
 		$this->cache->put('wysiwyg_etag_gzip' . $cache_name, $compressed_etag);
 		
+		echo $dynamic_javascript;
+		exit;
 		$config->increment('bbcode_version', 1);
 	}
 	
@@ -177,11 +179,7 @@ abstract class base
 		
 		if (!file_exists($file_name))
 		{
-			$this->recalculate_editor_setup_javascript
-			if (!file_exists($file_name))
-			{
-				return false;
-			}
+			return false;
 		}
 		
 		$read_js = file_get_contents($file_name);
@@ -267,12 +265,12 @@ abstract class base
 	public function get_request_javascript()
 	{
 		$cache_name = $this->get_name();
-		$dynamic_javascript = $this->cache->get('wysiwyg_dynamic_js|' . $cache_name);
+		$dynamic_javascript = $this->cache->get('wysiwyg_dynamic_js' . $cache_name);
 		
 		if($dynamic_javascript === false)
 		{
 			$this->recalculate_editor_setup_javascript($text_formatter_factory);
-			$dynamic_javascript = $this->cache->get('wysiwyg_dynamic_js|' . $cache_name);
+			$dynamic_javascript = $this->cache->get('wysiwyg_dynamic_js' . $cache_name);
 			return false;
 		}
 		

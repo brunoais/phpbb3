@@ -199,26 +199,26 @@ switch ($mode)
 			return;
 		}
 	break;
-
 	case 'wysiwyg_definition':
-			$wysiwyg = $phpbb_container->get('wysiwyg.converters.' . $config['wysiwyg_type']);
-			$result = $wysiwyg->handle_user_request_setup_javascript();
-			if($result === true)
-			{
-				exit;
-			}
-			// $result = $wysiwyg->handle_user_request_setup_javascript($phpbb_container->get('wysiwyg.text_formatter.s9e.factory'));
-			$result = $wysiwyg->handle_user_request_setup_javascript($phpbb_container->get('text_formatter.s9e.factory'));
-			if($result === true)
-			{
-				exit;
-			}
-			header('Cache-Control: public, no-cache', true, 500);
-			
-			$phpbb_log->add('critical', $user->data['user_id'], $user->ip, 'LOG_WYSIWYG_NOT_READY', false, array(
-								$result === false ? 'false' : 'null',
-							));
+		$wysiwyg = $phpbb_container->get('wysiwyg.converters.' . $config['wysiwyg_type']);
+		// $result = $wysiwyg->recalculate_editor_setup_javascript($phpbb_container->get('text_formatter.s9e.factory'));
+		$result = $wysiwyg->handle_user_request_setup_javascript();
+		if($result === true)
+		{
 			exit;
+		}
+		// $result = $wysiwyg->handle_user_request_setup_javascript($phpbb_container->get('wysiwyg.text_formatter.s9e.factory'));
+		$result = $wysiwyg->handle_user_request_setup_javascript($phpbb_container->get('text_formatter.s9e.factory'));
+		if($result === true)
+		{
+			exit;
+		}
+		header('Cache-Control: public, no-cache', true, 500);
+		
+		$phpbb_log->add('critical', $user->data['user_id'], $user->ip, 'LOG_WYSIWYG_NOT_READY', false, array(
+							$result === false ? 'false' : 'null',
+						));
+		exit;
 	break;
 
 	default:
