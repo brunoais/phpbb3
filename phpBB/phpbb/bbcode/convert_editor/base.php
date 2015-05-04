@@ -14,6 +14,7 @@
 namespace phpbb\bbcode\convert_editor;
 
 use \phpbb\request\request_interface;
+use \phpbb\bbcode\js_regex_helper;
 
 /**
 * 
@@ -31,6 +32,7 @@ abstract class base
 	const DEFAULT_SOURCE_MODE	= 0x2;
 	const DEFAULT_MIXED_MODE	= 0x4;
 	
+	const EDITOR_CONFIG_BASENAME = 'editor_config_';
 	
 	/**
 	 * cache object
@@ -128,20 +130,28 @@ abstract class base
 	
 	abstract protected function generate_editor_setup_javascript($text_formatter_factory);
 	
-	abstract protected function get_static_javascript();
-	abstract protected function get_dynamic_javascript();
+	abstract protected function get_static_javascript_variables();
+	abstract protected function get_dynamic_javascript_variables();
 	
 	
 	public function recalculate_editor_setup_javascript($text_formatter_factory)
 	{
+		$cache_name = $this->get_name();
+		
 		$this->generate_editor_setup_javascript($text_formatter_factory);
 		
-		$setup_javascript = $this->get_static_javascript();
-		$dynamic_javascript = $this->get_dynamic_javascript();
+		$editor_setup_vars = $this->get_static_javascript_variables();
+		$editor_dynamic_vars = $this->get_dynamic_javascript_variables();
+		
+		$setup_javascript = $this->template->set_filenames(array(
+			'editor_config' => self::EDITOR_CONFIG_BASENAME . strtolower($cache_name) . '.js',
+		))
+			->assign_vars($editor_setup_vars)
+			->assign_display('editor_config');
+		
 		
 		$gzip_setup_javascript = gzencode($setup_javascript, 9);
 		
-		$cache_name = $this->get_name();
 		
 		$etag = sha1($setup_javascript);
 		$uncompressed_etag = $cache_name . '|normal|' . $etag;
@@ -153,13 +163,11 @@ abstract class base
 		
 		// Only change or create the cached information after changing the files
 		// This prevents corrupted data in the client
-		$this->cache->put('wysiwyg_dynamic_js' . $cache_name, $dynamic_javascript);
+		$this->cache->put('wysiwyg_dynamic_js_vars' . $cache_name, $editor_dynamic_vars);
 		$this->cache->put('wysiwyg_etag' . $cache_name, $uncompressed_etag);
 		$this->cache->put('wysiwyg_etag_gzip' . $cache_name, $compressed_etag);
 		
-		echo $dynamic_javascript;
-		exit;
-		$config->increment('bbcode_version', 1);
+		$this->config->increment('bbcode_version', 1);
 	}
 	
 	/**
@@ -262,22 +270,21 @@ abstract class base
 		return null;
 	}
 	
-	public function get_request_javascript()
+	public function get_request_variables()
 	{
 		$cache_name = $this->get_name();
-		$dynamic_javascript = $this->cache->get('wysiwyg_dynamic_js' . $cache_name);
+		$dynamic_javascript_vars = $this->cache->get('wysiwyg_dynamic_js_vars' . $cache_name);
 		
-		if($dynamic_javascript === false)
+		if($dynamic_javascript_vars === false)
 		{
-			$this->recalculate_editor_setup_javascript($text_formatter_factory);
-			$dynamic_javascript = $this->cache->get('wysiwyg_dynamic_js' . $cache_name);
 			return false;
 		}
+		return $dynamic_javascript_vars;
 		
 	}
 	
 
-	public function get_container_tags($child_nodes)
+	protected function get_container_tags($child_nodes)
 	{
 		foreach ($child_nodes as $child_node)
 		{
@@ -313,7 +320,100 @@ abstract class base
 		
 	}
 	
-	public function extract_and_normalize_bbcode_data($bbcode, $tag, $all_names = array())
+	
+	protected function get_bbcodes_for_tags($bbcodes)
+	{
+		$tag_to_BBCodes = array();
+		
+		foreach($bbcodes as $bbcode_name => $bbcode)
+		{
+			$tag_to_BBCodes[$bbcode->tagName][] = $bbcode_name;
+		}
+		
+		return $tag_to_BBCodes;
+	}
+	
+	protected function filter_out_tags_without_bbcode($bbcodes_for_tags, $tags)
+	{
+		foreach ($tags as $name => $data)
+		{
+			if(empty($bbcodes_for_tags[$name]))
+			{
+				$bbcodes_for_tags[$name] = array();
+			}
+		}
+		
+		return $bbcodes_for_tags;
+	}
+	
+	protected function get_all_tag_names($tags)
+	{
+		$tagnames = array();
+		foreach ($tags as $name => $data)
+		{
+			$tagnames[] = $name;
+		}
+		
+		return $tagnames;
+	}
+	
+	public function extract_and_normalize_bbcode_data($bbcodes, $tags, $low_case_names = true)
+	{
+		$bbcodes_data = array();
+		
+		$bbcodes_for_tags = $this->get_bbcodes_for_tags($bbcodes);
+		$bbcodes_for_tags = $this->filter_out_tags_without_bbcode($bbcodes_for_tags, $tags);
+		
+		if ($low_case_names)
+		{
+			foreach($bbcodes_for_tags as &$bbcodes_for_tag)
+			{
+				$bbcodes_for_tag = array_map('strtolower', $bbcodes_for_tag);
+			}
+		}
+		
+		
+		$tag_names = $this->get_all_tag_names($tags);
+		
+		foreach ($bbcodes as $bbcode_name => $bbcode){
+			$this_data = $this->normalize_text_parser_data($bbcode, $tags[$bbcode->tagName], $tag_names);
+			
+			foreach(array('deniedChildren', 'allowedChildren', 
+					'deniedDescendants', 'allowedDecendants') as $key)
+			{
+				// var_dump($bbcodes_for_tags + array_flip($this_data[$key]));
+				$this_data[$key] = array_reduce(
+						$bbcodes_for_tags + array_flip($this_data[$key]),
+						'array_merge',
+						array()
+					);
+				
+				// $this_data[$key] = array_reduce(
+						// $bbcodes_for_tags + array_flip($this_data[$key]),
+						// function ($carry, $item) use ($this_data, $key){
+							// if(!is_array($carry) || !is_array($item)){
+								// var_dump($this_data[$key]);
+							// }
+							// return array_merge($carry, $item);
+						// },
+						// array()
+					// );
+			}
+			if ($low_case_names)
+			{
+				$bbcodes_data[strtolower($bbcode_name)] = $this_data;
+			}
+			else
+			{
+				$bbcodes_data[$bbcode_name] = $this_data;
+			}
+		}
+		
+		return $bbcodes_data;
+		
+	}
+	
+	public function normalize_text_parser_data($bbcode, $tag, $tag_names = array())
 	{
 		$config = array();
 		$config['useContent'] = array();
@@ -415,75 +515,15 @@ abstract class base
 			$data = array(
 				'sourceAttribute' => $target_attribute,
 			);
-			// Find regex functionalities that do not exist in javascript regex parser. Those are:
-			// atomic grouping, lookbehind (both positive and negative), conditionals, comments and \A and \z anchors.
-			// TODO: Remove the comments, if they exist, instead of just failing
-			// TODO: See if there's a good alternative regex to:
-			// (?<=\[..[^]]{0,65535}\][^][]{0,65535}|^[^][]{0,65535}|\[[^^][^]]{0,65535}\][^][]{0,65535})(?<=^|[^\\])(\(\?(>|<[=!]|\(\?=|#)|\\[AZz])
-			if (preg_match_all(
-				'%(?<=^|[^\\\\])(\(\?(>|<[=!]|\(\?=|#)|\\\\[AZz])%',
-					$regex, $illegal_regex_elements, PREG_SET_ORDER | PREG_OFFSET_CAPTURE)
-				)
-			{
-				foreach ($illegal_regex_elements as $illegal_regex_element)
-				{
-					$error = null;
-					if($illegal_regex_element[2])
-					{
-						switch($illegal_regex_element[2][0])
-						{
-							case '<=':
-							case '<!':
-								$error = 'Javascript does not support lookbehind.';
-							break;
-							case '>':
-								$error = 'Javascript does not support atomic grouping.';
-							break;
-							case '#':
-								$error = 'Javascript does not support comments in the regex';
-								
-							break;
-							case '(?=':
-								$error = 'Javascript does not support conditionals in the regex.';
-								
-							break;
-							
-							/* NO-DEFAULT */
-						}
-					}
-					else
-					{
-						switch($illegal_regex_element[1][0])
-						{
-							case '\A':
-							case '\Z':
-							case '\z':
-								$error = 'Javascript does not support \\A and \\Z anchors.';
-							break;
-							/* NO-DEFAULT */
-						}
-					}
-					
-					if(isset($error))
-					{
-						$errors[] = $error . ' Illegality found at offset ' . $illegal_regex_element[0][1] . '.';
-					}
-				}
-			}
-			if (isset($errors))
-			{
-				$data['regexPotentialErrors'] = $errors;	
-			}
-			$data['regexFixed'] = preg_replace_callback('%(?|\(\?\'([a-zA-Z][a-zA-Z0-9]+)\'|\(\?P?<([a-zA-Z][a-zA-Z0-9]+)>)%',
-				function ($matches) use (&$match_vs_attribute)
-				{
-					$match_vs_attribute[] = $matches[1];
-					return "(";
-				}
-			, $regex);
 			
-			$data['matchNumVsAttr'] = $match_vs_attribute;
+			$transformation_results = js_regex_helper::to_js($regex);
+			
+			$data['regexFixed'] = $transformation_results['jsRegex'];
+			$data['modifiersFixed'] = $transformation_results['modifiers'];
+			$data['matchNumVsAttr'] = $transformation_results['matchesVsNames'];
 			$config['preProcessors'][] = $data;
+			// var_dump($data['regexFixed']);
+			
 		}
 		
 		$config['allowedChildren'] = array();
@@ -496,9 +536,8 @@ abstract class base
 			switch($rule_name)
 			{
 				case 'denyChild':
-					
 					$config['deniedChildren'] = array_merge($config['deniedChildren'], $rule);
-					$config['allowedChildren'] = array_merge(array_diff($all_names, $rule), $config['allowedChildren']);
+					$config['allowedChildren'] = array_merge(array_diff($tag_names, $rule), $config['allowedChildren']);
 					
 				break;
 				case 'allowChild':
@@ -509,12 +548,12 @@ abstract class base
 				case 'denyDescendant':
 					
 					$config['deniedDescendants'] = array_merge($config['deniedDescendants'], $rule);
-					$config['allowedDecendants'] = array_merge(array_diff($all_names, $rule), $config['allowedDecendants']);
+					$config['allowedDecendants'] = array_merge(array_diff($tag_names, $rule), $config['allowedDecendants']);
 					
 				break;
 				case 'allowDescendant':
 					
-					$config['allowedDecendants'] = array_merge(array_diff($all_names, $rule), $config['allowedDecendants']);
+					$config['allowedDecendants'] = array_merge(array_diff($tag_names, $rule), $config['allowedDecendants']);
 					
 				break;
 				case 'closeParent':
@@ -551,6 +590,12 @@ abstract class base
 				// no default
 			}
 		}
+		
+		
+		$config['deniedChildren'] = array_unique($config['deniedChildren']);
+		$config['allowedChildren'] = array_unique($config['allowedChildren']);
+		$config['deniedDescendants'] = array_unique($config['deniedDescendants']);
+		$config['allowedDecendants'] = array_unique($config['allowedDecendants']);
 		
 		
 		return $config;

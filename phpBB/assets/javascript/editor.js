@@ -49,7 +49,6 @@ var editor = {
 	},
 	
 	getElementDefaultDisplay: function () {
-		var tag = document.createElement(tag);
 		if(window.getComputedStyle){
 			return function (tagName){
 				var tag = document.createElement(tagName);
@@ -139,8 +138,8 @@ var editor = {
 
 		filterUint: function(attrValue){
 			return /^(?:0|[1-9]\d*)$/.test(attrValue) ? attrValue : false;
-		},
-	}
+		}
+	},
 	
 	/*
 	 * A port in javascript of the PHP functions textFormatter allows.
@@ -182,7 +181,7 @@ var editor = {
 				/**
 				* @param {!string} c
 				*/
-				function(c)){
+				function(c){
 					return '%' + c.charCodeAt(0).toString(16).toUpperCase();
 				}
 			);
@@ -195,7 +194,7 @@ var editor = {
 		str_rot13: function(str){
 			return str.replace(
 				/[a-z]/gi,
-				function(c)){
+				function(c){
 					return String.fromCharCode(c.charCodeAt(0) + ((c.toLowerCase() < 'n') ? 13 : -13));
 				}
 			);

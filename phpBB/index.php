@@ -206,7 +206,7 @@ page_header($page_title, true);
 $wysiwyg_type = $config['wysiwyg_type'];
 try
 {
-	// substr(strrchr(get_class(), '\\'), 1);
+	// var_dump(explode('|', "|abc|def|ghi", 3));
 
 	$wysiwyg = $phpbb_container->get('wysiwyg.converters.' . $wysiwyg_type);
 	// $wysiwyg->recalculate_editor_setup_javascript($phpbb_container->get('wysiwyg.text_formatter.s9e.factory'));
