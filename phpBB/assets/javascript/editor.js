@@ -90,7 +90,7 @@ var editor = {
 		},
 		
 		filterUrl: function(attrValue){
-			return editor.tokenRegex.URL.test(value) ? attrValue : false;
+			return editor.tokenRegex.URL.test(attrValue) ? attrValue : false;
 		},
 	
 		filterIp: function(attrValue){
@@ -109,23 +109,23 @@ var editor = {
 		
 		
 		filterRange: function(attrValue, min, max){
-			if (!editor.tokenRegex.INTEGER.test(value)){
+			if (!editor.tokenRegex.INTEGER.test(attrValue)){
 				return false;
 			}
 
-			value = parseInt(value, 10);
+			attrValue = parseInt(attrValue, 10);
 
-			if (value < min){
-				console.info('Value ' + value + ' out of range. Value raised to ' + min + ' (min value).');
+			if (attrValue < min){
+				console.info('Value ' + attrValue + ' out of range. Value raised to ' + min + ' (min value).');
 				return min;
 			}
 
-			if (value > max){
-				console.info('Value ' + value + ' out of range. Value lowered to ' + max + ' (max value).');
+			if (attrValue > max){
+				console.info('Value ' + attrValue + ' out of range. Value lowered to ' + max + ' (max value).');
 				return max;
 			}
 
-			return value;
+			return attrValue;
 		},
 		
 		filterRegexp: function(attrValue, regexp){
@@ -233,7 +233,7 @@ var editor = {
 		ucwords: function(str){
 			return str.replace(
 				/(?:^|\s)[a-z]/g,
-				function(m)){
+				function(m){
 					return m.toUpperCase()
 				}
 			);
@@ -263,84 +263,82 @@ var editor = {
 			return '[' + name + attributeStr + ']' + content + '[/' + name + ']';
 		},
 		
-	}
+	},
 	
 
-}
+	/**
+	 * @return A javascript object that allows adding parameters and 
+	 * @source Based on s9e\TextFormatter\render.js
+	*/
+	xslt: function (xsl){
+		// older IE has its own way of doing it
+		var standardsBrowser = (typeof DOMParser !== 'undefined' && typeof XSLTProcessor !== 'undefined');
+		if (standardsBrowser) {
+			var xslDoc = (new DOMParser).parseFromString(xsl, 'text/xml');
 
-
-/**
- * @return A javascript object that allows adding parameters and 
- * @source Based on s9e\TextFormatter\render.js
-*/
-var xslt = function (xsl){
-	// older IE has its own way of doing it
-	var standardsBrowser = (typeof DOMParser !== 'undefined' && typeof XSLTProcessor !== 'undefined');
-	if (standardsBrowser) {
-		var xslDoc = (new DOMParser).parseFromString(xsl, 'text/xml');
-
-		var processor = new XSLTProcessor();
-		processor.importStylesheet(xslDoc);
-		
-		return {
-			'setParameter': function (name, value){
-				if(!value){
-					if(value === ''){
-						value = ' ';
-					}else{
-						value = '';
-					}
-				}
-				processor.setParameter(null, name, value);
-			},
+			var processor = new XSLTProcessor();
+			processor.importStylesheet(xslDoc);
 			
-			'transformToFragment' : function (xml, onDocument){
-				var xmlDoc = (new DOMParser).parseFromString(xml, 'text/xml');
-				// NOTE: importNode() is used because of https://code.google.com/p/chromium/issues/detail?id=266305
-				return onDocument.importNode(processor.transformToFragment(xmlDoc, onDocument), true);
-			}
-		};
-	}else{
-		var ieStylesheet = new ActiveXObject('MSXML2.FreeThreadedDOMDocument.6.0');
-		ieStylesheet.async = false;
-		ieStylesheet.validateOnParse = false;
-		ieStylesheet.loadXML(xsl);
-
-		var ieGenerator = new ActiveXObject("MSXML2.XSLTemplate.6.0");
-		ieGenerator.stylesheet = ieStylesheet;
-		var ieTransformer = ieGenerator.createProcessor();
-		
-		return {
-			'setParameter' : function (name, value){
-				if(!value){
-					if(value === ''){
-						value = ' ';
-					}else{
-						value = '';
+			return {
+				'setParameter': function (name, value){
+					if(!value){
+						if(value === ''){
+							value = ' ';
+						}else{
+							value = '';
+						}
 					}
+					processor.setParameter(null, name, value);
+				},
+				
+				'transformToFragment' : function (xml, onDocument){
+					var xmlDoc = (new DOMParser).parseFromString(xml, 'text/xml');
+					// NOTE: importNode() is used because of https://code.google.com/p/chromium/issues/detail?id=266305
+					return onDocument.importNode(processor.transformToFragment(xmlDoc, onDocument), true);
 				}
-				ieTransformer.addParameter(name, value, '');
-			},
+			};
+		}else{
+			var ieStylesheet = new ActiveXObject('MSXML2.FreeThreadedDOMDocument.6.0');
+			ieStylesheet.async = false;
+			ieStylesheet.validateOnParse = false;
+			ieStylesheet.loadXML(xsl);
+
+			var ieGenerator = new ActiveXObject("MSXML2.XSLTemplate.6.0");
+			ieGenerator.stylesheet = ieStylesheet;
+			var ieTransformer = ieGenerator.createProcessor();
 			
-			'transformToFragment' : function (xml, onDocument){
-				var div = onDocument.createElement('div'),
-					fragment = onDocument.createDocumentFragment();
+			return {
+				'setParameter' : function (name, value){
+					if(!value){
+						if(value === ''){
+							value = ' ';
+						}else{
+							value = '';
+						}
+					}
+					ieTransformer.addParameter(name, value, '');
+				},
+				
+				'transformToFragment' : function (xml, onDocument){
+					var div = onDocument.createElement('div'),
+						fragment = onDocument.createDocumentFragment();
 
-				var ieTargetStylesheet = new ActiveXObject('MSXML2.FreeThreadedDOMDocument.6.0');
-				ieTargetStylesheet.async = false;
-				ieTargetStylesheet.validateOnParse = false;
-				ieTargetStylesheet.loadXML(xml);
-				
-				ieTransformer.input = ieTargetStylesheet
-				ieTransformer.transform();
-				
-				div.innerHTML = ieTransformer.output;
-				while (div.firstChild){
-					fragment.appendChild(div.removeChild(div.firstChild));
+					var ieTargetStylesheet = new ActiveXObject('MSXML2.FreeThreadedDOMDocument.6.0');
+					ieTargetStylesheet.async = false;
+					ieTargetStylesheet.validateOnParse = false;
+					ieTargetStylesheet.loadXML(xml);
+					
+					ieTransformer.input = ieTargetStylesheet
+					ieTransformer.transform();
+					
+					div.innerHTML = ieTransformer.output;
+					while (div.firstChild){
+						fragment.appendChild(div.removeChild(div.firstChild));
+					}
+
+					return fragment;
 				}
-
-				return fragment;
-			}
-		};
+			};
+		}
 	}
-};
+}

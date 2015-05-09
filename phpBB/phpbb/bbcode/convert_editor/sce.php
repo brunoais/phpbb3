@@ -157,6 +157,15 @@ class sce extends base
 							$parsed_child['js']['type'] = 'PARSED_CHILDREN_SET';
 							
 						break;
+						case 'text':
+							// Contains a single text node. It requires special treatment
+							$js_var_name = $this->make_new_js_var('textNode');
+							$parsed_child['js']['nodeName'] = $js_var_name;
+							$parsed_child['js']['nodeText'] = $parsed_child['node']->textContent;
+							$parsed_child['js']['type'] = 'CONSTANT_TEXT_NODE_DEFINITION';
+							$parsed_child['children'] = array();
+							
+						break;
 						case 'value-of':
 							// Here it is easier due to how TextFormatter uses this tag
 							$var_data = $parsed_child['vars'][0];
@@ -175,11 +184,12 @@ class sce extends base
 				{
 					if ($parsed_child['tagName'][0] === '#')
 					{
-						// This is a text node. It requires special treatment
+						// Contains a single text node. It requires special treatment
 						$js_var_name = $this->make_new_js_var('textNode');
 						$parsed_child['js']['nodeName'] = $js_var_name;
 						$parsed_child['js']['nodeText'] = $parsed_child['node']->data;
 						$parsed_child['js']['type'] = 'CONSTANT_TEXT_NODE_DEFINITION';
+						$parsed_child['children'] = array();
 					}
 					else
 					{
@@ -227,7 +237,7 @@ class sce extends base
 						}				
 						$js_var_name = $this->make_new_js_var($parsed_child['tagName'] . 'Tag');
 												
-						$parsed_child['js']['tag'] = $parsed_child['tagName'];
+						$parsed_child['js']['tagName'] = $parsed_child['tagName'];
 						$parsed_child['js']['attributes'] = $tag_attributes;
 						$parsed_child['js']['bbcodeAttributes'] = $bbcode_attributes;
 						$parsed_child['js']['type'] = 'NODE_DEFINITION';
@@ -275,6 +285,8 @@ class sce extends base
 		$tag_id = -1;
 		$js_texts = array();
 		
+		// var_dump($configurator->tags['code']);
+		
 		foreach ($configurator->BBCodes as $bbcode_name => $bbcode)
 		{
 			$tag_id++;
@@ -293,7 +305,6 @@ class sce extends base
 			$bbcode_definition['parsedTemplate'] = &$parsed_template;
 			
 			$tag = $configurator->tags[$bbcode->tagName];
-			
 			$container_tags = $this->get_container_tags($parsed_template);
 			$bbcode_definition['containerTags'] = array_unique($container_tags);
 			
@@ -304,7 +315,12 @@ class sce extends base
 	
 			$this->parse_node($bbcode_name, $parsed_template);
 			
+			// This should happen when it reaches the end of the block... Sounds like it isn't
+			unset($parsed_template);
 		}
+		
+		// var_dump($this->template_tree_definition['bbcodes']['code']['parsedTemplate']);
+		
 		
 		$this->static_js_vars = array(
 			'XSLT' => $this->template_tree_definition['xsl'],
@@ -344,37 +360,6 @@ class sce extends base
 		// return to normal. Do not discard all output to allow debugging
 		
 		ob_end_flush();
-		
-	}
-	/*
-		TextFormatter 		to 			SCE
-		defaultChildRule				{forced:allow}
-		defaultDescendantRule			{forced:allow}
-		CloseParent						allowedChildren
-		CloseParent						closedBy
-		ignoreSurroundingWhitespace		{browser automatic}
-		isNormalized					{Not needed}
-		isTransparent					?
-		filterChain->items->callback	Use to know the RegEx to use for validation
-		attributePreprocessors			Extra RegEx to copy/parse data from an attribute to another
-		attributes->defaultValue		Default value of attribute
-		rules->autoReopen				{Doesn't have. Is it required?}
-		AttributeFilter::AsURL			{Requires manual check for URL}
-		
-		
-	*/
-
-	/**
-	 * This converts the smilies in the format that is in the database into a javascript output
-	 * which is the instructions for the WYSIWYG editor on how to display all the smilies and which smilies
-	 * to show up on the smilies list
-	 *
-	 *
-	 *
-	 */
-	public function convert_smilies_to_editor()
-	{
-		
 		
 	}
 

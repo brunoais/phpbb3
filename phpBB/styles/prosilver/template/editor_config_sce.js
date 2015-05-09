@@ -1,4 +1,4 @@
-{%- macro parseCase(bbcodeName, parent, childData) -%}
+{%- macro parse_case(EDITOR_JS_GLOBAL_OBJ, bbcodeName, parent, childData) -%}
 	{%- import _self as exec -%}
 
 	{%- for var, one in data.caseVars %}
@@ -12,76 +12,82 @@
 	switch(conditionResult[0]){
 	{% for caseVal, caseData in data.case %}
 		case '{{ caseVal }}':
-			{{- exec.parse_node(bbcodeName, parent, childData.children) }}
+			{{- exec.parse_node(EDITOR_JS_GLOBAL_OBJ, bbcodeName, parent, childData.children) }}
 		break;
 	{% endfor %}
 	}
 {%- endmacro -%}
 
-{%- macro parse_node(bbcodeName, append_to, children) -%}
+{%- macro parse_node(EDITOR_JS_GLOBAL_OBJ, bbcodeName, append_to, children) -%}
 	{%- import _self as exec -%}
-	{%- for child in children -%}
-		{% set node_name = child.js.nodeName %}
-		
-		{% if child.js.type == 'NODE_DEFINITION' %}
-			{% set tag_attributes = child.js.attributes %}
 
-			var {{ node_name }} = document.createElement("{{ child.tagName }}")
-			{% for attrName, attrValue in tag_attributes %}
-				{{ node_name }}.setAttribute("{{ attrName }}", "{{ attrValue }}");
+	{%- for child in children -%}
+		{% if child.js.type == 'NODE_DEFINITION' %}
+
+			var {{ child.js.nodeName }} = document.createElement("{{ child.tagName }}")
+			{{ append_to }}.appendChild({{ child.js.nodeName }});
+			{% for attrName, attrValue in child.js.attributes %}
+				{{ child.js.nodeName }}.setAttribute("{{ attrName }}", {{ attrValue }});
 				{% if attribute(child.js.bbcodeAttributes, attrName) is defined %}
 					addBBCodeDataToElement(
-						{{ node_name }},
+						{{ child.js.nodeName }},
 						"{{ attribute(child.js.bbcodeAttributes, attrName) }}",
 						attributes["{{ attribute(child.js.bbcodeAttributes, attrName) }}"]
 					);
 				{% endif %}
 				{% if child.js.parentEditable %}
 					addBBCodeDataToElement(
-						{{ append_to }},
+						{{ child.js.nodeName }},
 						"{{ child.js.varName }}",
 						editorConstants.VALUE_IN_CONTENT
 					);
-					{{ append_to }}.contentEditable = "true";
+					{{ child.js.nodeName }}.contentEditable = "true";
 
-				{% endif %}
+				{% endif -%}
 			{% endfor %}
 			
 		{% elseif child.js.type == 'ATTRIBUTE_TEXT_NODE_DEFINITION' %}
-			
-			{% if child.js.var[0].isAttribute %}
-				var {{ node_name }} = document.createTextNode(attributes["{{child.js.var[0].name}}"]);
+			{% if child.vars[0].isAttribute %}
+				var {{ child.js.nodeName }} = document.createTextNode(attributes["{{child.vars[0].name}}"]);
 			{% else %}
-				var {{ node_name }} = document.createTextNode({{ EDITOR_JS_GLOBAL_OBJ }}.{{child.js.var[0].prefixedName}});
+				var {{ child.js.nodeName }} = document.createTextNode({{ EDITOR_JS_GLOBAL_OBJ }}.{{ attribute(child.vars[0], 'prefixedName') }});
 			{% endif %}
+			
+			{{ append_to }}.appendChild({{ child.js.nodeName }});
+			
 			{% if child.js.parentEditable %}
 				addBBCodeDataToElement(
 					{{ append_to }},
 					"{{ child.js.varName }}",
 					editorConstants.VALUE_IN_CONTENT
 				);
-				{{ append_to }}.contentEditable = "true";
+				{{ append_to }}.contentEditable = 'true';
 
 			{% endif %}
 		{% elseif child.js.type == 'CONSTANT_TEXT_NODE_DEFINITION' %}
-			var {{ node_name }} = document.createTextNode({{ EDITOR_JS_GLOBAL_OBJ }}.{{ child.js.nodeText }});
+			var {{ child.js.nodeName }} = document.createTextNode("{{ child.js.nodeText }}");
+			{{ append_to }}.appendChild({{ child.js.nodeName }});
 		{% elseif child.js.type == 'PARSED_CHILDREN_SET' %}
 			previousType = {{ append_to }}.getAttribute('data-bbcode-type');
 						{{ append_to }}.setAttribute('data-bbcode-type', 
 							(previousType && previousType + '|content')|| 'content');
 						{{ append_to }}.contentEditable = 'true';
 						{{ append_to }}.innerHTML += content;
-			
+		
+		{% elseif child.js.type == 'SWITCH_DEFINITION' %}
+			{# NOOP #}
 		{% else %}
 			ERROR: Got into else with type "{{ child.js.type }}".
 		{% endif %}
 		{% if child.children is defined %}
-			{{ exec.parse_node(bbcodeName, node_name, child.children) }}
+			{{ exec.parse_node(EDITOR_JS_GLOBAL_OBJ, bbcodeName, child.js.nodeName, child.children) }}
 		{% else %}
-			{{ exec.parse_case(bbcodeName, node_name, child.children) }}
+			{{ exec.parse_case(EDITOR_JS_GLOBAL_OBJ, bbcodeName, child.js.nodeName, child.case) }}
 		{% endif %}
 	{%- endfor -%}
 {%- endmacro -%}
+
+{%- import _self as exec -%}
 
 
 
@@ -102,8 +108,22 @@
 		element.setAttribute('data-bbcode-data', JSON.stringify(attrData));
 	}
 
-	var xslt = xslt('{{ XSLT }}');
+	var xslt = editor.xslt('{{ XSLT }}');
 
+$.sceditor.command.set('bold', {
+	// exec: function() {
+		// this.insert('[b]', '[/b]');
+	// },
+	exec: function() {
+		this.insert('[code=php]', '[/code]');
+	},
+	txtExec: function() {
+		this.insert('[b]', '[/b]');
+	},
+	tooltip: "Bold"
+});
+	
+	
 {% for bbcode in BBCODES %}
 	$.sceditor.plugins.bbcode.bbcode.set('{{ bbcode.name }}',
 			{
@@ -111,8 +131,8 @@
 				{% for containerTag in bbcode.containerTags %}
 					'{{ containerTag }}': {
 						'data-tag-id': "{{ bbcode.tagId }}"
-					}
-				{% endfor %}
+					},
+				{% endfor %}{# This last one is required for IE #}'': {}
 				},
 				// TODO: This needs improvement as it might simply not be true
 				isInline:
@@ -207,7 +227,7 @@
 
 				var mainContainerFragment = document.createDocumentFragment();
 
-				{{ exec.parse_node(bbcode.name, 'mainContainerFragment', bbcode.parsedTemplate) }}
+				{{ exec.parse_node(EDITOR_JS_GLOBAL_OBJ, bbcode.name, 'mainContainerFragment', bbcode.parsedTemplate) }}
 					
 				if(mainContainerFragment.firstChild.getAttribute('contentEditable') !== 'yes'){
 					mainContainerFragment.firstChild.contentEditable = 'false';
@@ -215,10 +235,10 @@
 				mainContainerFragment.firstChild.setAttribute('data-tag-id', "{{ bbcode.tagId }}");
 				return mainContainerFragment.firstChild.outerHTML;
 			},
-			format: function (element, content) {
-				var infos = element.querySelectorAll('[data-bbcode-type]');
+			format: function (element) {
+				var infos = element[0].querySelectorAll('[data-bbcode-type]');
 				var params = [];
-				var useContent = false;
+				var content = '';
 				
 				for(var i = 0; i < infos.length; i++){
 					var current = infos[i];
@@ -226,7 +246,7 @@
 					var data = current.getAttribute('data-bbcode-data');
 					if(!type){
 						console.error("To BBCode translation error at BBCode {{ bbcode.name }}.\n" 
-									+ "Unexpected empty data-bbcode-type parameter. Value and node as follows:");
+									+ 'Unexpected empty data-bbcode-type parameter. Value and node as follows:');
 						console.error(type);
 						console.error(current);
 						return;
@@ -236,7 +256,7 @@
 					var extraOffset = 0;
 					for(var j = 0; j < types.length; j++){
 						if(types[j] === 'content'){
-							useContent = true;
+							content = this.elementToBbcode($(current));
 							extraOffset--;
 						}else if(types[j] === 'attr'){
 							var name = data[j + extraOffset].name;
@@ -262,9 +282,17 @@
 				return '[{{ bbcode.name }}' + 
 					(params ? ' ' : '') +
 					params.join(' ') +
-					']' + (useContent ? content : '') + '[/{{ bbcode.name }}]';
+					']' + content + '[/{{ bbcode.name }}]';
 				}
 			});
 {% endfor %}
+
+
+// Loadup and start SCE
+var messageTextarea = $("#signature, #message");
+messageTextarea.sceditor({
+	plugins: 'bbcode,undo',
+	style: {{ EDITOR_JS_GLOBAL_OBJ }}.stylePath
+});
 
 })(jQuery, window, document); // Avoid conflicts with other libraries

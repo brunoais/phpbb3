@@ -119,6 +119,29 @@ if (in_array($mode, array('post', 'reply', 'quote', 'edit', 'delete')) && !$foru
 /* @var $phpbb_content_visibility \phpbb\content_visibility */
 $phpbb_content_visibility = $phpbb_container->get('content.visibility');
 
+// $wysiwyg = $phpbb_container->get('wysiwyg.converters.' . $config['wysiwyg_type']);
+// $result = $wysiwyg->generate_editor_setup_javascript($phpbb_container->get('text_formatter.s9e.factory'));
+// $result = $wysiwyg->get_dynamic_javascript();
+// $template->assign_vars(array(
+	// 'S_VIEWFLASH' => 'yes',
+	// 'JS_BBCODE_VARS_CONTAINER' => 'yayvar',
+	// 'JS_BBCODE_VARS' => array(
+		// 'A' => 1,
+		// 'B' => 1,
+		// 'C' => 1,
+		// 'D' => 1,
+		// 'L_A' => 1,
+		// 'L_B' => 1,
+		// 'L_C' => 1,
+	// ),
+// ));
+
+// $str = '';
+// var_dump(preg_match('/\s*-\}\}\s*|\s*~\}\}(?:[ \t\r\0\x0B]*(?:\n|\z))|\s*\}\}/A', $str, $match), $match);
+// var_dump(preg_match('/\s*-\}\}\s*|\s*\}\}/A', $str, $match), $match);
+// exit;
+// var_dump($wysiwyg->get_dynamic_javascript());
+// exit;
 // We need to know some basic information in all cases before we do anything.
 switch ($mode)
 {
@@ -199,14 +222,16 @@ switch ($mode)
 			return;
 		}
 	break;
+
 	case 'wysiwyg_definition':
 		$wysiwyg = $phpbb_container->get('wysiwyg.converters.' . $config['wysiwyg_type']);
-		// $result = $wysiwyg->recalculate_editor_setup_javascript($phpbb_container->get('text_formatter.s9e.factory'));
-		$result = $wysiwyg->handle_user_request_setup_javascript();
-		if($result === true)
-		{
-			exit;
-		}
+		// $result = $wysiwyg->handle_user_request_setup_javascript();
+		// if($result === true)
+		// {
+			// exit;
+		// }
+		$user->setup('posting');
+		$result = $wysiwyg->recalculate_editor_setup_javascript($phpbb_container->get('text_formatter.s9e.factory'));
 		// $result = $wysiwyg->handle_user_request_setup_javascript($phpbb_container->get('wysiwyg.text_formatter.s9e.factory'));
 		$result = $wysiwyg->handle_user_request_setup_javascript($phpbb_container->get('text_formatter.s9e.factory'));
 		if($result === true)
@@ -216,8 +241,8 @@ switch ($mode)
 		header('Cache-Control: public, no-cache', true, 500);
 		
 		$phpbb_log->add('critical', $user->data['user_id'], $user->ip, 'LOG_WYSIWYG_NOT_READY', false, array(
-							$result === false ? 'false' : 'null',
-						));
+			$result === false ? 'false' : 'null',
+		));
 		exit;
 	break;
 
@@ -1930,6 +1955,13 @@ if ($allowed)
 	$max_files = ($auth->acl_get('a_') || $auth->acl_get('m_', $forum_id)) ? 0 : (int) $config['max_attachments'];
 	$plupload->configure($cache, $template, $s_action, $forum_id, $max_files);
 }
+
+
+$wysiwyg = $phpbb_container->get('wysiwyg.converters.' . $config['wysiwyg_type']);
+$wysiwyg->recalculate_editor_setup_javascript($phpbb_container->get('text_formatter.s9e.factory'));
+$wysiwyg_request_variables = $wysiwyg->get_request_variables();
+
+$template->assign_vars($wysiwyg_request_variables);
 
 // Attachment entry
 posting_gen_attachment_entry($attachment_data, $filename_data, $allowed);

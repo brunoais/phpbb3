@@ -147,6 +147,9 @@ abstract class base
 			'editor_config' => self::EDITOR_CONFIG_BASENAME . strtolower($cache_name) . '.js',
 		))
 			->assign_vars($editor_setup_vars)
+			->assign_vars(array(
+				'EDITOR_JS_GLOBAL_OBJ' => \phpbb\bbcode\xsl_parse_helper::EDITOR_JS_GLOBAL_OBJ,
+			))
 			->assign_display('editor_config');
 		
 		
@@ -294,14 +297,7 @@ abstract class base
 				foreach($child_node['case'] as $case)
 				{
 					$tag = $this->get_container_tags($case['children']);
-					if(is_array($tag))
-					{
-						array_merge($containers, $tag);
-					}
-					else
-					{
-						$containers[] = $tag;
-					}
+					$containers = array_merge($containers, $tag);
 				}
 				
 				return $containers;
@@ -316,7 +312,7 @@ abstract class base
 			}
 		}
 		
-		return null;
+		return array();
 		
 	}
 	
@@ -378,24 +374,24 @@ abstract class base
 		foreach ($bbcodes as $bbcode_name => $bbcode){
 			$this_data = $this->normalize_text_parser_data($bbcode, $tags[$bbcode->tagName], $tag_names);
 			
+			
 			foreach(array('deniedChildren', 'allowedChildren', 
 					'deniedDescendants', 'allowedDecendants') as $key)
 			{
-				// var_dump($bbcodes_for_tags + array_flip($this_data[$key]));
-				$this_data[$key] = array_reduce(
-						$bbcodes_for_tags + array_flip($this_data[$key]),
-						'array_merge',
-						array()
-					);
+				$bbcode_list = array();
+				foreach ($this_data[$key] as $current_tag)
+				{
+					foreach ($bbcodes_for_tags[$current_tag] as $bbcode)
+					{
+						$bbcode_list[] = $bbcode;
+					}
+				}
+				
+				$this_data[$key] = $bbcode_list;
 				
 				// $this_data[$key] = array_reduce(
 						// $bbcodes_for_tags + array_flip($this_data[$key]),
-						// function ($carry, $item) use ($this_data, $key){
-							// if(!is_array($carry) || !is_array($item)){
-								// var_dump($this_data[$key]);
-							// }
-							// return array_merge($carry, $item);
-						// },
+						// 'array_merge',
 						// array()
 					// );
 			}
