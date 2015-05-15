@@ -1,7 +1,7 @@
 /* BBCode CSS Reset http://meyerweb.com/eric/tools/css/reset/ v2.0 | 20110126
 ---------------------------------------- */
 
-blockquote, cite, quote{
+blockquote, cite, quote {
 	margin: 0;
 	padding: 0;
 	border: 0;
@@ -17,6 +17,10 @@ blockquote:before, blockquote:after,
 q:before, q:after {
 	content: '';
 	content: none;
+}
+
+.inWYSIWYG p {
+	margin: 0;
 }
 
 /* BBCode style formatting
@@ -64,10 +68,13 @@ blockquote.uncited {
 .codebox p {
 	text-transform: uppercase;
 	border-bottom: 1px solid transparent;
-	margin-bottom: 3px;
+	margin: 0 0 3px 0;
 	font-size: 0.8em !important;
 	font-weight: bold;
 	display: block;
+	padding: 0;
+	font: inherit;
+	vertical-align: baseline;
 }
 
 blockquote .codebox {

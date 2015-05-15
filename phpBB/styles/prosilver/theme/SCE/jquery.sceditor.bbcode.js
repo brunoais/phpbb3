@@ -597,9 +597,7 @@
 				doc = getWysiwygDoc();
 				doc.open();
 				doc.write(_tmpl('html', {
-					// Add IE version class to the HTML element so can apply
-					// conditional styling without CSS hacks
-					attrs: IE_VER ? ' class="ie ie"' + IE_VER : '',
+					attrs: ' class="inWYSIWYG"',
 					spellcheck: options.spellcheck ? '' : 'spellcheck="false"',
 					charset: options.charset,
 					style: options.style
