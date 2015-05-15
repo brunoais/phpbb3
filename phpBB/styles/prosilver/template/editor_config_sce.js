@@ -1,18 +1,18 @@
 {%- macro parse_case(EDITOR_JS_GLOBAL_OBJ, bbcodeName, parent, childData) -%}
 	{%- import _self as exec -%}
 
-	{%- for var, one in data.caseVars %}
+	{%- for var, one in childData.caseVars %}
 		xslt.setParameter('{{ var }}', attributes['{{ var }}']);
 	{% endfor %}
 	var conditionResult = xslt.transformToFragment(
-		'<{{ bbcodeName }} d="{{ data.num }}"></{{ bbcodeName }}>',
+		'<{{ bbcodeName }} d="{{ childData.num }}"></{{ bbcodeName }}>',
 		document
 	).firstChild.nodeValue;
-
+	
 	switch(conditionResult[0]){
-	{% for caseVal, caseData in data.case %}
+	{% for caseVal, caseData in childData.case %}
 		case '{{ caseVal }}':
-			{{- exec.parse_node(EDITOR_JS_GLOBAL_OBJ, bbcodeName, parent, childData.children) }}
+			{{ exec.parse_node(EDITOR_JS_GLOBAL_OBJ, bbcodeName, parent, attribute(childData.case, caseVal).children) }}
 		break;
 	{% endfor %}
 	}
@@ -75,15 +75,11 @@
 						{{ append_to }}.innerHTML += content;
 		
 		{% elseif child.js.type == 'SWITCH_DEFINITION' %}
-			{# NOOP #}
+			{{ exec.parse_case(EDITOR_JS_GLOBAL_OBJ, bbcodeName, append_to, child) }}
 		{% else %}
 			ERROR: Got into else with type "{{ child.js.type }}".
 		{% endif %}
-		{% if child.children is defined %}
-			{{ exec.parse_node(EDITOR_JS_GLOBAL_OBJ, bbcodeName, child.js.nodeName, child.children) }}
-		{% else %}
-			{{ exec.parse_case(EDITOR_JS_GLOBAL_OBJ, bbcodeName, child.js.nodeName, child.case) }}
-		{% endif %}
+		{{ exec.parse_node(EDITOR_JS_GLOBAL_OBJ, bbcodeName, child.js.nodeName, child.children) }}
 	{%- endfor -%}
 {%- endmacro -%}
 
@@ -110,29 +106,78 @@
 
 	var xslt = editor.xslt('{{ XSLT }}');
 
-$.sceditor.command.set('bold', {
+$.sceditor.command.set('b', {
 	// exec: function() {
 		// this.insert('[b]', '[/b]');
 	// },
 	exec: function() {
-		this.insert('[code=php]', '[/code]');
+		this.insert('[b]', '[/b]');
 	},
 	txtExec: function() {
 		this.insert('[b]', '[/b]');
 	},
-	tooltip: "Bold"
+	tooltip: "B"
 });
-	
+$.sceditor.command.set('n', {
+	// exec: function() {
+		// this.insert('[b]', '[/b]');
+	// },
+	exec: function() {
+		this.wysiwygEditorInsertHtml('</span>', '<span data-bbcode-type="content" style="font-weight: bold" contenteditable="true">');
+	},
+	txtExec: function() {
+		this.insert('[/b]', '[b]');
+	},
+	tooltip: "n"
+});
+$.sceditor.command.set('i', {
+	// exec: function() {
+		// this.insert('[b]', '[/b]');
+	// },
+	exec: function() {
+		this.insert('[i]', '[/i]');
+	},
+	txtExec: function() {
+		this.insert('[i]', '[/i]');
+	},
+	tooltip: "I"
+});
+$.sceditor.command.set('u', {
+	// exec: function() {
+		// this.insert('[b]', '[/b]');
+	// },
+	exec: function() {
+		this.insert('[u]', '[/u]');
+	},
+	txtExec: function() {
+		this.insert('[u]', '[/u]');
+	},
+	tooltip: "U"
+});
+
+{% set foo = 0 %}
 	
 {% for bbcode in BBCODES %}
+	
+	// $.sceditor.command.set('{{ bbcode.name }}',
+		// {
+			// exec: function() {
+				// this.insert('[{{ bbcode.name }}]', '[/{{ bbcode.name }}]');
+			// },
+			// txtExec: function() {
+				// this.insert('[{{ bbcode.name }}]', '[/{{ bbcode.name }}]');
+			// },
+		// }
+	// );
+	
 	$.sceditor.plugins.bbcode.bbcode.set('{{ bbcode.name }}',
 			{
 				tags: {
 				{% for containerTag in bbcode.containerTags %}
 					'{{ containerTag }}': {
-						'data-tag-id': "{{ bbcode.tagId }}"
+						'data-tag-id': ["{{ bbcode.tagId }}"]
 					},
-				{% endfor %}{# This last one is required for IE #}'': {}
+				{% endfor %}{# This last one is required for IE #}
 				},
 				// TODO: This needs improvement as it might simply not be true
 				isInline:
@@ -152,7 +197,7 @@ $.sceditor.command.set('bold', {
 				allowedChildren: ['#'],
 				{% elseif bbcode.data.allowedChildren is not empty %}
 				allowedChildren: ['
-					{%- if bbcode.data.ignoreTextInside -%}
+					{%- if not bbcode.data.ignoreTextInside -%}
 						{{- "#','"-}}
 					{%- endif -%}
 					{{- bbcode.data.allowedChildren|join("','") -}}
@@ -220,6 +265,7 @@ $.sceditor.command.set('bold', {
 					{% endif %}
 					{% if attrData.required %}
 					if(!attributes['{{ attrName }}'] && attributes['{{ attrName }}'] !== ''){
+						console.log("reverting {{ bbcode.name }}");
 						return editor.revertBackToBBCode("{{ bbcode.name }}", originalAttributes, originalContent);
 					}
 					{% endif %}
@@ -229,7 +275,7 @@ $.sceditor.command.set('bold', {
 
 				{{ exec.parse_node(EDITOR_JS_GLOBAL_OBJ, bbcode.name, 'mainContainerFragment', bbcode.parsedTemplate) }}
 					
-				if(mainContainerFragment.firstChild.getAttribute('contentEditable') !== 'yes'){
+				if(mainContainerFragment.firstChild.getAttribute('contentEditable') !== 'true'){
 					mainContainerFragment.firstChild.contentEditable = 'false';
 				}
 				mainContainerFragment.firstChild.setAttribute('data-tag-id', "{{ bbcode.tagId }}");
@@ -239,7 +285,7 @@ $.sceditor.command.set('bold', {
 				var infos = element[0].querySelectorAll('[data-bbcode-type]');
 				var params = [];
 				var content = '';
-				
+				console.log(infos);
 				for(var i = 0; i < infos.length; i++){
 					var current = infos[i];
 					var type = current.getAttribute('data-bbcode-type');
@@ -278,7 +324,6 @@ $.sceditor.command.set('bold', {
 						}
 					}
 				}
-				
 				return '[{{ bbcode.name }}' + 
 					(params ? ' ' : '') +
 					params.join(' ') +

@@ -207,7 +207,7 @@ class sce extends base
 							{
 								$tag_attributes[$var['attr']] = preg_replace_callback(
 									// Note: The lookaround are required in case multiple variables are next to eachother
-									"%((?<=[^'])|')" . preg_quote("{\${$var['name']}}", '%') . "((?=[^'])|')%",
+									"%((?<=[^'])|')" . preg_quote('{$' . $var['prefixedName'] . '}', '%') . "((?=[^'])|')%",
 									function ($match) use ($var, &$tag_attributes, $bbcode_attributes)
 									{
 										$replacement = '';
@@ -319,7 +319,10 @@ class sce extends base
 			unset($parsed_template);
 		}
 		
-		// var_dump($this->template_tree_definition['bbcodes']['code']['parsedTemplate']);
+		// var_dump($this->template_tree_definition['bbcodes']['img']);
+		// var_dump($this->template_tree_definition['bbcodes']['quote']);
+		// var_dump($this->template_tree_definition['bbcodes']['code']);
+		// exit;
 		
 		
 		$this->static_js_vars = array(

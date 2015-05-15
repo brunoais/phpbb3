@@ -742,7 +742,8 @@
 						shortcut = command.shortcut;
 						$button  = _tmpl('toolbarButton', {
 							name: commandName,
-							dispName: base._(command.tooltip || commandName)
+							dispName: base._(command.name ||
+								command.tooltip || commandName)
 						}, true);
 
 						$button
@@ -4403,73 +4404,9 @@
 		 * @memberOf jQuery.sceditor
 		 */
 		var defaultCommnds = {
-			// START_COMMAND: Bold
-			bold: {
-				exec: 'bold',
-				tooltip: 'Bold',
-				shortcut: 'ctrl+b'
-			},
-			// END_COMMAND
-			// START_COMMAND: Italic
-			italic: {
-				exec: 'italic',
-				tooltip: 'Italic',
-				shortcut: 'ctrl+i'
-			},
-			// END_COMMAND
-			// START_COMMAND: Underline
-			underline: {
-				exec: 'underline',
-				tooltip: 'Underline',
-				shortcut: 'ctrl+u'
-			},
-			// END_COMMAND
-			// START_COMMAND: Strikethrough
-			strike: {
-				exec: 'strikethrough',
-				tooltip: 'Strikethrough'
-			},
-			// END_COMMAND
-			// START_COMMAND: Subscript
-			subscript: {
-				exec: 'subscript',
-				tooltip: 'Subscript'
-			},
-			// END_COMMAND
-			// START_COMMAND: Superscript
-			superscript: {
-				exec: 'superscript',
-				tooltip: 'Superscript'
-			},
-			// END_COMMAND
-
-			// START_COMMAND: Left
-			left: {
-				exec: 'justifyleft',
-				tooltip: 'Align left'
-			},
-			// END_COMMAND
-			// START_COMMAND: Centre
-			center: {
-				exec: 'justifycenter',
-				tooltip: 'Center'
-			},
-			// END_COMMAND
-			// START_COMMAND: Right
-			right: {
-				exec: 'justifyright',
-				tooltip: 'Align right'
-			},
-			// END_COMMAND
-			// START_COMMAND: Justify
-			justify: {
-				exec: 'justifyfull',
-				tooltip: 'Justify'
-			},
-			// END_COMMAND
-
+			
 			// START_COMMAND: Font
-			font: {
+			example: {
 				_dropDown: function (editor, caller, callback) {
 					var	fontIdx = 0,
 						fonts   = editor.opts.fonts.split(','),
@@ -4502,126 +4439,14 @@
 						}
 					);
 				},
-				tooltip: 'Font Name'
+				tooltip: 'example'
 			},
 			// END_COMMAND
-			// START_COMMAND: Size
-			size: {
-				_dropDown: function (editor, caller, callback) {
-					var	content   = $('<div />'),
-						/** @private */
-						clickFunc = function (e) {
-							callback($(this).data('size'));
-							editor.closeDropDown(true);
-							e.preventDefault();
-						};
-
-					for (var i = 1; i <= 7; i++) {
-						content.append(_tmpl('sizeOpt', {
-							size: i
-						}, true).click(clickFunc));
-					}
-
-					editor.createDropDown(caller, 'fontsize-picker', content);
-				},
-				exec: function (caller) {
-					var editor = this;
-
-					defaultCommnds.size._dropDown(
-						editor,
-						caller,
-						function (fontSize) {
-							editor.execCommand('fontsize', fontSize);
-						}
-					);
-				},
-				tooltip: 'Font Size'
-			},
-			// END_COMMAND
-			// START_COMMAND: Colour
-			color: {
-				_dropDown: function (editor, caller, callback) {
-					var	i, x, color, colors,
-						genColor     = {r: 255, g: 255, b: 255},
-						content      = $('<div />'),
-						colorColumns = editor.opts.colors ?
-							editor.opts.colors.split('|') : new Array(21),
-						// IE is slow at string concation so use an array
-						html         = [],
-						cmd          = defaultCommnds.color;
-
-					if (!cmd._htmlCache) {
-						for (i = 0; i < colorColumns.length; ++i) {
-							colors = colorColumns[i] ?
-								colorColumns[i].split(',') : new Array(21);
-
-							html.push('<div class="sceditor-color-column">');
-
-							for (x = 0; x < colors.length; ++x) {
-								// use pre defined colour if can otherwise use the
-								// generated color
-								color = colors[x] || '#' +
-									genColor.r.toString(16) +
-									genColor.g.toString(16) +
-									genColor.b.toString(16);
-
-								html.push(
-									'<a href="#" class="sceditor-color-option"' +
-									' style="background-color: ' + color + '"' +
-									' data-color="' + color + '"></a>'
-								);
-
-								if (x % 5 === 0) {
-									genColor.g -= 51;
-									genColor.b = 255;
-								} else {
-									genColor.b -= 51;
-								}
-							}
-
-							html.push('</div>');
-
-							if (i % 5 === 0) {
-								genColor.r -= 51;
-								genColor.g = 255;
-								genColor.b = 255;
-							} else {
-								genColor.g = 255;
-								genColor.b = 255;
-							}
-						}
-
-						cmd._htmlCache = html.join('');
-					}
-
-					content.append(cmd._htmlCache)
-						.find('a')
-						.click(function (e) {
-							callback($(this).attr('data-color'));
-							editor.closeDropDown(true);
-							e.preventDefault();
-						});
-
-					editor.createDropDown(caller, 'color-picker', content);
-				},
-				exec: function (caller) {
-					var editor = this;
-
-					defaultCommnds.color._dropDown(
-						editor,
-						caller,
-						function (color) {
-							editor.execCommand('forecolor', color);
-						}
-					);
-				},
-				tooltip: 'Font Color'
-			},
-			// END_COMMAND
+			
 			// START_COMMAND: Remove Format
 			removeformat: {
 				exec: 'removeformat',
-				tooltip: 'Remove Formatting'
+				tooltip: 'unformat'
 			},
 			// END_COMMAND
 
@@ -4678,18 +4503,7 @@
 				tooltip: 'Paste Text'
 			},
 			// END_COMMAND
-			// START_COMMAND: Bullet List
-			bulletlist: {
-				exec: 'insertunorderedlist',
-				tooltip: 'Bullet list'
-			},
-			// END_COMMAND
-			// START_COMMAND: Ordered List
-			orderedlist: {
-				exec: 'insertorderedlist',
-				tooltip: 'Numbered list'
-			},
-			// END_COMMAND
+			
 			// START_COMMAND: Indent
 			indent: {
 				state: function (parents, firstBlock) {
@@ -4750,7 +4564,7 @@
 						editor.execCommand('indent');
 					}
 				},
-				tooltip: 'Add indent'
+				tooltip: 'indent'
 			},
 			// END_COMMAND
 			// START_COMMAND: Outdent
@@ -4767,199 +4581,7 @@
 						editor.execCommand('outdent');
 					}
 				},
-				tooltip: 'Remove one indent'
-			},
-			// END_COMMAND
-
-			// START_COMMAND: Table
-			table: {
-				forceNewLineAfter: ['table'],
-				exec: function (caller) {
-					var	editor  = this,
-						content = _tmpl('table', {
-							rows: editor._('Rows:'),
-							cols: editor._('Cols:'),
-							insert: editor._('Insert')
-						}, true);
-
-					content.find('.button').click(function (e) {
-						var	row, col,
-							rows = content.find('#rows').val() - 0,
-							cols = content.find('#cols').val() - 0,
-							html = '<table>';
-
-						if (rows < 1 || cols < 1) {
-							return;
-						}
-
-						for (row = 0; row < rows; row++) {
-							html += '<tr>';
-
-							for (col = 0; col < cols; col++) {
-								html += '<td>' +
-										(IE_BR_FIX ? '' : '<br />') +
-									'</td>';
-							}
-
-							html += '</tr>';
-						}
-
-						html += '</table>';
-
-						editor.wysiwygEditorInsertHtml(html);
-						editor.closeDropDown(true);
-						e.preventDefault();
-					});
-
-					editor.createDropDown(caller, 'inserttable', content);
-				},
-				tooltip: 'Insert a table'
-			},
-			// END_COMMAND
-
-			// START_COMMAND: Horizontal Rule
-			horizontalrule: {
-				exec: 'inserthorizontalrule',
-				tooltip: 'Insert a horizontal rule'
-			},
-			// END_COMMAND
-
-			// START_COMMAND: Code
-			code: {
-				forceNewLineAfter: ['code'],
-				exec: function () {
-					this.wysiwygEditorInsertHtml(
-						'<code>',
-						(IE_BR_FIX ? '' : '<br />') + '</code>'
-					);
-				},
-				tooltip: 'Code'
-			},
-			// END_COMMAND
-
-			// START_COMMAND: Image
-			image: {
-				exec: function (caller) {
-					var	editor  = this,
-						content = _tmpl('image', {
-							url: editor._('URL:'),
-							width: editor._('Width (optional):'),
-							height: editor._('Height (optional):'),
-							insert: editor._('Insert')
-						}, true);
-
-					content.find('.button').click(function (e) {
-						var	val    = content.find('#image').val(),
-							width  = content.find('#width').val(),
-							height = content.find('#height').val(),
-							attrs  = '';
-
-						if (width) {
-							attrs += ' width="' + width + '"';
-						}
-
-						if (height) {
-							attrs += ' height="' + height + '"';
-						}
-
-						if (val) {
-							editor.wysiwygEditorInsertHtml(
-								'<img' + attrs + ' src="' + val + '" />'
-							);
-						}
-
-						editor.closeDropDown(true);
-						e.preventDefault();
-					});
-
-					editor.createDropDown(caller, 'insertimage', content);
-				},
-				tooltip: 'Insert an image'
-			},
-			// END_COMMAND
-
-			// START_COMMAND: E-mail
-			email: {
-				exec: function (caller) {
-					var	editor  = this,
-						content = _tmpl('email', {
-							label: editor._('E-mail:'),
-							desc: editor._('Description (optional):'),
-							insert: editor._('Insert')
-						}, true);
-
-					content.find('.button').click(function (e) {
-						var val         = content.find('#email').val(),
-							description = content.find('#des').val();
-
-						if (val) {
-							// needed for IE to reset the last range
-							editor.focus();
-
-							if (!editor.getRangeHelper().selectedHtml() ||
-								description) {
-								description = description || val;
-
-								editor.wysiwygEditorInsertHtml(
-									'<a href="' + 'mailto:' + val + '">' +
-										description +
-									'</a>'
-								);
-							} else {
-								editor.execCommand('createlink', 'mailto:' + val);
-							}
-						}
-
-						editor.closeDropDown(true);
-						e.preventDefault();
-					});
-
-					editor.createDropDown(caller, 'insertemail', content);
-				},
-				tooltip: 'Insert an email'
-			},
-			// END_COMMAND
-
-			// START_COMMAND: Link
-			link: {
-				exec: function (caller) {
-					var	editor  = this,
-						content = _tmpl('link', {
-							url: editor._('URL:'),
-							desc: editor._('Description (optional):'),
-							ins: editor._('Insert')
-						}, true);
-
-					content.find('.button').click(function (e) {
-						var	val         = content.find('#link').val(),
-							description = content.find('#des').val();
-
-						if (val) {
-							// needed for IE to restore the last range
-							editor.focus();
-
-							// If there is no selected text then must set the URL as
-							// the text. Most browsers do this automatically, sadly
-							// IE doesn't.
-							if (!editor.getRangeHelper().selectedHtml() ||
-								description) {
-								description = description || val;
-
-								editor.wysiwygEditorInsertHtml(
-									'<a href="' + val + '">' + description + '</a>'
-								);
-							} else {
-								editor.execCommand('createlink', val);
-							}
-						}
-
-						editor.closeDropDown(true);
-						e.preventDefault();
-					});
-
-					editor.createDropDown(caller, 'insertlink', content);
-				},
-				tooltip: 'Insert a link'
+				tooltip: 'outdent'
 			},
 			// END_COMMAND
 
@@ -4980,308 +4602,6 @@
 					}
 				},
 				tooltip: 'Unlink'
-			},
-			// END_COMMAND
-
-
-			// START_COMMAND: Quote
-			quote: {
-				forceNewLineAfter: ['blockquote'],
-				exec: function (caller, html, author) {
-					var	before = '<blockquote>',
-						end    = '</blockquote>';
-
-					// if there is HTML passed set end to null so any selected
-					// text is replaced
-					if (html) {
-						author = (author ? '<cite>' + author + '</cite>' : '');
-						before = before + author + html + end;
-						end    = null;
-					// if not add a newline to the end of the inserted quote
-					} else if (this.getRangeHelper().selectedHtml() === '') {
-						end = (IE_BR_FIX ? '' : '<br />') + end;
-					}
-
-					this.wysiwygEditorInsertHtml(before, end);
-				},
-				tooltip: 'Insert a Quote'
-			},
-			// END_COMMAND
-
-			// START_COMMAND: Emoticons
-			emoticon: {
-				exec: function (caller) {
-					var editor = this;
-
-					var createContent = function (includeMore) {
-						var	$moreLink,
-							emoticonsCompat = editor.opts.emoticonsCompat,
-							rangeHelper     = editor.getRangeHelper(),
-							startSpace      = emoticonsCompat &&
-								rangeHelper.getOuterText(true, 1) !== ' ' ?
-								' ' : '',
-							endSpace        = emoticonsCompat &&
-								rangeHelper.getOuterText(false, 1) !== ' ' ?
-								' ' : '',
-							$content        = $('<div />'),
-							$line           = $('<div />').appendTo($content),
-							perLine         = 0,
-							emoticons       = $.extend(
-								{},
-								editor.opts.emoticons.dropdown,
-								includeMore ? editor.opts.emoticons.more : {}
-							);
-
-						$.each(emoticons, function () {
-							perLine++;
-						});
-						perLine = Math.sqrt(perLine);
-
-						$.each(emoticons, function (code, emoticon) {
-							$line.append(
-								$('<img />').attr({
-									src: emoticon.url || emoticon,
-									alt: code,
-									title: emoticon.tooltip || code
-								}).click(function () {
-									editor.insert(startSpace + $(this).attr('alt') +
-										endSpace, null, false).closeDropDown(true);
-
-									return false;
-								})
-							);
-
-							if ($line.children().length >= perLine) {
-								$line = $('<div />').appendTo($content);
-							}
-						});
-
-						if (!includeMore) {
-							$moreLink = $(
-								'<a class="sceditor-more">' +
-									editor._('More') + '</a>'
-							).click(function () {
-								editor.createDropDown(
-									caller,
-									'more-emoticons',
-									createContent(true)
-								);
-
-								return false;
-							});
-
-							$content.append($moreLink);
-						}
-
-						return $content;
-					};
-
-					editor.createDropDown(
-						caller,
-						'emoticons',
-						createContent(false)
-					);
-				},
-				txtExec: function (caller) {
-					defaultCommnds.emoticon.exec.call(this, caller);
-				},
-				tooltip: 'Insert an emoticon'
-			},
-			// END_COMMAND
-
-			// START_COMMAND: YouTube
-			youtube: {
-				_dropDown: function (editor, caller, handleIdFunc) {
-					var	matches,
-						content = _tmpl('youtubeMenu', {
-							label: editor._('Video URL:'),
-							insert: editor._('Insert')
-						}, true);
-
-					content.find('.button').click(function (e) {
-						var val = content
-							.find('#link')
-							.val();
-
-						if (val) {
-							matches = val.match(
-								/(?:v=|v\/|embed\/|youtu.be\/)(.{11})/
-							);
-
-							if (matches) {
-								val = matches[1];
-							}
-
-							if (/^[a-zA-Z0-9_\-]{11}$/.test(val)) {
-								handleIdFunc(val);
-							} else {
-								/*global alert:false*/
-								alert('Invalid YouTube video');
-							}
-						}
-
-						editor.closeDropDown(true);
-						e.preventDefault();
-					});
-
-					editor.createDropDown(caller, 'insertlink', content);
-				},
-				exec: function (caller) {
-					var editor = this;
-
-					defaultCommnds.youtube._dropDown(
-						editor,
-						caller,
-						function (id) {
-							editor.wysiwygEditorInsertHtml(_tmpl('youtube', {
-								id: id
-							}));
-						}
-					);
-				},
-				tooltip: 'Insert a YouTube video'
-			},
-			// END_COMMAND
-
-			// START_COMMAND: Date
-			date: {
-				_date: function (editor) {
-					var	now   = new Date(),
-						year  = now.getYear(),
-						month = now.getMonth() + 1,
-						day   = now.getDate();
-
-					if (year < 2000) {
-						year = 1900 + year;
-					}
-
-					if (month < 10) {
-						month = '0' + month;
-					}
-
-					if (day < 10) {
-						day = '0' + day;
-					}
-
-					return editor.opts.dateFormat
-						.replace(/year/i, year)
-						.replace(/month/i, month)
-						.replace(/day/i, day);
-				},
-				exec: function () {
-					this.insertText(defaultCommnds.date._date(this));
-				},
-				txtExec: function () {
-					this.insertText(defaultCommnds.date._date(this));
-				},
-				tooltip: 'Insert current date'
-			},
-			// END_COMMAND
-
-			// START_COMMAND: Time
-			time: {
-				_time: function () {
-					var	now   = new Date(),
-						hours = now.getHours(),
-						mins  = now.getMinutes(),
-						secs  = now.getSeconds();
-
-					if (hours < 10) {
-						hours = '0' + hours;
-					}
-
-					if (mins < 10) {
-						mins = '0' + mins;
-					}
-
-					if (secs < 10) {
-						secs = '0' + secs;
-					}
-
-					return hours + ':' + mins + ':' + secs;
-				},
-				exec: function () {
-					this.insertText(defaultCommnds.time._time());
-				},
-				txtExec: function () {
-					this.insertText(defaultCommnds.time._time());
-				},
-				tooltip: 'Insert current time'
-			},
-			// END_COMMAND
-
-
-			// START_COMMAND: Ltr
-			ltr: {
-				state: function (parents, firstBlock) {
-					return firstBlock && firstBlock.style.direction === 'ltr';
-				},
-				exec: function () {
-					var	editor = this,
-						elm    = editor.getRangeHelper().getFirstBlockParent(),
-						$elm   = $(elm);
-
-					editor.focus();
-
-					if (!elm || $elm.is('body')) {
-						editor.execCommand('formatBlock', 'p');
-
-						elm  = editor.getRangeHelper().getFirstBlockParent();
-						$elm = $(elm);
-
-						if (!elm || $elm.is('body')) {
-							return;
-						}
-					}
-
-					if ($elm.css('direction') === 'ltr') {
-						$elm.css('direction', '');
-					} else {
-						$elm.css('direction', 'ltr');
-					}
-				},
-				tooltip: 'Left-to-Right'
-			},
-			// END_COMMAND
-
-			// START_COMMAND: Rtl
-			rtl: {
-				state: function (parents, firstBlock) {
-					return firstBlock && firstBlock.style.direction === 'rtl';
-				},
-				exec: function () {
-					var	editor = this,
-						elm    = editor.getRangeHelper().getFirstBlockParent(),
-						$elm   = $(elm);
-
-					editor.focus();
-
-					if (!elm || $elm.is('body')) {
-						editor.execCommand('formatBlock', 'p');
-
-						elm  = editor.getRangeHelper().getFirstBlockParent();
-						$elm = $(elm);
-
-						if (!elm || $elm.is('body')) {
-							return;
-						}
-					}
-
-					if ($elm.css('direction') === 'rtl') {
-						$elm.css('direction', '');
-					} else {
-						$elm.css('direction', 'rtl');
-					}
-				},
-				tooltip: 'Right-to-Left'
-			},
-			// END_COMMAND
-
-
-			// START_COMMAND: Print
-			print: {
-				exec: 'print',
-				tooltip: 'Print'
 			},
 			// END_COMMAND
 
@@ -5349,11 +4669,17 @@
 			 *
 			 * @type {String}
 			 */
-			toolbar: 'bold,italic,underline,strike,subscript,superscript|' +
-				'left,center,right,justify|font,size,color,removeformat|' +
-				'cut,copy,paste,pastetext|bulletlist,orderedlist,indent,outdent|' +
-				'table|code,quote|horizontalrule,image,email,link,unlink|' +
-				'emoticon,youtube,date,time|ltr,rtl|print,maximize,source',
+			toolbar:
+				'b,n,i,u|indent,outdent,removeformat|' +
+				'cut,copy,paste,pastetext|' +
+				'unlink' +
+				'|print,maximize,source',
+				
+				// 'bold,italic,underline,strike,subscript,superscript|' +
+				// 'left,center,right,justify|font,size,color,removeformat|' +
+				// 'cut,copy,paste,pastetext|bulletlist,orderedlist,indent,outdent|' +
+				// 'table|code,quote|horizontalrule,image,email,link,unlink|' +
+				// 'emoticon,youtube,date,time|ltr,rtl|print,maximize,source',
 
 			/**
 			 * Comma separated list of commands to excludes from the toolbar
@@ -9690,7 +9016,7 @@
 			},
 			isInline: false,
 			quoteType: BBCodeParser.QuoteType.never,
-			format: function (element, content) {
+			format: function (element, content) {console.log("what?!?!");
 				var	author = '';
 				var $elm  = $(element);
 				var $cite = $elm.children('cite').first();
@@ -9710,7 +9036,7 @@
 				return '[quote' + author + ']' + content + '[/quote]';
 			},
 			html: function (token, attrs, content) {
-				if (attrs.defaultattr) {
+				if (attrs.defaultattr) { console.log("what?!?!");
 					content = '<cite>' + escapeEntities(attrs.defaultattr) +
 						'</cite>' + content;
 				}

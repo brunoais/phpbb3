@@ -42,7 +42,7 @@ class xsl_parse_helper
 	}
 	
 	public function translate_attribute_vars_to_params($option){
-		$this->attr_to_param = true;
+		$this->attr_to_param = $option;
 	}
 	
 	public function get_built_xsl_sheet(){
@@ -83,7 +83,7 @@ class xsl_parse_helper
 						);
 						
 						$this->stylesheet_params[$match[3]] = true;
-						
+
 						if ($this->attr_to_param && $var_data['isAttribute'])
 						{
 							return str_replace($var_data['fullname'], '$' . $var_data['prefixedName'], $match[0]);
@@ -287,7 +287,7 @@ class xsl_parse_helper
 				'children' => array(),
 			);
 			
-			$case[$chr]['vars'] = $this->parse_attributes($whenNode, "%(([@$])((?:([SL])_)?([a-zA-Z_0-9]+)))%");
+			$case[$chr]['vars'] = $this->parse_attributes($when, "%(([@$])((?:([SL])_)?([a-zA-Z_0-9]+)))%");
 			
 			foreach ($whenNode->childNodes as $child_node){
 				$case[$chr]['children'][] = $this->parse_tag_template_childNode($child_node);
