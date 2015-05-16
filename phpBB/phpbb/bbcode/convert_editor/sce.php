@@ -39,8 +39,6 @@ class sce extends base
 	
 	protected $dynamic_variables;
 	
-	protected $template_tree_definition;
-	
 	/**
 	 * Constructor
 	 * 
@@ -59,7 +57,6 @@ class sce extends base
 		$this->js_variables = array();
 		$this->extra_variables = array();
 		$this->dynamic_variables = NULL;
-		$this->template_tree_definition = array();
 	}
 	
 	public function get_static_javascript_variables()
@@ -103,7 +100,6 @@ class sce extends base
 		$vars = array();
 		foreach ($parsed_child['case'] as $test_result => &$execution)
 		{
-			// TODO: Keep changes made to variables. Delete outputs
 			foreach ($execution['vars'] as $execution_var)
 			{
 				if ($execution_var['isAttribute'])
@@ -272,20 +268,18 @@ class sce extends base
 		$parsed_templates = $xsl_helper->parse_tag_templates($configurator->BBCodes, $configurator->tags);
 		$xsl_text = $xsl_helper->get_built_xsl_sheet();
 		
-		$this->template_tree_definition = array();
+		$template_tree_definition = array();
 		
-		$this->template_tree_definition['xsl'] = str_replace("\n", "' +\n'", addcslashes($xsl_text, "'"));
+		$template_tree_definition['xsl'] = str_replace("\n", "' +\n'", addcslashes($xsl_text, "'"));
 		
-		$this->template_tree_definition['bbcodes'] = array();
+		$template_tree_definition['bbcodes'] = array();
 		
 		$bbcodes_data = $this->extract_and_normalize_bbcode_data($configurator->BBCodes, $configurator->tags, true);
 		
-		$tree_definition = &$this->template_tree_definition['bbcodes'];
+		$tree_definition = &$template_tree_definition['bbcodes'];
 		
 		$tag_id = -1;
 		$js_texts = array();
-		
-		// var_dump($configurator->tags['code']);
 		
 		foreach ($configurator->BBCodes as $bbcode_name => $bbcode)
 		{
@@ -318,18 +312,17 @@ class sce extends base
 			// This should happen when it reaches the end of the block... Sounds like it isn't
 			unset($parsed_template);
 		}
+		// var_dump($template_tree_definition['bbcodes']);
 		
-		// var_dump($this->template_tree_definition['bbcodes']['img']);
-		// var_dump($this->template_tree_definition['bbcodes']['quote']);
-		// var_dump($this->template_tree_definition['bbcodes']['code']);
+		// var_dump($template_tree_definition['bbcodes']['img']);
+		// var_dump($template_tree_definition['bbcodes']['quote']);
+		// var_dump($template_tree_definition['bbcodes']['code']);
 		// exit;
 		
 		
 		$this->static_js_vars = array(
-			'XSLT' => $this->template_tree_definition['xsl'],
-			'BBCODES' => $this->template_tree_definition['bbcodes'],
-			'EDITOR_JS_GLOBAL_OBJ' => xsl_parse_helper::EDITOR_JS_GLOBAL_OBJ,
-		);
+			'XSLT' => $template_tree_definition['xsl'],
+			'BBCODES' => $template_tree_definition['bbcodes'],
 		
 		$this->dynamic_variables = array(
 			'JS_BBCODE_VARS_CONTAINER' => xsl_parse_helper::EDITOR_JS_GLOBAL_OBJ,
