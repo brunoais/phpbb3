@@ -81,7 +81,8 @@
 			'{{ key }}': '{{ attribute(_context, key) |e('js') }}',
 			{% endif -%}
 		{% endfor -%}
-		'stylePath': "{T_THEME_PATH}/bbcode.css"
+		'stylePath': "{T_THEME_PATH}/bbcode.css",
+		'L_SUBMIT': "{L_SUBMIT}"
 	}
 	
 	</script>

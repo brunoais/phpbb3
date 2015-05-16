@@ -323,6 +323,11 @@ class sce extends base
 		$this->static_js_vars = array(
 			'XSLT' => $template_tree_definition['xsl'],
 			'BBCODES' => $template_tree_definition['bbcodes'],
+			'OVERRIDES' => array(
+				'toolbar' => 'b,i,u|quote,code|list,*|img,url|flash|size,color|bug,ranger,choicer,prefilter|postfilter,defaulted',
+				'toolbarName' => array(),
+			),
+		);/* attachment|b,code,color,email|flash,i,img,list|*,quote,size,u|url,bloat,bloats,hr|bug,ranger,choicer,prefilter|postfilter,defaulted, */
 		
 		$this->dynamic_variables = array(
 			'JS_BBCODE_VARS_CONTAINER' => xsl_parse_helper::EDITOR_JS_GLOBAL_OBJ,

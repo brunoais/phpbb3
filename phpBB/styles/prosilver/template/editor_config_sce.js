@@ -106,69 +106,165 @@
 
 	var xslt = editor.xslt('{{ XSLT }}');
 
-$.sceditor.command.set('b', {
+// $.sceditor.command.set('b', {
+	// // exec: function() {
+		// // this.insert('[b]', '[/b]');
+	// // },
 	// exec: function() {
 		// this.insert('[b]', '[/b]');
 	// },
-	exec: function() {
-		this.insert('[b]', '[/b]');
-	},
-	txtExec: function() {
-		this.insert('[b]', '[/b]');
-	},
-	tooltip: "B"
-});
-$.sceditor.command.set('n', {
-	// exec: function() {
+	// txtExec: function() {
 		// this.insert('[b]', '[/b]');
 	// },
-	exec: function() {
-		this.wysiwygEditorInsertHtml('</span>', '<span data-bbcode-type="content" style="font-weight: bold" contenteditable="true">');
-	},
-	txtExec: function() {
-		this.insert('[/b]', '[b]');
-	},
-	tooltip: "n"
-});
-$.sceditor.command.set('i', {
+	// tooltip: "B"
+// });
+// $.sceditor.command.set('n', {
+	// // exec: function() {
+		// // this.insert('[b]', '[/b]');
+	// // },
 	// exec: function() {
-		// this.insert('[b]', '[/b]');
+		// this.wysiwygEditorInsertHtml('</span>', '<span data-bbcode-type="content" style="font-weight: bold" contenteditable="true">');
 	// },
-	exec: function() {
-		this.insert('[i]', '[/i]');
-	},
-	txtExec: function() {
-		this.insert('[i]', '[/i]');
-	},
-	tooltip: "I"
-});
-$.sceditor.command.set('u', {
+	// txtExec: function() {
+		// this.insert('[/b]', '[b]');
+	// },
+	// tooltip: "n"
+// });
+// $.sceditor.command.set('i', {
+	// // exec: function() {
+		// // this.insert('[b]', '[/b]');
+	// // },
 	// exec: function() {
-		// this.insert('[b]', '[/b]');
+		// this.insert('[i]', '[/i]');
 	// },
-	exec: function() {
-		this.insert('[u]', '[/u]');
-	},
-	txtExec: function() {
-		this.insert('[u]', '[/u]');
-	},
-	tooltip: "U"
-});
+	// txtExec: function() {
+		// this.insert('[i]', '[/i]');
+	// },
+	// tooltip: "I"
+// });
+// $.sceditor.command.set('u', {
+	// // exec: function() {
+		// // this.insert('[b]', '[/b]');
+	// // },
+	// exec: function() {
+		// this.insert('[u]', '[/u]');
+	// },
+	// txtExec: function() {
+		// this.insert('[u]', '[/u]');
+	// },
+	// tooltip: "U"
+// });
 
-{% set foo = 0 %}
+var makeDropdown = (function(){
+	
+	var makeSelectBox = function (options, selectMultiple, separator){
+		var select = document.createElement('select');
+		select.multiple = !!selectMultiple;
+		
+		for (var i = 0; i < options.length; i++){
+			var option = new Option(
+					options[i].text,
+					options[i].value,
+					this.undefined,
+					!!options[i].selected
+				);
+			select.add(option);
+		}
+		var returner = {
+			element: select
+		};
+		if(selectMultiple){
+			returner.getValue = function (){
+				return $(select).val();
+			};
+		}else{
+			returner.getValue = function (){
+				return ($(select).val() || []).join(separator);
+			};
+		}
+		return returner;
+	};
+	var makeInput = function (type, defaultValue){
+		var input = document.createElement('input');
+		input.type = type || 'text';
+		input.value = defaultValue || '';
+		
+		return {
+			element: input,
+			getValue: function (){
+				return input.value;
+			}
+		};
+	};
+	
+	return function (button, BBCodeName, attributes, buttonToAlignTo, oKCallback, errorCallback){
+		var elements = [];
+		var container = document.createElement('div');
+		container.className = 'editorDropdownContainer';
+		
+		for (var i = 0; i < attributes.length; i++){
+			var attributeRequestContainer = document.createElement('div');
+			
+			var text = document.createElement('span');
+			text.textContent = attributes[i].name;
+			attributeRequestContainer.appendChild(text);
+			
+			var dataElement;
+			
+			switch(attributes[i].type){
+				case 'chooseMany':
+				case 'choose1':
+					dataElement = makeSelectBox(attributes[i].options,
+						attributes[i].type === 'chooseMany',
+						attributes[i].separator)
+				break;
+				default:
+					dataElement = makeInput(attributes[i].type,
+						attributes[i].value);
+				break;
+			}
+						
+			elements.push(dataElement);
+			attributeRequestContainer.appendChild(dataElement);
+			container.appendChild(attributeRequestContainer);
+			
+		}
+	
+		var confirm = document.createElement('button');
+		confirm.textContent = EDITOR_JS_GLOBAL_OBJ.L_SUBMIT;
+		confirm.onclick = function (e){
+			var data = {};
+			for (var i = 0; i < elements.length; i++){
+				data[attributes[i].name] = elements[i].getValue();
+			}
+			editor.closeDropDown(true);
+			oKCallback(data);
+		}
+		container.appendChild(confirm);
+		
+		editor.createDropDown(button, 'dropdown-' + BBCodeName, container);
+	};
+})();
+
+{% set toolbar = '' %}
 	
 {% for bbcode in BBCODES %}
 	
-	// $.sceditor.command.set('{{ bbcode.name }}',
-		// {
-			// exec: function() {
-				// this.insert('[{{ bbcode.name }}]', '[/{{ bbcode.name }}]');
-			// },
-			// txtExec: function() {
-				// this.insert('[{{ bbcode.name }}]', '[/{{ bbcode.name }}]');
-			// },
-		// }
-	// );
+	$.sceditor.command.set('{{ bbcode.name }}',
+		{
+			state: function (parent, blockParent){
+				parent = $(this.currentNode());
+				return (parent.attr('data-tag-id') === '{{ bbcode.tagId }}' ||
+					parent.closest('[data-tag-id={{ bbcode.tagId }}]', blockParent)[0]) ? 1 : 0;
+			},
+			exec: function() {
+				this.insert('[{{ bbcode.name }}]', '[/{{ bbcode.name }}]');
+			},
+			txtExec: function() {
+				this.insert('[{{ bbcode.name }}]', '[/{{ bbcode.name }}]');
+			},
+		}
+	);
 	
 	$.sceditor.plugins.bbcode.bbcode.set('{{ bbcode.name }}',
 			{
@@ -177,7 +273,7 @@ $.sceditor.command.set('u', {
 					'{{ containerTag }}': {
 						'data-tag-id': ["{{ bbcode.tagId }}"]
 					},
-				{% endfor %}{# This last one is required for IE #}
+				{% endfor %}
 				},
 				// TODO: This needs improvement as it might simply not be true
 				isInline:
@@ -330,6 +426,15 @@ $.sceditor.command.set('u', {
 					']' + content + '[/{{ bbcode.name }}]';
 				}
 			});
+		
+		
+		{% set toolbar = toolbar ~ bbcode.name %}
+		{% if loop.index0 is divisible by(4) %}
+			{% set toolbar = toolbar ~ '|'  %}
+		{% else %}
+			{% set toolbar = toolbar ~ ',' %}
+		{% endif %}
+		
 {% endfor %}
 
 
@@ -337,7 +442,17 @@ $.sceditor.command.set('u', {
 var messageTextarea = $("#signature, #message");
 messageTextarea.sceditor({
 	plugins: 'bbcode,undo',
-	style: {{ EDITOR_JS_GLOBAL_OBJ }}.stylePath
+	style: {{ EDITOR_JS_GLOBAL_OBJ }}.stylePath,
+
+{% if OVERRIDES.toolbar is defined %}
+	toolbar: '{{ OVERRIDES.toolbar }}|removeformat|' +
+				'cut,copy,paste,pastetext|' +
+				'unlink|print,maximize,source'
+{% else %}
+	toolbar: '{{ toolbar }}|indent,outdent,removeformat|' +
+				'cut,copy,paste,pastetext|' +
+				'unlink|print,maximize,source'
+{% endif %}
 });
 
 })(jQuery, window, document); // Avoid conflicts with other libraries
