@@ -34,6 +34,8 @@ abstract class base
 	
 	const EDITOR_CONFIG_BASENAME = 'editor_config_';
 	
+	protected $toolbar_default_ordering;
+	
 	/**
 	 * cache object
 	 * @var \phpbb\cache\driver\driver_interface
@@ -99,6 +101,16 @@ abstract class base
 		$this->phpbb_dispatcher = $phpbb_dispatcher;
 		$this->template = $template;
 		$this->request = $request;
+		
+		
+		$this->toolbar_default_ordering = array(
+			array('b', 'i', 'u'),
+			array('quote', 'code'),
+			array('list', '*'),
+			array('img', 'url'),
+			array('flash'),
+			array('size', 'color'),
+		);
 		
 	}
 	
@@ -388,13 +400,22 @@ abstract class base
 				}
 				
 				$this_data[$key] = $bbcode_list;
-				
-				// $this_data[$key] = array_reduce(
-						// $bbcodes_for_tags + array_flip($this_data[$key]),
-						// 'array_merge',
-						// array()
-					// );
 			}
+			if (isset($this_data['autoCloseOn'])){
+				// var_dump($tags['li']);
+				$bbcode_list = array();
+			// var_dump($this_data['autoCloseOn']);
+				foreach ($this_data['autoCloseOn'] as $current_tag)
+				{
+					foreach ($bbcodes_for_tags[$current_tag] as $bbcode)
+					{
+						$bbcode_list[] = $bbcode;
+					}
+				}
+				
+				$this_data['autoCloseOn'] = $bbcode_list;
+			}
+			
 			if ($low_case_names)
 			{
 				$bbcodes_data[strtolower($bbcode_name)] = $this_data;
@@ -554,7 +575,7 @@ abstract class base
 				break;
 				case 'closeParent':
 					
-					$config['autoCloseOn'][] = $rule;
+					$config['autoCloseOn'] = $rule;
 					
 				break;
 				case 'ignoreSurroundingWhitespace':

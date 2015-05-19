@@ -36,8 +36,9 @@ class sce extends base
 	protected $js_variables;
 	
 	protected $extra_variables;
-	
 	protected $dynamic_variables;
+	
+	const DEFAULT_TOOLBAR_BUTTON_GROUP_SIZE = 4;
 	
 	/**
 	 * Constructor
@@ -204,7 +205,7 @@ class sce extends base
 								$tag_attributes[$var['attr']] = preg_replace_callback(
 									// Note: The lookaround are required in case multiple variables are next to eachother
 									"%((?<=[^'])|')" . preg_quote('{$' . $var['prefixedName'] . '}', '%') . "((?=[^'])|')%",
-									function ($match) use ($var, &$tag_attributes, $bbcode_attributes)
+									function ($match) use ($var, &$tag_attributes, &$bbcode_attributes)
 									{
 										$replacement = '';
 										if ($match[1] !== "'")
@@ -312,55 +313,58 @@ class sce extends base
 			// This should happen when it reaches the end of the block... Sounds like it isn't
 			unset($parsed_template);
 		}
-		// var_dump($template_tree_definition['bbcodes']);
 		
-		// var_dump($template_tree_definition['bbcodes']['img']);
-		// var_dump($template_tree_definition['bbcodes']['quote']);
-		// var_dump($template_tree_definition['bbcodes']['code']);
-		// exit;
+		// Toolbar button order override.
+		$defined_bbcode = $this->toolbar_default_ordering;
 		
+		$predefined_bbcode_names = array();
+		
+		$toolbar_buttons = '';
+		
+		foreach ($defined_bbcode as $button_group)
+		{			
+			foreach ($button_group as $button_name)
+			{
+				$predefined_bbcode_names[$button_name] = true;
+				$toolbar_buttons .= $button_name . ',';
+			}
+			$toolbar_buttons .= '|';
+		}
+		
+		$extra_bbcode = array();
+		
+		$separator_counter = 1;
+		
+		foreach ($template_tree_definition['bbcodes'] as $name => $something)
+		{
+			if(!isset($predefined_bbcode_names[$name]))
+			{
+				$extra_bbcode[] = $name;
+				$toolbar_buttons .= $name;
+				if ($separator_counter % self::DEFAULT_TOOLBAR_BUTTON_GROUP_SIZE)
+				{
+					$toolbar_buttons .= ',';
+				}
+				else
+				{
+					$toolbar_buttons .= '|';
+				}
+				$separator_counter++;
+			}
+		}
 		
 		$this->static_js_vars = array(
 			'XSLT' => $template_tree_definition['xsl'],
 			'BBCODES' => $template_tree_definition['bbcodes'],
 			'OVERRIDES' => array(
-				'toolbar' => 'b,i,u|quote,code|list,*|img,url|flash|size,color|bug,ranger,choicer,prefilter|postfilter,defaulted',
-				'toolbarName' => array(),
+				'toolbar' => $toolbar_buttons,
 			),
-		);/* attachment|b,code,color,email|flash,i,img,list|*,quote,size,u|url,bloat,bloats,hr|bug,ranger,choicer,prefilter|postfilter,defaulted, */
+		);
 		
 		$this->dynamic_variables = array(
 			'JS_BBCODE_VARS_CONTAINER' => xsl_parse_helper::EDITOR_JS_GLOBAL_OBJ,
 			'JS_BBCODE_VARS' => array_keys($this->extra_variables),
 		);
-		
-		
-		return;
-		
-		foreach($configurator->BBCodes AS $bbcode)
-		{
-			var_dump($bbcode, $configurator->tags[$bbcode->tagName]);
-			echo "<br>\n";
-		}
-		echo "-----------------------------------------------------------------
-		-------------------------------------------------------------------
-		--------------------------------------------------------------------
-		-------------------------------------------------------------------------
-		---------------------------------------------------------
-		-----------------------------------------------------------------------
-		-------------------------------
-";
-		// foreach( AS $bbcode)
-		// {
-			// var_dump($bbcode);
-			// echo "<br>\n";
-		// }
-		exit;
-		
-		
-		// return to normal. Do not discard all output to allow debugging
-		
-		ob_end_flush();
 		
 	}
 
