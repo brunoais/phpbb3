@@ -236,9 +236,8 @@ switch ($mode)
 			// exit;
 		// }
 		$user->setup('posting');
-		$result = $wysiwyg->recalculate_editor_setup_javascript($phpbb_container->get('text_formatter.s9e.factory'));
-		// $result = $wysiwyg->handle_user_request_setup_javascript($phpbb_container->get('wysiwyg.text_formatter.s9e.factory'));
-		$result = $wysiwyg->handle_user_request_setup_javascript($phpbb_container->get('text_formatter.s9e.factory'));
+		$result = $wysiwyg->recalculate_editor_setup_javascript($phpbb_container->get('wysiwyg.text_formatter.s9e.factory'));
+		$result = $wysiwyg->handle_user_request_setup_javascript($phpbb_container->get('wysiwyg.text_formatter.s9e.factory'));
 		if($result === true)
 		{
 			exit;
@@ -1967,7 +1966,7 @@ if (!$phpbb_container->has('wysiwyg.converters.' . $wysiwyg_type))
 	$wysiwyg_type = $config['wysiwyg_type'];
 }
 $wysiwyg = $phpbb_container->get('wysiwyg.converters.' . $wysiwyg_type);
-$wysiwyg->recalculate_editor_setup_javascript($phpbb_container->get('text_formatter.s9e.factory'));
+$wysiwyg->recalculate_editor_setup_javascript($phpbb_container->get('wysiwyg.text_formatter.s9e.factory'));
 $wysiwyg_request_variables = $wysiwyg->get_request_variables();
 
 $template->assign_vars($wysiwyg_request_variables);

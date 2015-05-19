@@ -5,6 +5,6 @@ core:
     require_dev_dependencies: true
 
     twig:
-        debug: true
-        auto_reload: true
+        debug: false
+        auto_reload: false
         enable_debug_extension: true
