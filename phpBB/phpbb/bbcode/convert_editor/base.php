@@ -145,7 +145,22 @@ abstract class base
 	abstract protected function get_static_javascript_variables();
 	abstract protected function get_dynamic_javascript_variables();
 	
-	
+	public function purge_cache($force_all = false)
+	{
+		$cache_name = $this->get_name();
+		
+		$this->cache->destroy('wysiwyg_dynamic_js_vars' . $cache_name);
+		$this->cache->destroy('wysiwyg_etag' . $cache_name);
+		$this->cache->destroy('wysiwyg_etag_gzip' . $cache_name);
+		
+		if ($force_all)
+		{
+			$file_name = $this->cache_prefix . '.' . $cache_name . '.js';
+			@unlink($file_name);
+			@unlink($file_name . '.gz');
+		}
+	}
+
 	public function recalculate_editor_setup_javascript($text_formatter_factory)
 	{
 		$cache_name = $this->get_name();
