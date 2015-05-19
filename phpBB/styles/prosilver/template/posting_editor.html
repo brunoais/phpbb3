@@ -40,7 +40,7 @@
 		<!-- IF S_SMILIES_ALLOWED and .smiley -->
 			<strong>{L_SMILIES}</strong><br />
 			<!-- BEGIN smiley -->
-				<a href="#" onclick="insert_text('{smiley.A_SMILEY_CODE}', true); return false;"><img src="{smiley.SMILEY_IMG}" width="{smiley.SMILEY_WIDTH}" height="{smiley.SMILEY_HEIGHT}" alt="{smiley.SMILEY_CODE}" title="{smiley.SMILEY_DESC}" /></a>
+				<img src="{smiley.SMILEY_IMG}" width="{smiley.SMILEY_WIDTH}" height="{smiley.SMILEY_HEIGHT}" alt="{smiley.SMILEY_CODE}" title="{smiley.SMILEY_DESC}" />
 			<!-- END smiley -->
 		<!-- ENDIF -->
 		<!-- IF S_SHOW_SMILEY_LINK and S_SMILIES_ALLOWED -->
@@ -81,8 +81,13 @@
 			'{{ key }}': '{{ attribute(_context, key) |e('js') }}',
 			{% endif -%}
 		{% endfor -%}
-		'stylePath': "{T_THEME_PATH}/bbcode.css",
-		'L_SUBMIT': "{L_SUBMIT}"
+		stylePath: '{T_THEME_PATH}/bbcode.css',
+		emoticons: {
+			<!-- BEGIN smiley -->
+			"{smiley.A_SMILEY_CODE}": '{smiley.SMILEY_IMG}',
+			<!-- END smiley -->
+		},
+		"L_SUBMIT": '{L_SUBMIT}'
 	}
 	
 	</script>

@@ -481,12 +481,17 @@ messageTextarea.sceditor({
 {% if OVERRIDES.toolbar is defined %}
 	toolbar: '{{ OVERRIDES.toolbar }}|removeformat|' +
 				'cut,copy,paste,pastetext|' +
-				'unlink|print,maximize,source'
+				'unlink|print,maximize,source',
 {% else %}
 	toolbar: '{{ toolbar }}|indent,outdent,removeformat|' +
 				'cut,copy,paste,pastetext|' +
-				'unlink|print,maximize,source'
+				'unlink|print,maximize,source',
 {% endif %}
+	emoticons: {
+		dropdown: {},
+		more: {},
+		hidden: {{ EDITOR_JS_GLOBAL_OBJ }}.emoticons
+	}
 });
 
 var sceInstance = messageTextarea.sceditor("instance");

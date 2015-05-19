@@ -21,6 +21,12 @@ console.warn || (console.warn = console.log);
 console.error || (console.error = console.log);
 
 
+var smilieBox = document.getElementById('smiley-box');
+
+$(smilieBox).on('click', 'img', function (e){
+	editor.insertBBCode(e.target.alt);
+	e.preventDefault();
+});
 
 
 var editorConstants = {
