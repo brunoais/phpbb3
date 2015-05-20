@@ -34,6 +34,8 @@ abstract class base
 	
 	const EDITOR_CONFIG_BASENAME = 'editor_config_';
 	
+	const BBCODE_PROCESS_HANDLE = 'wysiwyg.text_formatter.s9e.factory';
+	
 	protected $toolbar_default_ordering;
 	
 	/**
@@ -61,16 +63,22 @@ abstract class base
 	protected $phpbb_dispatcher;
 	
 	/**
-	* Template object
-	* @var \phpbb\template\template
+	* Object loader object
+	* @var \Symfony\Component\DependencyInjection\ContainerInterface
 	*/
-	protected $template;
+	protected $phpbb_container;
 	
 	/**
 	* Request object
 	* @var \phpbb\request\request
 	*/
 	protected $request;
+	
+	/**
+	* Template object
+	* @var \phpbb\template\template
+	*/
+	protected $template;
 	
 	/**
 	 * Dictate the name of the handler.
@@ -90,17 +98,22 @@ abstract class base
 	 * @param string $cache_prefix A string to prefix to the cache file name (includes the path)
 	 * @param \phpbb\config\config $config Config object
 	 * @param \phpbb\event\dispatcher_interface $phpbb_dispatcher Where to send events to
+	 * @param \Symfony\Component\DependencyInjection\ContainerInterface $phpbb_container 
+	 * @param \phpbb\request\request $request To handle the HTTP cache
+	 * @param \phpbb\template\template $template 
 	 */
 	protected function __construct(\phpbb\cache\driver\driver_interface $cache, $cache_prefix,
-		\phpbb\config\config $config, \phpbb\event\dispatcher_interface $phpbb_dispatcher, 
+		\phpbb\config\config $config, \phpbb\event\dispatcher_interface $phpbb_dispatcher,
+		\Symfony\Component\DependencyInjection\ContainerInterface $phpbb_container, 
 		\phpbb\request\request $request, \phpbb\template\template $template)
 	{
 		$this->cache = $cache;
 		$this->cache_prefix = $cache_prefix;
 		$this->config = $config;
 		$this->phpbb_dispatcher = $phpbb_dispatcher;
-		$this->template = $template;
+		$this->phpbb_container = $phpbb_container;
 		$this->request = $request;
+		$this->template = $template;
 		
 		
 		$this->toolbar_default_ordering = array(
@@ -145,33 +158,50 @@ abstract class base
 	abstract protected function get_static_javascript_variables();
 	abstract protected function get_dynamic_javascript_variables();
 	
-	public function purge_cache($force_all = false)
+	private function calculate_path_key()
 	{
 		$cache_name = $this->get_name();
+		$this->template->set_filenames(array(
+				'editor_config' => self::EDITOR_CONFIG_BASENAME . strtolower($cache_name) . '.js',
+				'bbcode' => 'bbcode.html',
+			));
 		
-		$this->cache->destroy('wysiwyg_dynamic_js_vars' . $cache_name);
-		$this->cache->destroy('wysiwyg_etag' . $cache_name);
-		$this->cache->destroy('wysiwyg_etag_gzip' . $cache_name);
+		return md5($this->template->get_source_file_for_handle('editor_config') . 
+						$this->template->get_source_file_for_handle('bbcode'));
+	}
+	
+	public function purge_cache($force_all = false)
+	{
+		$this->cache->destroy('wysiwyg_data');
 		
 		if ($force_all)
 		{
-			$file_name = $this->cache_prefix . '.' . $cache_name . '.js';
-			@unlink($file_name);
-			@unlink($file_name . '.gz');
+			$files = glob($this->cache_prefix . '*.js');
+			foreach ($files as $file)
+			{
+				@unlink($file);
+			}
+			
+			$files = glob($this->cache_prefix . '*.js.gz');
+			foreach ($files as $file)
+			{
+				@unlink($file);
+			}
 		}
 	}
 
-	public function recalculate_editor_setup_javascript($text_formatter_factory)
+	public function recalculate_editor_setup_javascript()
 	{
 		$cache_name = $this->get_name();
 		
-		$this->generate_editor_setup_javascript($text_formatter_factory);
+		$this->generate_editor_setup_javascript($this->phpbb_container->get(self::BBCODE_PROCESS_HANDLE));
 		
 		$editor_setup_vars = $this->get_static_javascript_variables();
 		$editor_dynamic_vars = $this->get_dynamic_javascript_variables();
 		
 		$setup_javascript = $this->template->set_filenames(array(
 			'editor_config' => self::EDITOR_CONFIG_BASENAME . strtolower($cache_name) . '.js',
+			'bbcode' => 'bbcode.html',
 		))
 			->assign_vars($editor_setup_vars)
 			->assign_vars(array(
@@ -179,23 +209,33 @@ abstract class base
 			))
 			->assign_display('editor_config');
 		
+		// md4 would probably be a better option for performance reasons but this works fine
+		$path_key = md5($this->template->get_source_file_for_handle('editor_config') . 
+						$this->template->get_source_file_for_handle('bbcode'));
 		
 		$gzip_setup_javascript = gzencode($setup_javascript, 9);
 		
 		
 		$etag = sha1($setup_javascript);
-		$uncompressed_etag = $cache_name . '|normal|' . $etag;
-		$compressed_etag = $cache_name . '|gzip|'. $etag;
+		$uncompressed_etag = $cache_name . '|'. $path_key .'|normal|' . $etag;
+		$compressed_etag = $cache_name . '|'. $path_key .'|gzip|'. $etag;
 		
-		$file_name = $this->cache_prefix . '.' . $cache_name . '.js';
+		$file_name = $this->cache_prefix . '.' . $path_key . '.' . $cache_name . '.js';
 		file_put_contents($file_name, $setup_javascript, LOCK_EX);
 		file_put_contents($file_name . '.gz', $gzip_setup_javascript, LOCK_EX);
 		
 		// Only change or create the cached information after changing the files
 		// This prevents corrupted data in the client
-		$this->cache->put('wysiwyg_dynamic_js_vars' . $cache_name, $editor_dynamic_vars);
-		$this->cache->put('wysiwyg_etag' . $cache_name, $uncompressed_etag);
-		$this->cache->put('wysiwyg_etag_gzip' . $cache_name, $compressed_etag);
+		
+		$wysiwyg_data = array(
+			$path_key => array(
+				'wysiwyg_dynamic_js_vars' . $cache_name => $editor_dynamic_vars,
+				'wysiwyg_etag' . $cache_name 			=> $uncompressed_etag,
+				'wysiwyg_etag_gzip' . $cache_name 		=> $compressed_etag,
+			),
+		);
+		
+		$this->cache->put('wysiwyg_data', $wysiwyg_data);
 		
 		$this->config->increment('bbcode_version', 1);
 	}
@@ -206,9 +246,13 @@ abstract class base
 	 *
 	 *
 	 */
-	public function get_setup_javascript($use_gz_version = false)
+	public function get_setup_javascript($path_key = null, $use_gz_version = false)
 	{
-		$file_name = $this->cache_prefix . '.' . $this->get_name() . '.js';
+		if (empty($path_key))
+		{
+			$path_key = $this->calculate_path_key();
+		}
+		$file_name = $this->cache_prefix . '.' . $path_key . '.' . $this->get_name() . '.js';
 		
 		if($use_gz_version)
 		{
@@ -232,41 +276,48 @@ abstract class base
 	 * If successful (returning true), the headers were set and the setup javascript was outputed to the user or
 	 * the headers were set and status code 304 NOT MODIFIED was sent.
 	 *
-	 * @return boolean|null true on success, false on failure, null if no setup has been called yet (should never happen)
+	 * @return boolean true on success, false on unknown failure
 	 */
-	public function handle_user_request_setup_javascript($text_formatter_factory = null)
+	public function handle_user_request_setup_javascript()
 	{
 		$cache_name = $this->get_name();
+		$cached_data = $this->cache->get('wysiwyg_data');
 		
 		$accepted_encodings = $this->request->variable("HTTP_ACCEPT_ENCODING", '', request_interface::SERVER);
 		
 		header('Content-Type: application/javascript', true);
-		header('Vary: Accept-Encoding', true);
+		// TODO: Find a better way to identify this
+		// header('Vary: Accept-Encoding, cookie', true);
 		// 1 week
 		header('Cache-Control: public, max-age=604800', true);
 		
 		$etag_match = $this->request->variable("HTTP_IF_NONE_MATCH", '', request_interface::SERVER);
 		
-		if ($etag_match)
+		if (!empty($etag_match))
 		{
-			$etag_data = explode('|', $etag_match, 3);
+			$etag_data = explode('|', $etag_match, 4);
 			$current_etag = null;
 			
-			if($etag_data[1] === 'gzip')
-			{
-				$current_etag = $this->cache->get('wysiwyg_etag_gzip'. $cache_name);
-				header('Content-Encoding: gzip', true);
-			}
-			else
-			{
-				$current_etag = $this->cache->get('wysiwyg_etag' . $cache_name);
-			}
+			$path_key = $this->calculate_path_key();
 			
-			if ($current_etag === $etag_match)
+			if ($etag_data[2] === $path_key)
 			{
-				// not modified
-				header('', false, 304);
-				return true;
+				if ($etag_data[3] === 'gzip')
+				{
+					$current_etag = $cached_data[$path_key]['wysiwyg_etag_gzip'. $cache_name];
+					header('Content-Encoding: gzip', true);
+				}
+				else
+				{
+					$current_etag = $cached_data[$path_key]['wysiwyg_etag' . $cache_name];
+				}
+				
+				if ($current_etag === $etag_match)
+				{
+					// not modified
+					header('', false, 304);
+					return true;
+				}
 			}
 		}
 		
@@ -275,37 +326,38 @@ abstract class base
 		$setup_javascript = $this->get_setup_javascript($accepts_gzip);
 		if ($setup_javascript !== false)
 		{
-			if($accepts_gzip)
+			if ($accepts_gzip)
 			{
 				header('Content-Encoding: gzip', true);
 			}
 			echo $setup_javascript;
 			return true;
 		}
-		if (empty($text_formatter_factory))
-		{
-			return false;
-		}
-		$this->recalculate_editor_setup_javascript($text_formatter_factory);
-		$setup_javascript = $this->get_setup_javascript();
+		
+		$this->recalculate_editor_setup_javascript($phpbb_container->get(BBCODE_PROCESS_HANDLE));
+		$setup_javascript = $this->get_setup_javascript($accepts_gzip);
 		if ($setup_javascript !== false)
 		{
-			if($accepts_gzip)
+			if ($accepts_gzip)
 			{
 				header('Content-Encoding: gzip', true);
 			}
 			echo $setup_javascript;
 			return true;
 		}
-		return null;
+		return false;
 	}
 	
 	public function get_request_variables()
 	{
 		$cache_name = $this->get_name();
-		$dynamic_javascript_vars = $this->cache->get('wysiwyg_dynamic_js_vars' . $cache_name);
+		$cached_data = $this->cache->get('wysiwyg_data');
 		
-		if($dynamic_javascript_vars === false)
+		$path_key = $this->calculate_path_key();
+		
+		$dynamic_javascript_vars = $cached_data[$path_key]['wysiwyg_dynamic_js_vars' . $cache_name];
+		
+		if ($dynamic_javascript_vars === false)
 		{
 			return false;
 		}
@@ -318,7 +370,7 @@ abstract class base
 	{
 		foreach ($child_nodes as $child_node)
 		{
-			if(isset($child_node['case']))
+			if (isset($child_node['case']))
 			{
 				$containers = array();
 				foreach($child_node['case'] as $case)
@@ -329,7 +381,7 @@ abstract class base
 				
 				return $containers;
 			}
-			else if($child_node['xsl'])
+			else if ($child_node['xsl'])
 			{
 				return $this->get_container_tags($child_node['children']);
 			}
@@ -360,7 +412,7 @@ abstract class base
 	{
 		foreach ($tags as $name => $data)
 		{
-			if(empty($bbcodes_for_tags[$name]))
+			if (empty($bbcodes_for_tags[$name]))
 			{
 				$bbcodes_for_tags[$name] = array();
 			}
@@ -463,7 +515,7 @@ abstract class base
 		{
 			$config['attrPresets'][$name] = $preset;
 		}
-		// Only parse BBCode if the closing tag was written
+		// Only parse BBCode if (the closing tag was written
 		$config['onlyParseIfClosed'] = $bbcode->forceLookahead;
 		// This may not be the same the the actual tag name. From the source code:
 		// // Create [php] as an alias for [code=php]
@@ -485,7 +537,7 @@ abstract class base
 			foreach ($attribute->filterChain as $filter)
 			{
 				$js_validation = $filter->getJS();
-				if($js_validation)
+				if ($js_validation)
 				{
 					$js_validation = $js_validation->__toString();
 					if (strpos($js_validation, 'BuiltInFilters.') === 0)
@@ -519,7 +571,7 @@ abstract class base
 					else if ($js_validation === '')
 					{
 						// Skip
-						// TODO: See if it is feasable not to skip
+						// TODO: See if (it is feasable not to skip
 						continue;
 					}
 					

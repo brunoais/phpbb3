@@ -49,7 +49,8 @@ class acp_bbcodes
 			break;
 
 			case 'edit':
-				$sql = 'SELECT bbcode_match, bbcode_tpl, wysiwyg_tpl, display_on_posting, bbcode_helpline
+				$sql = 'SELECT bbcode_match, bbcode_tpl, wysiwyg_tpl, wysiwyg_override,
+								display_on_posting, bbcode_helpline
 					FROM ' . BBCODES_TABLE . '
 					WHERE bbcode_id = ' . $bbcode_id;
 				$result = $db->sql_query($sql);
@@ -64,6 +65,7 @@ class acp_bbcodes
 				$bbcode_match = $row['bbcode_match'];
 				$bbcode_tpl = htmlspecialchars($row['bbcode_tpl']);
 				$wysiwyg_tpl = htmlspecialchars($row['wysiwyg_tpl']);
+				$wysiwyg_override = htmlspecialchars($row['wysiwyg_override']);
 				$display_on_posting = $row['display_on_posting'];
 				$bbcode_helpline = $row['bbcode_helpline'];
 			break;
@@ -89,6 +91,7 @@ class acp_bbcodes
 				$bbcode_match = $request->variable('bbcode_match', '');
 				$bbcode_tpl = htmlspecialchars_decode($request->variable('bbcode_tpl', '', true));
 				$wysiwyg_tpl = htmlspecialchars_decode($request->variable('wysiwyg_tpl', '', true));
+				$wysiwyg_override = htmlspecialchars_decode($request->variable('wysiwyg_override', '', true));
 				$bbcode_helpline = $request->variable('bbcode_helpline', '', true);
 			break;
 		}
@@ -108,6 +111,7 @@ class acp_bbcodes
 					'BBCODE_MATCH'			=> $bbcode_match,
 					'BBCODE_TPL'			=> $bbcode_tpl,
 					'WYSIWYG_TPL'			=> $wysiwyg_tpl,
+					'WYSIWYG_OVERRIDE'		=> $wysiwyg_override,
 					'BBCODE_HELPLINE'		=> $bbcode_helpline,
 					'DISPLAY_ON_POSTING'	=> $display_on_posting,
 				);
@@ -173,6 +177,7 @@ class acp_bbcodes
 					'bbcode_match',
 					'bbcode_tpl',
 					'wysiwyg_tpl',
+					'wysiwyg_override',
 					'bbcode_helpline',
 					'hidden_fields',
 				);
@@ -236,6 +241,7 @@ class acp_bbcodes
 						'bbcode_match'				=> $bbcode_match,
 						'bbcode_tpl'				=> $bbcode_tpl,
 						'wysiwyg_tpl'				=> $wysiwyg_tpl,
+						'wysiwyg_override'			=> $wysiwyg_override,
 						'display_on_posting'		=> $display_on_posting,
 						'bbcode_helpline'			=> $bbcode_helpline,
 						'first_pass_match'			=> $data['first_pass_match'],
@@ -295,22 +301,8 @@ class acp_bbcodes
 					}
 					
 					// Select which WYSIWYG editor to use
-					$wysiwyg_type = $config['wysiwyg_type'];
-
-					if (!class_exists($wysiwyg_type))
-					{
-						trigger_error('NO_SUCH_WYSIWYG_MODULE');
-					}
-					// We do some additional checks in the module to ensure it can actually be utilised
-					try
-					{
-						$wysiwyg = new $wysiwyg_type($phpbb_root_path, $phpEx, $auth, $config, $db, $user, $phpbb_dispatcher);
-						$wysiwyg->convert_bbcode_to_editor($phpbb_container->get('wysiwyg.text_formatter.s9e.factory'));
-					}
-					catch (\Exception $e)
-					{
-						trigger_error($e->getMessage());
-					}
+					$wysiwyg = $phpbb_container->get('wysiwyg.converters.' . $config['wysiwyg_type']);
+					$wysiwyg->recalculate_editor_setup_javascript($phpbb_container->get('wysiwyg.text_formatter.s9e.factory'));
 					
 
 					$phpbb_log->add('admin', $user->data['user_id'], $user->ip, $log_action, false, array($data['bbcode_tag']));
@@ -349,23 +341,10 @@ class acp_bbcodes
 						$db->sql_query('DELETE FROM ' . BBCODES_TABLE . " WHERE bbcode_id = $bbcode_id");
 						$cache->destroy('sql', BBCODES_TABLE);
 						$phpbb_container->get('text_formatter.cache')->invalidate();
-					
-						// Select which WYSIWYG editor to use
-						$wysiwyg_type = $config['wysiwyg_type'];
-
-						if (!class_exists($wysiwyg_type))
-						{
-							trigger_error('NO_SUCH_WYSIWYG_MODULE');
-						}
-						// We do some additional checks in the module to ensure it can actually be utilised
-						try
-						{
-							$search = new $wysiwyg_type($phpbb_root_path, $phpEx, $auth, $config, $db, $user, $phpbb_dispatcher);
-						}
-						catch (\Exception $e)
-						{
-							trigger_error($e->getMessage());
-						}
+						
+						$wysiwyg = $phpbb_container->get('wysiwyg.converters.' . $config['wysiwyg_type']);
+						$wysiwyg->purge_cache();
+						
 						$phpbb_log->add('admin', $user->data['user_id'], $user->ip, 'LOG_BBCODE_DELETE', false, array($row['bbcode_tag']));
 
 						if ($request->is_ajax())
@@ -460,6 +439,8 @@ class acp_bbcodes
 		// Allow unicode characters for URL|LOCAL_URL|RELATIVE_URL|INTTEXT tokens
 		$utf8 = preg_match('/(URL|LOCAL_URL|RELATIVE_URL|INTTEXT)/', $bbcode_match);
 
+		$utf8_pcre_properties = phpbb_pcre_utf8_support();
+
 		$fp_match = preg_quote($bbcode_match, '!');
 		$fp_replace = preg_replace('#^\[(.*?)\]#', '[$1:$uid]', $bbcode_match);
 		$fp_replace = preg_replace('#\[/(.*?)\]$#', '[/$1:$uid]', $fp_replace);
@@ -490,7 +471,7 @@ class acp_bbcodes
 				'!([a-zA-Z0-9-+.,_ ]+)!'	 =>	"$1"
 			),
 			'INTTEXT' => array(
-				'!([\p{L}\p{N}\-+,_. ]+)!u'	 =>	"$1"
+				($utf8_pcre_properties) ? '!([\p{L}\p{N}\-+,_. ]+)!u' : '!([a-zA-Z0-9\-+,_. ]+)!u'	 =>	"$1"
 			),
 			'IDENTIFIER' => array(
 				'!([a-zA-Z0-9-_]+)!'	 =>	"$1"
@@ -510,7 +491,7 @@ class acp_bbcodes
 			'EMAIL' => '(' . get_preg_expression('email') . ')',
 			'TEXT' => '(.*?)',
 			'SIMPLETEXT' => '([a-zA-Z0-9-+.,_ ]+)',
-			'INTTEXT' => '([\p{L}\p{N}\-+,_. ]+)',
+			'INTTEXT' => ($utf8_pcre_properties) ? '([\p{L}\p{N}\-+,_. ]+)' : '([a-zA-Z0-9\-+,_. ]+)',
 			'IDENTIFIER' => '([a-zA-Z0-9-_]+)',
 			'COLOR' => '([a-zA-Z]+|#[0-9abcdefABCDEF]+)',
 			'NUMBER' => '([0-9]+)',
@@ -518,7 +499,7 @@ class acp_bbcodes
 
 		$pad = 0;
 		$modifiers = 'i';
-		$modifiers .= ($utf8) ? 'u' : '';
+		$modifiers .= ($utf8 && $utf8_pcre_properties) ? 'u' : '';
 
 		if (preg_match_all('/\{(' . implode('|', array_keys($tokens)) . ')[0-9]*\}/i', $bbcode_match, $m))
 		{

@@ -14,7 +14,7 @@
 namespace phpbb\bbcode;
 
 
-class text_formatter_data_access extends phpbb\textformatter\data_access
+class text_formatter_data_access extends \phpbb\textformatter\data_access
 {
 	/**
 	* @var string Name of the BBCodes table

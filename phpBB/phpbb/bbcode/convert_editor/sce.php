@@ -49,11 +49,9 @@ class sce extends base
 	 * @param \phpbb\config\config $config Config object
 	 * @param \phpbb\event\dispatcher_interface $phpbb_dispatcher Where to send events to
 	 */
-	public function __construct(\phpbb\cache\driver\driver_interface $cache, $cache_prefix,
-		\phpbb\config\config $config, \phpbb\event\dispatcher_interface $phpbb_dispatcher,
-		\phpbb\request\request $request, \phpbb\template\template $template)
+	public function __construct()
 	{
-		parent::__construct($cache, $cache_prefix, $config, $phpbb_dispatcher, $request, $template);
+		call_user_func_array('parent::__construct', func_get_args());
 		
 		$this->js_variables = array();
 		$this->extra_variables = array();
@@ -78,7 +76,7 @@ class sce extends base
 	 */
 	protected function make_new_js_var($original_name)
 	{
-		if(!isset($this->js_variables[$original_name]))
+		if (!isset($this->js_variables[$original_name]))
 		{
 			$this->js_variables[$original_name] = 1;
 			return $original_name;
@@ -222,7 +220,7 @@ class sce extends base
 											$replacement = xsl_parse_helper::EDITOR_JS_GLOBAL_OBJ . '.' . $var['prefixedName'];
 											$this->extra_variables[$var['prefixedName']] = true;
 										}
-										if($match[2] !== "'")
+										if ($match[2] !== "'")
 										{
 											$replacement .= " + '";
 										}
@@ -314,6 +312,9 @@ class sce extends base
 			unset($parsed_template);
 		}
 		
+		var_dump($template_tree_definition['bbcodes']['selfclosed']);
+		
+		
 		// Toolbar button order override.
 		$defined_bbcode = $this->toolbar_default_ordering;
 		
@@ -337,7 +338,7 @@ class sce extends base
 		
 		foreach ($template_tree_definition['bbcodes'] as $name => $something)
 		{
-			if(!isset($predefined_bbcode_names[$name]))
+			if (!isset($predefined_bbcode_names[$name]))
 			{
 				$extra_bbcode[] = $name;
 				$toolbar_buttons .= $name;

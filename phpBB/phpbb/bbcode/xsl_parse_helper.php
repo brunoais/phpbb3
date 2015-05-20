@@ -197,7 +197,7 @@ class xsl_parse_helper
 		
 		$xsl_var_match = null;
 		
-		if($current['xsl']){
+		if ($current['xsl']){
 			
 			switch($current['tagName']){
 				case 'copy-of':

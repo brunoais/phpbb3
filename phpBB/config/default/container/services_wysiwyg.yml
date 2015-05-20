@@ -30,5 +30,6 @@ services:
             - %wysiwyg.cache.prefix%
             - @config
             - @dispatcher
+            - @service_container
             - @request
             - @template

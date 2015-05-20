@@ -8,7 +8,7 @@
 		'<{{ bbcodeName }} d="{{ childData.num }}"></{{ bbcodeName }}>',
 		document
 	).firstChild.nodeValue;
-	
+
 	switch(conditionResult[0]){
 	{% for caseVal, caseData in childData.case %}
 		case '{{ caseVal }}':
@@ -45,16 +45,16 @@
 
 				{% endif -%}
 			{% endfor %}
-			
+
 		{% elseif child.js.type == 'ATTRIBUTE_TEXT_NODE_DEFINITION' %}
 			{% if child.vars[0].isAttribute %}
 				var {{ child.js.nodeName }} = document.createTextNode(attributes["{{child.vars[0].name}}"]);
 			{% else %}
 				var {{ child.js.nodeName }} = document.createTextNode({{ EDITOR_JS_GLOBAL_OBJ }}.{{ attribute(child.vars[0], 'prefixedName') }});
 			{% endif %}
-			
+
 			{{ append_to }}.appendChild({{ child.js.nodeName }});
-			
+
 			{% if child.js.parentEditable %}
 				addBBCodeDataToElement(
 					{{ append_to }},
@@ -69,11 +69,11 @@
 			{{ append_to }}.appendChild({{ child.js.nodeName }});
 		{% elseif child.js.type == 'PARSED_CHILDREN_SET' %}
 			previousType = {{ append_to }}.getAttribute('data-bbcode-type');
-						{{ append_to }}.setAttribute('data-bbcode-type', 
+						{{ append_to }}.setAttribute('data-bbcode-type',
 							(previousType && previousType + '|content')|| 'content');
 						{{ append_to }}.contentEditable = 'true';
 						{{ append_to }}.innerHTML += content;
-		
+
 		{% elseif child.js.type == 'SWITCH_DEFINITION' %}
 			{{ exec.parse_case(EDITOR_JS_GLOBAL_OBJ, bbcodeName, append_to, child) }}
 		{% else %}
@@ -93,7 +93,7 @@
 		'<{{ bbcodeName }} d="{{ childData.num }}"></{{ bbcodeName }}>',
 		document
 	).firstChild.nodeValue;
-	
+
 	switch(conditionResult[0]){
 	{% for caseVal, caseData in childData.case %}
 		case '{{ caseVal }}':
@@ -128,12 +128,12 @@
 
 
 	var makeDropdown = function(editor){
-		
+
 		var makeSelectBox = function (options, selectMultiple, separator, required){
 			var select = document.createElement('select');
 			select.multiple = !!selectMultiple;
 			select.required = !!required;
-			
+
 			for (var i = 0; i < options.length; i++){
 				var option = new Option(
 						options[i].text,
@@ -162,7 +162,7 @@
 			input.type = type || 'text';
 			input.required = !!isRequired;
 			input.value = defaultValue || '';
-			
+
 			return {
 				element: input,
 				getValue: function (){
@@ -170,7 +170,7 @@
 				}
 			};
 		};
-		
+
 		return function (button, BBCodeName, attributes, oKCallback, errorCallback){
 			var elements = [];
 			var container = document.createElement('form');
@@ -183,16 +183,16 @@
 				editor.closeDropDown(true);
 				oKCallback(data);
 			}
-			
+
 			for (var i = 0; i < attributes.length; i++){
 				var attributeRequestContainer = document.createElement('div');
-				
+
 				var text = document.createElement('span');
 				text.textContent = attributes[i].name;
 				attributeRequestContainer.appendChild(text);
-				
+
 				var dataElement;
-				
+
 				switch(attributes[i].type){
 					case 'chooseMany':
 					case 'choose1':
@@ -206,26 +206,26 @@
 							attributes[i].required, attributes[i].value);
 					break;
 				}
-							
+
 				elements.push(dataElement);
 				attributeRequestContainer.appendChild(dataElement.element);
 				container.appendChild(attributeRequestContainer);
-				
+
 			}
-		
+
 			var confirm = document.createElement('button');
 			confirm.textContent = "{{ lang('SUBMIT') }}";
-			confirm.onclick = 
+			confirm.onclick =
 			container.appendChild(confirm);
-			
+
 			editor.createDropDown(button, 'dropdown-' + BBCodeName, container);
 		};
 	};
 
 {% set toolbar = '' %}
-	
+
 {% for bbcode in BBCODES %}
-	
+
 	$.sceditor.command.set('{{ bbcode.name }}',
 		{
 			state: function (parent, blockParent){
@@ -235,14 +235,18 @@
 			},
 			exec: function(button) {
 				{% if bbcode.data.attr is empty %}
-					this.insert('[{{ bbcode.name }}]', '[/{{ bbcode.name }}]');
+					this.insert('[{{ bbcode.name }}]'
+					{%- if not bbcode.data.autoCloseOn %}, '[/{{ bbcode.name }}]'{% endif -%}
+					);
 				{% else %}
 					var editor = this;
 					var attributes = [
 					{% for attrName, attrData in bbcode.data.attr %}
+						{% if bbcode.override.data.attr[attrName] -%}
+							bbcode.override.data.attr[attrName]
+						{% else %}
 						{
-							"name": '{{ attrName }}',
-							{% if attrData.filters is not empty and 
+							{% if attrData.filters is not empty and
 								(attrData.filters[0].name == 'filterNumber' or
 								attrData.filters[0].name == 'filterRange') %}
 								"type": "number",
@@ -251,10 +255,11 @@
 								"required": true,
 							{% endif %}
 							{% if attrData.defaultValue is not empty %}
-								"value": 'attrData.defaultValue',
+								"value": '{{ attrData.defaultValue }}',
 							{% endif %}
-							"" : ""
+							"name": '{{ attrName }}'
 						}
+						{% endif %}
 						{%- if not loop.last %}
 						,
 						{% endif %}
@@ -265,17 +270,23 @@
 					for (var attribute in data){
 						attrStr += ' ' + attribute + '="' + data[attribute] + '"';
 					}
-					editor.insert('[{{ bbcode.name }}' + attrStr + ']', '[/{{ bbcode.name }}]');
+					editor.insert('[{{ bbcode.name }}' + attrStr + ']'
+						{%- if not bbcode.data.autoCloseOn %}, '[/{{ bbcode.name }}]'{% endif -%}
+						);
 				});
-					
 				{% endif %}
 			},
 			txtExec: function() {
-				this.insert('[{{ bbcode.name }}]', '[/{{ bbcode.name }}]');
+				this.insert('[{{ bbcode.name }}]'
+					{%- if not bbcode.data.autoCloseOn %}, '[/{{ bbcode.name }}]'{% endif -%}
+				);
 			},
+
+			name: '{{ bbcode.name }}',
+			tooltip: '[[WIP]]'
 		}
 	);
-	
+
 	$.sceditor.plugins.bbcode.bbcode.set('{{ bbcode.name }}',
 			{
 				tags: {
@@ -293,33 +304,34 @@
 						{%- for containerTag in bbcode.containerTags %}  editor.getElementDefaultDisplay('{{ containerTag }}') !== 'block' && {% endfor %}true,
 					{%- endif %}
 
-				{% if bbcode.override.data.isHtmlInline is defined -%}
+				{% if bbcode.data.isHtmlInline is defined -%}
 					isHtmlInline: {{- bbcode.override.data.isHtmlInline ? 'true' : 'false' -}},
 				{%- endif %}
-				{% if bbcode.override.data.breakBefore is defined -%}
+				{% if bbcode.data.breakBefore is defined -%}
 					breakBefore: {{- bbcode.override.data.breakBefore ? 'true' : 'false' -}},
 				{%- endif %}
-				{% if bbcode.override.data.breakStart is defined -%}
+				{% if bbcode.data.breakStart is defined -%}
 					breakStart: {{- bbcode.override.data.breakStart ? 'true' : 'false' -}},
 				{%- endif %}
-				{% if bbcode.override.data.breakEnd is defined -%}
+				{% if bbcode.data.breakEnd is defined -%}
 					breakEnd: {{- bbcode.override.data.breakEnd ? 'true' : 'false' -}},
 				{%- endif %}
-				{% if bbcode.override.data.breakAfter is defined -%}
+				{% if bbcode.data.breakAfter is defined -%}
 					breakAfter: {{- bbcode.override.data.breakAfter ? 'true' : 'false' -}},
 				{%- endif %}
-				
-				{% if bbcode.data.autoCloseOn %}
-				excludeClosing: true,
+
+
+				{% if bbcode.data.autoClose %}
+
+					{% if bbcode.data.autoCloseOn %}
+						excludeClosing: true,
+					{% endif %}
+					{% if bbcode.data.allowedChildren is empty %}
+						isSelfClosing: true,
+					{% endif %}
 				{% endif %}
-				{% if (not bbcode.data.useContent is empty and
-					(bbcode.data.autoClose is empty or
-						(bbcode.data.ignoreBBCodeInside is empty and bbcode.data.ignoreTextInside is empty)
-					)
-					)
-				%}
-				excludeClosing: true,
-				{% elseif bbcode.data.ignoreBBCodeInside is not empty %}
+
+				{% if bbcode.data.ignoreBBCodeInside is not empty %}
 				allowedChildren: ['#'],
 				{% elseif bbcode.data.allowedChildren is not empty %}
 				allowedChildren: ['
@@ -331,12 +343,15 @@
 				{% endif %}
 				allowsEmpty: true,
 
+				quoteType: $.sceditor.BBCodeParser.QuoteType.always,
+
 				html: function (token, attributes, content) {
 					var originalAttributes = attributes;
 					var originalContent = content;
 					var previousType;
 					var attrData;
 					var usedContents = [];
+					console.log(attributes);
 
 				{% if bbcode.data.defaultAttribute %}
 					if(!attributes["{{ bbcode.data.defaultAttribute }}"] &&
@@ -400,7 +415,7 @@
 				var mainContainerFragment = document.createDocumentFragment();
 
 				{{ exec.parse_node(EDITOR_JS_GLOBAL_OBJ, bbcode.name, 'mainContainerFragment', bbcode.parsedTemplate) }}
-					
+
 				if(mainContainerFragment.firstChild.getAttribute('contentEditable') !== 'true'){
 					mainContainerFragment.firstChild.contentEditable = 'false';
 				}
@@ -415,13 +430,12 @@
 					infos = Array.prototype.slice.call(infos);
 					infos.push(element[0]);
 				}
-				console.log(infos);
 				for(var i = 0; i < infos.length; i++){
 					var current = infos[i];
 					var type = current.getAttribute('data-bbcode-type');
 					var data = current.getAttribute('data-bbcode-data');
 					if(!type){
-						console.error("To BBCode translation error at BBCode {{ bbcode.name }}.\n" 
+						console.error("To BBCode translation error at BBCode {{ bbcode.name }}.\n"
 									+ 'Unexpected empty data-bbcode-type parameter. Value and node as follows:');
 						console.error(type);
 						console.error(current);
@@ -444,8 +458,8 @@
 								name + '="' + value + '"'
 							);
 						}else{
-							console.warn("To BBCode translation warning at BBCode {{ bbcode.name }}.\n" + 
-										 "Unexpected value for data-bbcode-type parameter." + 
+							console.warn("To BBCode translation warning at BBCode {{ bbcode.name }}.\n" +
+										 "Unexpected value for data-bbcode-type parameter." +
 										 "Skipping to the next value. Value and node were as follows:");
 							console.warn(types[j]);
 							console.warn(types);
@@ -454,21 +468,24 @@
 						}
 					}
 				}
-				return '[{{ bbcode.name }}' + 
+				console.log(params);
+				return '[{{ bbcode.name }}' +
 					(params ? ' ' : '') +
 					params.join(' ') +
-					']' + content + '[/{{ bbcode.name }}]';
+					']' + content {% if not bbcode.data.autoCloseOn -%}
+						+ '[/{{ bbcode.name }}]'
+							{%- endif -%};
 				}
 			});
-		
-		
+
+
 		{% set toolbar = toolbar ~ bbcode.name %}
 		{% if loop.index0 is divisible by(4) %}
 			{% set toolbar = toolbar ~ '|'  %}
 		{% else %}
 			{% set toolbar = toolbar ~ ',' %}
 		{% endif %}
-		
+
 {% endfor %}
 
 
@@ -477,7 +494,7 @@ var messageTextarea = $("#signature, #message");
 messageTextarea.sceditor({
 	plugins: 'bbcode,undo',
 	style: {{ EDITOR_JS_GLOBAL_OBJ }}.stylePath,
-	
+
 {% if OVERRIDES.toolbar is defined %}
 	toolbar: '{{ OVERRIDES.toolbar }}|removeformat|' +
 				'cut,copy,paste,pastetext|' +
