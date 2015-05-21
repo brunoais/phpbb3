@@ -312,11 +312,11 @@ class sce extends base
 			unset($parsed_template);
 		}
 		
-		// var_dump($template_tree_definition['bbcodes']);
+		var_dump($template_tree_definition['bbcodes']['size']['data']);
 		
-		// font is special... It uses a dropdown...
-		$this->font_override();
-		$toolbar_buttons = $this->toolbar_override($this->toolbar_default_ordering)
+		// size is special... It uses a dropdown...
+		$this->font_override($template_tree_definition['bbcodes']['size']['data']);
+		$toolbar_buttons = $this->toolbar_override($this->toolbar_default_ordering, $template_tree_definition['bbcodes']);
 		
 		
 		$this->static_js_vars = array(
@@ -334,16 +334,18 @@ class sce extends base
 		
 	}
 
-	public function font_override($defined_bbcode){
-		
+	public function font_override(&$bbcode_data){
 		$this->extra_variables['L_FONT_TINY'] = true;
 		$this->extra_variables['L_FONT_SMALL'] = true;
 		$this->extra_variables['L_FONT_NORMAL'] = true;
 		$this->extra_variables['L_FONT_LARGE'] = true;
 		$this->extra_variables['L_FONT_HUGE'] = true;
+		
+		
+		
 	}
 
-	public function toolbar_override($defined_bbcode){
+	public function toolbar_override($defined_bbcode, $tree_definition){
 		$predefined_bbcode_names = array();
 		
 		$toolbar_buttons = '';
@@ -360,7 +362,7 @@ class sce extends base
 		
 		$separator_counter = 1;
 		
-		foreach ($template_tree_definition['bbcodes'] as $name => $something)
+		foreach ($tree_definition as $name => $something)
 		{
 			if (!isset($predefined_bbcode_names[$name]))
 			{

@@ -235,7 +235,7 @@
 			exec: function(button) {
 				{% if bbcode.data.attr is empty %}
 					this.insert('[{{ bbcode.name }}]'
-					{%- if bbcode.data.autoCloseOn is empty and 
+					{%- if bbcode.data.autoCloseOn is empty and
 							(not bbcode.data.autoClose or bbcode.data.allowedChildren is not empty) %}, '[/{{ bbcode.name }}]'{% endif -%}
 					);
 				{% else %}
@@ -246,29 +246,29 @@
 							{{ bbcode.override.data.attr[attrName]
 						{% else %}
 						{
-							{% if attrData.type == 'choose1' or
-								attrData.type == 'chooseMany' -%}
-								"type": "{{ attrData.type }}",
+						{% if attrData.type == 'choose1' or
+							attrData.type == 'chooseMany' -%}
+							'type': "{{ attrData.type }}",
+							'options': [
+							{% for option in attrData.options %}
+								{
+									text: "{{ option.text }}",
+									value: "{{ option.value }}",
+									selected: {{ option.selected ? 'true' : 'false' }},
+								}
+								{%- if not loop.last -%}
+								,
+								{% endif -%}
+							{% endfor %}
+							],
+							{% if attrData.separator %}
+								'separator': "{{ attrData.separator }}",
 							{% endif %}
-								attrData.options
-								attrData.separator
-								options: [
-								{% for option in attrData.options %}
-									{
-										text: "{{ option.text }}",
-										value: "{{ option.value }}",
-										selected: {{ option.selected ? 'true' : 'false' }},
-									}
-									{%- if not loop.last %}
-									,
-									{% endif %}
-								{% endfor %}
-								]
-							{% endif %}
-							{% if attrData.required %}
-								"required": true,
-							{% endif %}
-							"name": '{{ attrName }}'
+						{% endif %}
+						{% if attrData.required %}
+							"required": true,
+						{% endif %}
+						"name": '{{ attrName }}'
 						}
 						{% endif %}
 						{%- if not loop.last %}
@@ -282,7 +282,7 @@
 						attrStr += ' ' + attribute + '="' + data[attribute] + '"';
 					}
 					editor.insert('[{{ bbcode.name }}' + attrStr + ']'
-						{%- if bbcode.data.autoCloseOn is empty and 
+						{%- if bbcode.data.autoCloseOn is empty and
 							(not bbcode.data.autoClose or bbcode.data.allowedChildren is not empty) %}, '[/{{ bbcode.name }}]'{% endif -%}
 						);
 				});
@@ -290,7 +290,7 @@
 			},
 			txtExec: function() {
 				this.insert('[{{ bbcode.name }}]'
-					{%- if bbcode.data.autoCloseOn is empty and 
+					{%- if bbcode.data.autoCloseOn is empty and
 							(not bbcode.data.autoClose or bbcode.data.allowedChildren is not empty) %}, '[/{{ bbcode.name }}]'{% endif -%}
 				);
 			},
@@ -510,7 +510,7 @@
 				return '[{{ bbcode.name }}' +
 					(params ? ' ' : '') +
 					params.join(' ') +
-					']' + content {% if bbcode.data.autoCloseOn is empty and 
+					']' + content {% if bbcode.data.autoCloseOn is empty and
 							(not bbcode.data.autoClose or bbcode.data.allowedChildren is not empty) -%}
 						+ '[/{{ bbcode.name }}]'
 							{%- endif -%};
