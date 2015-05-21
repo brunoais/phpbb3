@@ -225,7 +225,6 @@
 {% set toolbar = '' %}
 
 {% for bbcode in BBCODES %}
-
 	$.sceditor.command.set('{{ bbcode.name }}',
 		{
 			state: function (parent, blockParent){
@@ -236,26 +235,38 @@
 			exec: function(button) {
 				{% if bbcode.data.attr is empty %}
 					this.insert('[{{ bbcode.name }}]'
-					{%- if not bbcode.data.autoCloseOn %}, '[/{{ bbcode.name }}]'{% endif -%}
+					{%- if bbcode.data.autoCloseOn is empty and 
+							(not bbcode.data.autoClose or bbcode.data.allowedChildren is not empty) %}, '[/{{ bbcode.name }}]'{% endif -%}
 					);
 				{% else %}
 					var editor = this;
 					var attributes = [
 					{% for attrName, attrData in bbcode.data.attr %}
 						{% if bbcode.override.data.attr[attrName] -%}
-							bbcode.override.data.attr[attrName]
+							{{ bbcode.override.data.attr[attrName]
 						{% else %}
 						{
-							{% if attrData.filters is not empty and
-								(attrData.filters[0].name == 'filterNumber' or
-								attrData.filters[0].name == 'filterRange') %}
-								"type": "number",
+							{% if attrData.type == 'choose1' or
+								attrData.type == 'chooseMany' -%}
+								"type": "{{ attrData.type }}",
+							{% endif %}
+								attrData.options
+								attrData.separator
+								options: [
+								{% for option in attrData.options %}
+									{
+										text: "{{ option.text }}",
+										value: "{{ option.value }}",
+										selected: {{ option.selected ? 'true' : 'false' }},
+									}
+									{%- if not loop.last %}
+									,
+									{% endif %}
+								{% endfor %}
+								]
 							{% endif %}
 							{% if attrData.required %}
 								"required": true,
-							{% endif %}
-							{% if attrData.defaultValue is not empty %}
-								"value": '{{ attrData.defaultValue }}',
 							{% endif %}
 							"name": '{{ attrName }}'
 						}
@@ -271,14 +282,16 @@
 						attrStr += ' ' + attribute + '="' + data[attribute] + '"';
 					}
 					editor.insert('[{{ bbcode.name }}' + attrStr + ']'
-						{%- if not bbcode.data.autoCloseOn %}, '[/{{ bbcode.name }}]'{% endif -%}
+						{%- if bbcode.data.autoCloseOn is empty and 
+							(not bbcode.data.autoClose or bbcode.data.allowedChildren is not empty) %}, '[/{{ bbcode.name }}]'{% endif -%}
 						);
 				});
 				{% endif %}
 			},
 			txtExec: function() {
 				this.insert('[{{ bbcode.name }}]'
-					{%- if not bbcode.data.autoCloseOn %}, '[/{{ bbcode.name }}]'{% endif -%}
+					{%- if bbcode.data.autoCloseOn is empty and 
+							(not bbcode.data.autoClose or bbcode.data.allowedChildren is not empty) %}, '[/{{ bbcode.name }}]'{% endif -%}
 				);
 			},
 
@@ -320,20 +333,42 @@
 					breakAfter: {{- bbcode.override.data.breakAfter ? 'true' : 'false' -}},
 				{%- endif %}
 
+				{% if bbcode.data.autoClose and bbcode.data.allowedChildren is empty and
+					bbcode.data.autoCloseOn is empty and
+					bbcode.data.useContent is empty %}
+					isSelfClosing: true,
+					excludeClosing: true,
+				{% endif %}
 
-				{% if bbcode.data.autoClose %}
-
-					{% if bbcode.data.autoCloseOn %}
-						excludeClosing: true,
-					{% endif %}
-					{% if bbcode.data.allowedChildren is empty %}
-						isSelfClosing: true,
+				{% if bbcode.data.autoClose is not empty %}
+					excludeClosing: true,
+					{% if bbcode.data.autoCloseOn is not empty %}
+						closedBy: [
+							{%- for autoCloseTag in bbcode.data.autoCloseOn -%}
+								'{{ autoCloseTag }}',
+							{%- endfor -%}
+							{%- for autoCloseTag in bbcode.data.autoCloseOn -%}
+							{%- if not loop.first -%}, {% endif -%}
+								'/{{ autoCloseTag }}'
+							{%- endfor -%}
+							],
+					{% elseif bbcode.data.deniedChildren is not empty %}
+						closedBy: [
+							{%- for deniedChild in bbcode.data.deniedChildren -%}
+								'{{ deniedChild }}',
+							{%- endfor -%}
+							{%- for deniedChild in bbcode.data.deniedChildren -%}
+							{%- if not loop.first -%}, {% endif -%}
+								'/{{ deniedChild }}'
+							{%- endfor -%}
+							],
 					{% endif %}
 				{% endif %}
 
-				{% if bbcode.data.ignoreBBCodeInside is not empty %}
+				{% if bbcode.data.ignoreBBCodeInside is not empty or
+					bbcode.data.allowedChildren is empty %}
 				allowedChildren: ['#'],
-				{% elseif bbcode.data.allowedChildren is not empty %}
+				{% else %}
 				allowedChildren: ['
 					{%- if not bbcode.data.ignoreTextInside -%}
 						{{- "#','"-}}
@@ -351,8 +386,9 @@
 					var previousType;
 					var attrData;
 					var usedContents = [];
-					console.log(attributes);
-
+				{% if bbcode.data.trimWhitespace %}
+					content = content.trim();
+				{% endif %}
 				{% if bbcode.data.defaultAttribute %}
 					if(!attributes["{{ bbcode.data.defaultAttribute }}"] &&
 						attributes["{{ bbcode.data.defaultAttribute }}"] !== '' && attributes.defaultattr){
@@ -406,7 +442,6 @@
 					{% endif %}
 					{% if attrData.required %}
 					if(!attributes['{{ attrName }}'] && attributes['{{ attrName }}'] !== ''){
-						console.log("reverting {{ bbcode.name }}");
 						return editor.revertBackToBBCode("{{ bbcode.name }}", originalAttributes, originalContent);
 					}
 					{% endif %}
@@ -447,6 +482,9 @@
 					for(var j = 0; j < types.length; j++){
 						if(types[j] === 'content'){
 							content = this.elementToBbcode($(current));
+						{% if bbcode.data.trimWhitespace %}
+							content = content.trim();
+						{% endif %}
 							extraOffset--;
 						}else if(types[j] === 'attr'){
 							var name = data[j + extraOffset].name;
@@ -468,11 +506,12 @@
 						}
 					}
 				}
-				console.log(params);
+
 				return '[{{ bbcode.name }}' +
 					(params ? ' ' : '') +
 					params.join(' ') +
-					']' + content {% if not bbcode.data.autoCloseOn -%}
+					']' + content {% if bbcode.data.autoCloseOn is empty and 
+							(not bbcode.data.autoClose or bbcode.data.allowedChildren is not empty) -%}
 						+ '[/{{ bbcode.name }}]'
 							{%- endif -%};
 				}

@@ -292,13 +292,16 @@ abstract class base
 		header('Cache-Control: public, max-age=604800', true);
 		
 		$etag_match = $this->request->variable("HTTP_IF_NONE_MATCH", '', request_interface::SERVER);
-		
+
+		$path_key = $this->calculate_path_key();
+		if (empty($cached_data[$path_key]))
+		{
+			$this->recalculate_editor_setup_javascript($this->phpbb_container->get(self::BBCODE_PROCESS_HANDLE));
+		}
 		if (!empty($etag_match))
 		{
 			$etag_data = explode('|', $etag_match, 4);
 			$current_etag = null;
-			
-			$path_key = $this->calculate_path_key();
 			
 			if ($etag_data[2] === $path_key)
 			{
@@ -324,6 +327,7 @@ abstract class base
 		$accepts_gzip = strpos($accepted_encodings, 'gzip') !== false;
 		
 		$setup_javascript = $this->get_setup_javascript($accepts_gzip);
+		
 		if ($setup_javascript !== false)
 		{
 			if ($accepts_gzip)
@@ -334,7 +338,6 @@ abstract class base
 			return true;
 		}
 		
-		$this->recalculate_editor_setup_javascript($phpbb_container->get(BBCODE_PROCESS_HANDLE));
 		$setup_javascript = $this->get_setup_javascript($accepts_gzip);
 		if ($setup_javascript !== false)
 		{
@@ -599,7 +602,7 @@ abstract class base
 			$data = array(
 				'sourceAttribute' => $target_attribute,
 			);
-			
+			$regex = str_replace('&quot;', '"', $regex);
 			$transformation_results = js_regex_helper::to_js($regex);
 			
 			$data['regexFixed'] = $transformation_results['jsRegex'];
@@ -652,7 +655,7 @@ abstract class base
 				break;
 				case 'suspendAutoLineBreaks':
 					
-					$config['trimWhitespace'] = $rule;
+					$config['doNotAutoLineBreak'] = $rule;
 					
 				break;
 				case 'autoClose':

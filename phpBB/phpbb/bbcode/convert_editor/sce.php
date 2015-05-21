@@ -312,47 +312,12 @@ class sce extends base
 			unset($parsed_template);
 		}
 		
-		var_dump($template_tree_definition['bbcodes']['selfclosed']);
+		// var_dump($template_tree_definition['bbcodes']);
 		
+		// font is special... It uses a dropdown...
+		$this->font_override();
+		$toolbar_buttons = $this->toolbar_override($this->toolbar_default_ordering)
 		
-		// Toolbar button order override.
-		$defined_bbcode = $this->toolbar_default_ordering;
-		
-		$predefined_bbcode_names = array();
-		
-		$toolbar_buttons = '';
-		
-		foreach ($defined_bbcode as $button_group)
-		{			
-			foreach ($button_group as $button_name)
-			{
-				$predefined_bbcode_names[$button_name] = true;
-				$toolbar_buttons .= $button_name . ',';
-			}
-			$toolbar_buttons .= '|';
-		}
-		
-		$extra_bbcode = array();
-		
-		$separator_counter = 1;
-		
-		foreach ($template_tree_definition['bbcodes'] as $name => $something)
-		{
-			if (!isset($predefined_bbcode_names[$name]))
-			{
-				$extra_bbcode[] = $name;
-				$toolbar_buttons .= $name;
-				if ($separator_counter % self::DEFAULT_TOOLBAR_BUTTON_GROUP_SIZE)
-				{
-					$toolbar_buttons .= ',';
-				}
-				else
-				{
-					$toolbar_buttons .= '|';
-				}
-				$separator_counter++;
-			}
-		}
 		
 		$this->static_js_vars = array(
 			'XSLT' => $template_tree_definition['xsl'],
@@ -369,6 +334,52 @@ class sce extends base
 		
 	}
 
+	public function font_override($defined_bbcode){
+		
+		$this->extra_variables['L_FONT_TINY'] = true;
+		$this->extra_variables['L_FONT_SMALL'] = true;
+		$this->extra_variables['L_FONT_NORMAL'] = true;
+		$this->extra_variables['L_FONT_LARGE'] = true;
+		$this->extra_variables['L_FONT_HUGE'] = true;
+	}
+
+	public function toolbar_override($defined_bbcode){
+		$predefined_bbcode_names = array();
+		
+		$toolbar_buttons = '';
+		
+		foreach ($defined_bbcode as $button_group)
+		{			
+			foreach ($button_group as $button_name)
+			{
+				$predefined_bbcode_names[$button_name] = true;
+				$toolbar_buttons .= $button_name . ',';
+			}
+			$toolbar_buttons .= '|';
+		}
+		
+		$separator_counter = 1;
+		
+		foreach ($template_tree_definition['bbcodes'] as $name => $something)
+		{
+			if (!isset($predefined_bbcode_names[$name]))
+			{
+				$toolbar_buttons .= $name;
+				if ($separator_counter % self::DEFAULT_TOOLBAR_BUTTON_GROUP_SIZE)
+				{
+					$toolbar_buttons .= ',';
+				}
+				else
+				{
+					$toolbar_buttons .= '|';
+				}
+				$separator_counter++;
+			}
+		}
+		
+		return $toolbar_buttons;
+	}
+	
 	public function get_name(){
 		return 'SCE';
 	}

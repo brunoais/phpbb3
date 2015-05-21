@@ -231,6 +231,7 @@ switch ($mode)
 			$wysiwyg_type = $config['wysiwyg_type'];
 		}
 		$wysiwyg = $phpbb_container->get('wysiwyg.converters.' . $wysiwyg_type);
+		$wysiwyg->purge_cache();
 		$result = $wysiwyg->handle_user_request_setup_javascript();
 		if ($result === true)
 		{

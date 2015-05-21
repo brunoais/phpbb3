@@ -7905,6 +7905,7 @@
 		 * @private
 		 */
 		quote = function (str, quoteType, name) {
+			str = str || "";
 			var	QuoteTypes  = BBCodeParser.QuoteType,
 				needsQuotes = /\s|=/.test(str);
 
@@ -9016,7 +9017,7 @@
 			},
 			isInline: false,
 			quoteType: BBCodeParser.QuoteType.never,
-			format: function (element, content) {console.log("what?!?!");
+			format: function (element, content) {
 				var	author = '';
 				var $elm  = $(element);
 				var $cite = $elm.children('cite').first();
